@@ -1,7 +1,29 @@
+import { config } from '../config.js'
+import { statusCodes } from '../common/constants/status-codes.js'
+
 const health = {
   method: 'GET',
   path: '/health',
-  handler: (_request, h) => h.response({ message: 'success' })
+  handler: async (request, h) => {
+    try {
+      if (!(await request.db.admin().ping()).ok) {
+        throw new Error('MongoDB ping failed')
+      }
+    } catch (e) {
+      return h
+        .response({
+          message: 'Unable to connect to backend MongoDB',
+          error: e.message,
+          version: config.get('serviceVersion')
+        })
+        .code(statusCodes.serviceUnavailable)
+    }
+
+    return h.response({
+      message: 'success',
+      version: config.get('serviceVersion')
+    })
+  }
 }
 
 export { health }
