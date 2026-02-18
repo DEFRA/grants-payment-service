@@ -14,6 +14,7 @@
     "format": "prettier --write \"**/*.{cjs,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{cjs,js,json,md}\"",
     "git:pre-commit-hook": "npm run security-audit && npm run format:check && npm run lint && npm test",
+    "commitlint": "commitlint --edit",
     "lint": "eslint --cache --cache-strategy content \"**/*.{cjs,js}\"",
     "lint:fix": "npm run lint -- --fix",
     "postinstall": "npm run setup:husky",
@@ -53,6 +54,7 @@
   "devDependencies": {
     "@babel/core": "7.28.5",
     "@babel/preset-env": "7.28.5",
+    "@commitlint/cli": "20.4.1",
     "@vitest/coverage-v8": "4.0.16",
     "autoprefixer": "10.4.23",
     "eslint": "9.39.2",

@@ -61,9 +61,11 @@ describe('#healthController', () => {
     test('Should return an error when MongoDB is unavailable', async () => {
       // simulate mongo failure (ping throws connection error)
       const err = new Error('connection refused')
-      const adminSpy = vi
-        .spyOn(server.db, 'admin')
-        .mockReturnValue({ ping: async () => { throw err } })
+      const adminSpy = vi.spyOn(server.db, 'admin').mockReturnValue({
+        ping: async () => {
+          throw err
+        }
+      })
 
       try {
         const { result, statusCode } = await server.inject({
