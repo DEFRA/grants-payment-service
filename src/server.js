@@ -5,14 +5,16 @@ import { secureContext } from '@defra/hapi-secure-context'
 import { config } from './config.js'
 import { router } from './plugins/router.js'
 import { requestLogger } from './common/helpers/logging/request-logger.js'
-import { mongoDb } from './common/helpers/mongodb.js'
+import { mongooseDb } from './common/helpers/mongoose.js'
 import { failAction } from './common/helpers/fail-action.js'
 import { pulse } from './common/helpers/pulse.js'
 import { requestTracing } from './common/helpers/request-tracing.js'
 import { setupProxy } from './common/helpers/proxy/setup-proxy.js'
 import { metrics } from '@defra/cdp-metrics'
 
-async function createServer() {
+async function createServer(serverOptions = {}) {
+  const { mongoUrl, mongoDatabase } = serverOptions
+
   setupProxy()
   const server = Hapi.server({
     host: config.get('host'),
@@ -45,7 +47,7 @@ async function createServer() {
   // requestTracing - trace header logging and propagation
   // secureContext  - loads CA certificates from environment config
   // pulse          - provides shutdown handlers
-  // mongoDb        - sets up mongo connection pool and attaches to `server` and `request` objects
+  // mongooseDb     - sets up mongoose connection pool and attaches to `server` and `request` objects
   // router         - routes used in the app
   await server.register([
     requestLogger,
@@ -54,8 +56,11 @@ async function createServer() {
     secureContext,
     pulse,
     {
-      plugin: mongoDb,
-      options: config.get('mongo')
+      plugin: mongooseDb.plugin,
+      options: {
+        mongoUrl,
+        databaseName: mongoDatabase
+      }
     },
     router
   ])

@@ -1,12 +1,14 @@
-import { config } from '../config.js'
-import { statusCodes } from '../common/constants/status-codes.js'
+import mongoose from 'mongoose'
+
+import { config } from '../../config.js'
+import { statusCodes } from '../../common/constants/status-codes.js'
 
 const health = {
   method: 'GET',
   path: '/health',
   handler: async (request, h) => {
     try {
-      if (!(await request.db.admin().ping()).ok) {
+      if (!(await mongoose.connection.db.admin().ping()).ok) {
         throw new Error('MongoDB ping failed')
       }
     } catch (e) {
