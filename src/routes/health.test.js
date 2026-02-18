@@ -1,12 +1,29 @@
+import { MongoClient } from 'mongodb'
 import { config } from '../config.js'
 import { statusCodes } from '../common/constants/status-codes.js'
 
 describe('#healthController', () => {
   /** @type {Server} */
   let server
+  let mongoConnectSpy
 
   beforeAll(async () => {
     config.set('serviceVersion', 'versionMock')
+
+    const mockMongo = {
+      admin: () => ({ ping: async () => ({ ok: 1 }) }),
+      collection: () => ({ createIndex: async () => {} }),
+      databaseName: 'grants-payment-service',
+      namespace: 'grants-payment-service'
+    }
+    const mockMongoClient = {
+      db: () => mockMongo,
+      close: async () => {}
+    }
+
+    mongoConnectSpy = vi
+      .spyOn(MongoClient, 'connect')
+      .mockResolvedValue(mockMongoClient)
 
     const { createServer } = await import('../server.js')
 
@@ -19,6 +36,10 @@ describe('#healthController', () => {
   afterAll(async () => {
     if (server) {
       await server.stop({ timeout: 0 })
+    }
+
+    if (mongoConnectSpy) {
+      mongoConnectSpy.mockRestore()
     }
   })
 
