@@ -19,7 +19,10 @@ const health = {
         .code(statusCodes.serviceUnavailable)
     }
 
-    return h.response({ message: 'success', version: config.get('serviceVersion') })
+    return h.response({
+      message: 'success',
+      version: config.get('serviceVersion')
+    })
   }
 }
 
