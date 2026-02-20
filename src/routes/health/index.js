@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 
-import { config } from '../../config.js'
-import { statusCodes } from '../../common/constants/status-codes.js'
+import { config } from '#~/config.js'
+import { statusCodes } from '#~/common/constants/status-codes.js'
 
 const health = {
   method: 'GET',
@@ -23,7 +23,7 @@ const health = {
 
     return h.response({
       message: 'success',
-      version: config.get('serviceVersion')
+      version: config.get('serviceVersion') ?? 'dev'
     })
   }
 }
