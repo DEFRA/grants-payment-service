@@ -1,5 +1,5 @@
 import { vi } from 'vitest'
-import { sendPaymentHubRequest } from './index.js'
+import { sendPaymentHubRequest, getPaymentHubToken } from './index.js'
 import { config } from '#~/config.js'
 import { initCache } from '#~/common/helpers/cache.js'
 import crypto from 'crypto'
@@ -177,99 +177,59 @@ describe('Payment Hub Helper', () => {
     })
   })
 
-  // Tests for private functions by recreating their implementation for testing
-  describe('Private functions', () => {
-    // Implementation of the private functions for testing
-    const getPaymentHubToken = () => {
-      const encoded = encodeURIComponent(config.get('paymentHub.uri'))
-      const ttl = config.get('paymentHub.ttl')
-      const signature = encoded + '\n' + ttl
-      const hash = crypto
-        .createHmac('sha256', config.get('paymentHub.key'))
-        .update(signature)
-        .digest('base64')
-      return (
-        'SharedAccessSignature sr=' +
-        encoded +
-        '&sig=' +
-        encodeURIComponent(hash) +
-        '&se=' +
-        ttl +
-        '&skn=' +
-        config.get('paymentHub.keyName')
-      )
-    }
-
-    let cachedTokenInstance = null
-    const getCachedToken = (serverInstance) => {
-      if (!cachedTokenInstance) {
-        cachedTokenInstance = initCache(
-          serverInstance,
-          'payment_hub_token',
-          getPaymentHubToken,
-          {
-            expiresIn: config.get('paymentHub.ttl')
-          }
-        )
-      }
-      return cachedTokenInstance
-    }
-
+  describe('helper functions', () => {
     it('should generate correct payment hub token', () => {
       const token = getPaymentHubToken()
 
       const expectedUri = encodeURIComponent('https://payment-hub.example.com')
-      const expectedTtl = '3600'
-
       expect(crypto.createHmac).toHaveBeenCalledWith('sha256', 'test-key')
 
       expect(token).toContain('SharedAccessSignature')
       expect(token).toContain(`sr=${expectedUri}`)
-      expect(token).toContain(`se=${expectedTtl}`)
+      // TTL is dynamic (current time + 3600) so just ensure the parameter is present
+      expect(token).toMatch(/se=\d+/)
       expect(token).toContain('skn=test-key-name')
     })
 
-    it('should initialize cache only once', () => {
-      // First call should initialize the cache
-      const cache1 = getCachedToken(server)
+    it('should initialize cache only once via exported helper', async () => {
+      // reset the module to clear internal cache variable
+      vi.resetModules()
+      const { getCachedToken: freshGetCachedToken } = await import('./index.js')
+
+      const cache1 = freshGetCachedToken(server)
       expect(initCache).toHaveBeenCalledTimes(1)
       expect(initCache).toHaveBeenCalledWith(
         server,
-        'payment_hub_token',
+        'token',
         expect.any(Function),
         {
           expiresIn: '3600'
         }
       )
 
-      // Second call should reuse the existing cache
-      const cache2 = getCachedToken(server)
+      const cache2 = freshGetCachedToken(server)
       expect(initCache).toHaveBeenCalledTimes(1)
-
-      // Should be the same cache instance
       expect(cache1).toBe(cache2)
     })
+  })
 
-    it('should call the token generator when initializing cache', () => {
-      // Reset the cached instance to test initialization again
-      cachedTokenInstance = null
-
-      let tokenGeneratorFn
-
-      // Capture the token generator function
-      initCache.mockImplementationOnce((serverInstance, name, generator) => {
-        tokenGeneratorFn = generator
-        return mockCache
-      })
-
-      // Call getCachedToken to trigger initCache
-      getCachedToken(server)
-
-      // Verify the token generator function was passed and works
-      expect(typeof tokenGeneratorFn).toBe('function')
-
-      const token = tokenGeneratorFn()
-      expect(token).toContain('SharedAccessSignature')
+  it('should return warning when payment hub feature flag disabled', async () => {
+    config.get.mockImplementation((key) => {
+      if (key === 'featureFlags.isPaymentHubEnabled') return false
+      return 'test-value'
     })
+
+    const payload = { foo: 'bar' }
+    const result = await sendPaymentHubRequest(server, payload)
+
+    expect(logger.warn).toHaveBeenCalled()
+    expect(result).toEqual(
+      expect.objectContaining({
+        status: 'warning',
+        message: expect.stringContaining('disabled'),
+        body: payload,
+        response: null
+      })
+    )
   })
 })

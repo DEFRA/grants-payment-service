@@ -57,7 +57,7 @@ describe('getTestDailyPaymentsController', () => {
     expect(result.source).toEqual({ date: today, docs: fakeDocs })
   })
 
-  it('handles errors and returns 500', async () => {
+  it('handles non-boom errors and returns 500', async () => {
     const error = new Error('oops')
     fetchGrantPaymentsByDate.mockRejectedValue(error)
     const h = makeH()
@@ -76,5 +76,23 @@ describe('getTestDailyPaymentsController', () => {
     expect(result.source).toMatchObject({
       message: 'Failed to get test daily payments'
     })
+  })
+
+  it('returns boom errors unchanged', async () => {
+    const boomError = {
+      isBoom: true,
+      output: { statusCode: 400 },
+      message: 'bad'
+    }
+    fetchGrantPaymentsByDate.mockRejectedValue(boomError)
+    const h = makeH()
+    const logger = { error: vi.fn() }
+
+    const result = await getTestDailyPaymentsController.handler(
+      { query: { date: '2026-02-20' }, logger },
+      h
+    )
+
+    expect(result).toBe(boomError)
   })
 })
