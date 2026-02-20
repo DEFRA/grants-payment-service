@@ -15,7 +15,7 @@ describe('#healthController', () => {
 
     config.set('serviceVersion', 'versionMock')
 
-    // import createServer after mongoose is mocked so controller picks up the mock
+    // import createServer after mongoose is mocked so controllers picks up the mock
     const { createServer } = await import('../../server.js')
 
     server = await createServer({
