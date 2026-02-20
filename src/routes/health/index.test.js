@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
-import { statusCodes } from '../../common/constants/status-codes.js'
-import { config } from '../../config.js'
+import { statusCodes } from '#~/common/constants/status-codes.js'
+import { config } from '#~/config.js'
 
 vi.mock('mongoose', async () => await import('./__mocks__/mongoose.js'))
 
