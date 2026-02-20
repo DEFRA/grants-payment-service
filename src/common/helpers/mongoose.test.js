@@ -1,7 +1,7 @@
 import { vi } from 'vitest'
 import mongoose from 'mongoose'
-import { config } from '../../config.js'
-import { mongooseDb } from './mongoose.js'
+import { config } from '#~/config.js'
+import { mongooseDb } from '#~/common/helpers/mongoose.js'
 
 // Mock dependencies
 vi.mock('mongoose', () => ({
@@ -13,7 +13,7 @@ vi.mock('mongoose', () => ({
   }
 }))
 
-vi.mock('../../config.js', () => ({
+vi.mock('#~/config.js', () => ({
   config: {
     get: vi.fn()
   }

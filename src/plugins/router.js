@@ -1,4 +1,4 @@
-import { health } from '../routes/health/index.js'
+import { health } from '#~/routes/health/index.js'
 
 const router = {
   plugin: {
