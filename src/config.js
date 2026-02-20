@@ -5,7 +5,13 @@ import convictFormatWithValidator from 'convict-format-with-validator'
 
 import { convictValidateMongoUri } from '#~/common/helpers/convict/validate-mongo-uri.js'
 
-loadEnvFile()
+try {
+  loadEnvFile()
+} catch (error) {
+  if (error.code !== 'ENOENT') {
+    throw error
+  }
+}
 
 convict.addFormat(convictValidateMongoUri)
 convict.addFormats(convictFormatWithValidator)
