@@ -1,7 +1,17 @@
+import { loadEnvFile } from 'node:process'
+
 import convict from 'convict'
 import convictFormatWithValidator from 'convict-format-with-validator'
 
-import { convictValidateMongoUri } from './common/helpers/convict/validate-mongo-uri.js'
+import { convictValidateMongoUri } from '#~/common/helpers/convict/validate-mongo-uri.js'
+
+try {
+  loadEnvFile()
+} catch (error) {
+  if (error.code !== 'ENOENT') {
+    throw error
+  }
+}
 
 convict.addFormat(convictValidateMongoUri)
 convict.addFormats(convictFormatWithValidator)

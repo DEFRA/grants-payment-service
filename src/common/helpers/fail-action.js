@@ -1,4 +1,4 @@
-import { createLogger } from './logging/logger.js'
+import { createLogger } from '#~/common/helpers/logging/logger.js'
 
 const logger = createLogger()
 
