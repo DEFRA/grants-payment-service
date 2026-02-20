@@ -1,7 +1,11 @@
+import { loadEnvFile } from 'node:process'
+
 import convict from 'convict'
 import convictFormatWithValidator from 'convict-format-with-validator'
 
-import { convictValidateMongoUri } from './common/helpers/convict/validate-mongo-uri.js'
+import { convictValidateMongoUri } from '#~/common/helpers/convict/validate-mongo-uri.js'
+
+loadEnvFile()
 
 convict.addFormat(convictValidateMongoUri)
 convict.addFormats(convictFormatWithValidator)
@@ -103,6 +107,77 @@ const config = convict({
       format: String,
       default: 'x-cdp-request-id',
       env: 'TRACING_HEADER'
+    }
+  },
+  paymentHub: {
+    defaultSourceSystem: {
+      doc: 'Default source system for payment hub requests',
+      format: String,
+      default: 'FPTT',
+      env: 'PAYMENT_HUB_DEFAULT_SOURCE_SYSTEM'
+    },
+    defaultLedger: {
+      doc: 'Default ledger for payment hub requests',
+      format: String,
+      default: 'AP',
+      env: 'PAYMENT_HUB_DEFAULT_LEDGER'
+    },
+    defaultSchedule: {
+      doc: 'Default schedule for payment hub requests',
+      format: String,
+      default: 'T4',
+      env: 'PAYMENT_HUB_DEFAULT_SCHEDULE'
+    },
+    defaultDeliveryBody: {
+      doc: 'Default delivery body for payment hub requests',
+      format: String,
+      default: 'RP00',
+      env: 'PAYMENT_HUB_DEFAULT_DELIVERY_BODY'
+    },
+    defaultFesCode: {
+      doc: 'Default FES code for payment hub requests',
+      format: String,
+      default: 'FALS_FPTT',
+      env: 'PAYMENT_HUB_DEFAULT_FES_CODE'
+    },
+    uri: {
+      doc: 'URI for payment hub service bus',
+      format: String,
+      default: 'https://paymenthub/',
+      env: 'PAYMENT_HUB_URI'
+    },
+    ttl: {
+      doc: 'Time to live for payment hub access token',
+      format: 'nat',
+      default: 86400,
+      env: 'PAYMENT_HUB_TTL'
+    },
+    keyName: {
+      doc: 'Key name for payment hub service bus',
+      format: String,
+      default: 'MyManagedAccessKey',
+      env: 'PAYMENT_HUB_SA_KEY_NAME'
+    },
+    key: {
+      doc: 'Key for payment hub service bus',
+      format: String,
+      default: 'my_key',
+      sensitive: true,
+      env: 'PAYMENT_HUB_SA_KEY'
+    }
+  },
+  featureFlags: {
+    testEndpoints: {
+      doc: 'Enable test endpoints',
+      format: 'Boolean',
+      default: false,
+      env: 'ENABLE_TEST_ENDPOINTS'
+    },
+    isPaymentHubEnabled: {
+      doc: 'Enable or Disable payments hub',
+      format: 'Boolean',
+      default: false,
+      env: 'ENABLE_PAYMENT_HUB'
     }
   }
 })
