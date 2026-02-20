@@ -1,5 +1,6 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import GrantPaymentsModel from '../../common/grant_payments.js'
+import { statusCodes } from '../../../common/constants/status-codes.js'
 import { postTestCreateGrantPaymentController } from './post-test-create-grant-payments.controller.js'
 
 vi.mock('../../common/grant_payments.js', () => {
@@ -33,7 +34,7 @@ describe('postTestCreateGrantPaymentController', () => {
     grants: [
       {
         paymentRequestNumber: 1,
-        correlationId: '7cf9bd11-c791-42c9-bd28-fa0fecb2d92c',
+        correlationId: '7cf9bd11-c791-42c9-bd28-fa0fec_id',
         invoiceNumber: 'R00000004-V001Q2',
         originalInvoiceNumber: '',
         agreementNumber: 'FPTT264870631',
@@ -77,14 +78,14 @@ describe('postTestCreateGrantPaymentController', () => {
     )
 
     expect(GrantPaymentsModel.create).toHaveBeenCalledWith(validPayload)
-    expect(result.statusCode).toBe(201)
+    expect(result.statusCode).toBe(statusCodes.created)
     expect(result.source).toEqual({
       id: 'abc123',
       message: 'Grant payments created'
     })
   })
 
-  test('returns 400 for validation error', async () => {
+  test('returns 400 for validation error (ValidationError)', async () => {
     const error = new Error('validation failed')
     error.name = 'ValidationError'
     GrantPaymentsModel.create.mockRejectedValue(error)
@@ -95,7 +96,22 @@ describe('postTestCreateGrantPaymentController', () => {
       h
     )
 
-    expect(result.statusCode).toBe(400)
+    expect(result.statusCode).toBe(statusCodes.badRequest)
+    expect(result.source).toMatchObject({ error: 'Validation error' })
+  })
+
+  test('returns 400 for validation error (ValidatorError)', async () => {
+    const error = new Error('validation failed')
+    error.name = 'ValidatorError'
+    GrantPaymentsModel.create.mockRejectedValue(error)
+
+    const h = makeH()
+    const result = await postTestCreateGrantPaymentController.handler(
+      { payload: validPayload },
+      h
+    )
+
+    expect(result.statusCode).toBe(statusCodes.badRequest)
     expect(result.source).toMatchObject({ error: 'Validation error' })
   })
 
@@ -108,7 +124,46 @@ describe('postTestCreateGrantPaymentController', () => {
       h
     )
 
-    expect(result.statusCode).toBe(500)
+    expect(result.statusCode).toBe(statusCodes.internalServerError)
     expect(result.source).toEqual({ error: 'Internal Server Error' })
+  })
+
+  test('returns 500 when error is null/undefined', async () => {
+    GrantPaymentsModel.create.mockRejectedValue(undefined)
+
+    const h = makeH()
+    const result = await postTestCreateGrantPaymentController.handler(
+      { payload: validPayload },
+      h
+    )
+
+    expect(result.statusCode).toBe(statusCodes.internalServerError)
+    expect(result.source).toEqual({ error: 'Internal Server Error' })
+  })
+
+  test('handles missing _id in created document (using id property)', async () => {
+    GrantPaymentsModel.create.mockResolvedValue({ id: 'id123' })
+
+    const h = makeH()
+    const result = await postTestCreateGrantPaymentController.handler(
+      { payload: validPayload },
+      h
+    )
+
+    expect(result.statusCode).toBe(statusCodes.created)
+    expect(result.source.id).toBe('id123')
+  })
+
+  test('handles missing _id and id in created document', async () => {
+    GrantPaymentsModel.create.mockResolvedValue({ someOtherProp: 'value' })
+
+    const h = makeH()
+    const result = await postTestCreateGrantPaymentController.handler(
+      { payload: validPayload },
+      h
+    )
+
+    expect(result.statusCode).toBe(statusCodes.created)
+    expect(result.source.id).toBeUndefined()
   })
 })

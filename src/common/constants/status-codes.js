@@ -3,6 +3,7 @@
  */
 export const statusCodes = {
   ok: 200,
+  created: 201,
   accepted: 202,
   noContent: 204,
   redirect: 302,

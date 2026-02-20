@@ -1,4 +1,5 @@
 import GrantPaymentsModel from '../../common/grant_payments.js'
+import { statusCodes } from '../../../common/constants/status-codes.js'
 
 const postTestCreateGrantPaymentController = {
   method: 'POST',
@@ -17,30 +18,29 @@ const postTestCreateGrantPaymentController = {
       const payload = req.payload
       const created = await GrantPaymentsModel.create(payload)
 
+      const id = created?._id?.toString?.() || created?.id || created?._id
+
       return res
         .response({
-          id: created._id?.toString?.() ?? created.id ?? created._id,
+          id,
           message: 'Grant payments created'
         })
-        .code(201)
+        .code(statusCodes.created)
     } catch (err) {
-      if (
-        err &&
-        (err.name === 'ValidationError' || err.name === 'ValidatorError')
-      ) {
+      if (err?.name === 'ValidationError' || err?.name === 'ValidatorError') {
         return res
           .response({
             error: 'Validation error',
             message: err.message
           })
-          .code(400)
+          .code(statusCodes.badRequest)
       }
 
       return res
         .response({
           error: 'Internal Server Error'
         })
-        .code(500)
+        .code(statusCodes.internalServerError)
     }
   }
 }
