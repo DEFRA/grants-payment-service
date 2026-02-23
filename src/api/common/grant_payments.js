@@ -1,12 +1,6 @@
 import mongoose from 'mongoose'
 const collection = 'grant_payments'
 
-const BusinessIdentifier = new mongoose.Schema({
-  sbi: { type: String, required: true },
-  frn: { type: String, required: true },
-  claimId: { type: String, required: true }
-})
-
 const Payment = new mongoose.Schema({
   amount: { type: Number, required: true },
   description: { type: String, required: true },
@@ -18,7 +12,7 @@ const Payment = new mongoose.Schema({
     type: String,
     required: true,
     default: 'pending',
-    enum: ['pending', 'cancelled', 'submitted']
+    enum: ['pending', 'cancelled', 'submitted', 'failed']
   }
 })
 
@@ -40,7 +34,9 @@ const Grant = new mongoose.Schema({
 
 const schema = new mongoose.Schema(
   {
-    businessIdentifier: { type: BusinessIdentifier, required: true },
+    sbi: { type: String, required: true },
+    frn: { type: String, required: true },
+    claimId: { type: String, required: true },
     grants: [{ type: Grant, required: true }]
   },
   { collection, timestamps: true }
