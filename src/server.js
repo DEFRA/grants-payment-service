@@ -2,7 +2,7 @@ import Hapi from '@hapi/hapi'
 
 import { secureContext } from '@defra/hapi-secure-context'
 
-import { config } from '#~/config.js'
+import { index } from '#~/config/index.js'
 import { router } from '#~/plugins/router.js'
 import { cron } from '#~/plugins/cron.js'
 import { requestLogger } from '#~/common/helpers/logging/request-logger.js'
@@ -18,8 +18,8 @@ async function createServer(serverOptions = {}) {
 
   setupProxy()
   const server = Hapi.server({
-    host: config.get('host'),
-    port: config.get('port'),
+    host: index.get('host'),
+    port: index.get('port'),
     routes: {
       validate: {
         options: {
@@ -46,7 +46,7 @@ async function createServer(serverOptions = {}) {
   // Hapi Plugins:
   // requestLogger  - automatically logs incoming requests
   // requestTracing - trace header logging and propagation
-  // secureContext  - loads CA certificates from environment config
+  // secureContext  - loads CA certificates from environment index
   // pulse          - provides shutdown handlers
   // mongooseDb     - sets up mongoose connection pool and attaches to `server` and `request` objects
   // router         - routes used in the app

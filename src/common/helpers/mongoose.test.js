@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
 import mongoose from 'mongoose'
-import { config } from '#~/config.js'
+import { index } from '#~/config/index.js'
 import { mongooseDb } from '#~/common/helpers/mongoose.js'
 
 // Mock dependencies
@@ -13,15 +13,9 @@ vi.mock('mongoose', () => ({
   }
 }))
 
-vi.mock('#~/config.js', () => ({
-  config: {
-    get: vi.fn()
-  }
-}))
-
 // Get the mocked functions with proper typing
 const mockMongoose = vi.mocked(mongoose)
-const mockConfig = vi.mocked(config)
+const mockConfig = index
 
 describe('mongooseDb', () => {
   let mockServer
@@ -60,7 +54,11 @@ describe('mongooseDb', () => {
     // Reset mocks
     vi.clearAllMocks()
 
-    mockConfig.get.mockImplementation((key) => configValues[key])
+    vi.spyOn(mockConfig, 'get').mockImplementation((key) => {
+      return key
+        .split('.')
+        .reduce((obj, part) => (obj ? obj[part] : undefined), configValues)
+    })
   })
 
   test('plugin should have correct name and version metadata', () => {
@@ -88,12 +86,15 @@ describe('mongooseDb', () => {
       )
     })
 
-    test('should fall back to config when options are not provided', () => {
+    test('should fall back to index when options are not provided', () => {
       mongooseDb.plugin.register(mockServer)
 
-      expect(mockMongoose.connect).toHaveBeenCalledWith(configValues.mongoUri, {
-        dbName: configValues.mongoDatabase
-      })
+      expect(mockMongoose.connect).toHaveBeenCalledWith(
+        configValues.mongo.uri,
+        {
+          dbName: configValues.mongo.database
+        }
+      )
     })
 
     test('should not seed database when feature flag is disabled', async () => {

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 
-import { config } from '#~/config.js'
+import { index } from '#~/config/index.js'
 
 /**
  * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<*> }
@@ -18,8 +18,8 @@ export const mongooseDb = {
     register: async function (server, options = {}) {
       server.logger.info('Setting up Mongoose')
 
-      const mongoUrl = options.mongoUrl ?? config.get('mongo.uri')
-      const databaseName = options.databaseName ?? config.get('mongo.database')
+      const mongoUrl = options.mongoUrl ?? index.get('mongo.uri')
+      const databaseName = options.databaseName ?? index.get('mongo.database')
 
       await mongoose.connect(mongoUrl, {
         dbName: databaseName
