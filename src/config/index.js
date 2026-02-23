@@ -19,6 +19,8 @@ convict.addFormats(convictFormatWithValidator)
 const isProduction = process.env.NODE_ENV === 'production'
 const isTest = process.env.NODE_ENV === 'test'
 
+const LOCALSTACK_ENDPOINT = 'http://localhost:4566'
+
 const config = convict({
   serviceVersion: {
     doc: 'The service version, this variable is injected into your docker container in CDP environments',
@@ -154,6 +156,46 @@ const config = convict({
       format: 'Boolean',
       default: false,
       env: 'ENABLE_PAYMENT_HUB'
+    }
+  },
+  aws: {
+    region: {
+      doc: 'AWS region',
+      format: String,
+      default: 'eu-west-2',
+      env: 'AWS_REGION'
+    }
+  },
+  sqs: {
+    endpoint: {
+      doc: 'AWS SQS endpoint (local/dev only; in CDP this is typically not required)',
+      format: String,
+      default: LOCALSTACK_ENDPOINT,
+      env: 'SQS_ENDPOINT'
+    },
+    queueUrl: {
+      doc: 'Inbound SQS queue URL (e.g. gps__sqs__create_payment)',
+      format: String,
+      default: 'http://localhost:4566/000000000000/gps__sqs__create_payment.fifo',
+      env: 'QUEUE_URL'
+    },
+    maxMessages: {
+      doc: 'Max number of messages to receive from SQS per poll',
+      format: 'nat',
+      default: 1,
+      env: 'MAX_NUMBER_OF_MESSAGES'
+    },
+    visibilityTimeout: {
+      doc: 'Visibility timeout for SQS messages (seconds)',
+      format: 'nat',
+      default: 60,
+      env: 'VISIBILITY_TIMEOUT'
+    },
+    waitTime: {
+      doc: 'Long polling wait time for SQS messages (seconds)',
+      format: 'nat',
+      default: 20,
+      env: 'WAIT_TIME_SECONDS'
     }
   }
 })
