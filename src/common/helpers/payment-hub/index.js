@@ -11,8 +11,7 @@ let cache = null
  */
 export const getPaymentHubToken = () => {
   const encoded = encodeURIComponent(config.get('paymentHub.uri'))
-  const ttl =
-    Math.round(new Date().getTime() / 1000) + config.get('paymentHub.ttl')
+  const ttl = Math.round(Date.now() / 1000) + config.get('paymentHub.ttl')
   const signature = `${encoded}\n${ttl}`
   const hash = crypto
     .createHmac('sha256', config.get('paymentHub.key'))
