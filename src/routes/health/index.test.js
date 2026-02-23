@@ -80,6 +80,15 @@ describe('#healthController', () => {
       })
       expect(statusCode).toBe(statusCodes.serviceUnavailable)
     })
+
+    test('falls back to dev version when cleared', async () => {
+      // clear the setting and make another request to exercise the fallback
+      config.set('serviceVersion', null)
+      mongooseModule.__mockPing.mockResolvedValueOnce({ ok: 1 })
+      const response = await server.inject({ method: 'GET', url: '/health' })
+      expect(response.result).toEqual({ message: 'success', version: 'dev' })
+      expect(response.statusCode).toBe(statusCodes.ok)
+    })
   })
 })
 

@@ -4,6 +4,7 @@ import { secureContext } from '@defra/hapi-secure-context'
 
 import { config } from '#~/config.js'
 import { router } from '#~/plugins/router.js'
+import { cron } from '#~/plugins/cron.js'
 import { requestLogger } from '#~/common/helpers/logging/request-logger.js'
 import { mongooseDb } from '#~/common/helpers/mongoose.js'
 import { failAction } from '#~/common/helpers/fail-action.js'
@@ -62,6 +63,7 @@ async function createServer(serverOptions = {}) {
         databaseName: mongoDatabase
       }
     },
+    cron,
     router
   ])
 

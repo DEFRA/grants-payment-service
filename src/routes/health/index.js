@@ -23,7 +23,7 @@ const health = {
 
     return h.response({
       message: 'success',
-      version: config.get('serviceVersion')
+      version: config.get('serviceVersion') ?? 'dev'
     })
   }
 }

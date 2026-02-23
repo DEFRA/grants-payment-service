@@ -114,6 +114,47 @@ const config = convict({
       default: 'x-cdp-request-id',
       env: 'TRACING_HEADER'
     }
+  },
+  paymentHub: {
+    uri: {
+      doc: 'URI for payment hub service bus',
+      format: String,
+      default: 'https://paymenthub/',
+      env: 'PAYMENT_HUB_URI'
+    },
+    ttl: {
+      doc: 'Time to live for payment hub access token',
+      format: 'nat',
+      default: 86400,
+      env: 'PAYMENT_HUB_TTL'
+    },
+    keyName: {
+      doc: 'Key name for payment hub service bus',
+      format: String,
+      default: 'MyManagedAccessKey',
+      env: 'PAYMENT_HUB_SA_KEY_NAME'
+    },
+    key: {
+      doc: 'Key for payment hub service bus',
+      format: String,
+      default: 'my_key',
+      sensitive: true,
+      env: 'PAYMENT_HUB_SA_KEY'
+    }
+  },
+  featureFlags: {
+    testEndpoints: {
+      doc: 'Enable test endpoints',
+      format: 'Boolean',
+      default: false,
+      env: 'ENABLE_TEST_ENDPOINTS'
+    },
+    isPaymentHubEnabled: {
+      doc: 'Enable or Disable payments hub',
+      format: 'Boolean',
+      default: false,
+      env: 'ENABLE_PAYMENT_HUB'
+    }
   }
 })
 
