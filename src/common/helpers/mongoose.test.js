@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
 import mongoose from 'mongoose'
-import { index } from '#~/config/index.js'
+import { config } from '#~/config/index.js'
 import { mongooseDb } from '#~/common/helpers/mongoose.js'
 
 // Mock dependencies
@@ -15,7 +15,7 @@ vi.mock('mongoose', () => ({
 
 // Get the mocked functions with proper typing
 const mockMongoose = vi.mocked(mongoose)
-const mockConfig = index
+const mockConfig = config
 
 describe('mongooseDb', () => {
   let mockServer

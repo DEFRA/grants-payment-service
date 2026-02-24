@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 
-import { index } from '#~/config/index.js'
+import { config } from '#~/config/index.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 
 const health = {
@@ -16,14 +16,14 @@ const health = {
         .response({
           message: 'Unable to connect to backend MongoDB',
           error: e.message,
-          version: index.get('serviceVersion')
+          version: config.get('serviceVersion')
         })
         .code(statusCodes.serviceUnavailable)
     }
 
     return h.response({
       message: 'success',
-      version: index.get('serviceVersion') ?? 'dev'
+      version: config.get('serviceVersion') ?? 'dev'
     })
   }
 }

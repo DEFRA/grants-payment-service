@@ -2,7 +2,7 @@ import Hapi from '@hapi/hapi'
 
 import { secureContext } from '@defra/hapi-secure-context'
 
-import { index } from '#~/config/index.js'
+import { config } from '#~/config/index.js'
 import { router } from '#~/plugins/router.js'
 import { cron } from '#~/plugins/cron.js'
 import { requestLogger } from '#~/common/helpers/logging/request-logger.js'
@@ -18,8 +18,8 @@ async function createServer(serverOptions = {}) {
 
   setupProxy()
   const server = Hapi.server({
-    host: index.get('host'),
-    port: index.get('port'),
+    host: config.get('host'),
+    port: config.get('port'),
     routes: {
       validate: {
         options: {

@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
 import { sendPaymentHubRequest, getPaymentHubToken } from './index.js'
-import { index as config } from '#~/config/index.js'
+import { config } from '#~/config/index.js'
 import { initCache } from '#~/common/helpers/cache.js'
 import crypto from 'crypto'
 

@@ -1,14 +1,14 @@
-import { index } from '#~/config/index.js'
+import { config } from '#~/config/index.js'
 import { getGlobalDispatcher, ProxyAgent } from 'undici'
 import { setupProxy } from '#~/common/helpers/proxy/setup-proxy.js'
 
 describe('setupProxy', () => {
   afterEach(() => {
-    index.set('httpProxy', null)
+    config.set('httpProxy', null)
   })
 
   test('Should not setup proxy if the environment variable is not set', () => {
-    index.set('httpProxy', null)
+    config.set('httpProxy', null)
     setupProxy()
 
     expect(global?.GLOBAL_AGENT?.HTTP_PROXY).toBeUndefined()
@@ -19,7 +19,7 @@ describe('setupProxy', () => {
   })
 
   test('Should setup proxy if the environment variable is set', () => {
-    index.set('httpProxy', 'http://localhost:8080')
+    config.set('httpProxy', 'http://localhost:8080')
     setupProxy()
     expect(global?.GLOBAL_AGENT?.HTTP_PROXY).toBe('http://localhost:8080')
     const undiciDispatcher = getGlobalDispatcher()

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { router } from './router.js'
-import { index as config } from '#~/config/index.js'
+import { config } from '#~/config/index.js'
 
 vi.mock('#~/config/index.js')
 // stub the imported routes so we can inspect them

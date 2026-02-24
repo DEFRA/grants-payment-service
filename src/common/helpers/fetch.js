@@ -1,5 +1,5 @@
 import { ProxyAgent } from 'undici'
-import { index } from '#~/config/index.js'
+import { config } from '#~/config/index.js'
 
 /**
  * Make fetch requests with timeout support
@@ -14,7 +14,7 @@ export const fetchWithTimeout = async (url, options) => {
   const controller = new AbortController()
   const timeoutId = setTimeout(
     () => controller.abort(new Error('Network timed out while fetching data')),
-    index.get('fetchTimeout')
+    config.get('fetchTimeout')
   )
 
   try {
@@ -38,7 +38,7 @@ export const fetchWithTimeout = async (url, options) => {
  * @returns {Promise<Response>} The fetch response
  */
 export const proxyFetch = async (url, options) => {
-  const proxyUrlConfig = index.get('httpProxy') // bound to HTTP_PROXY
+  const proxyUrlConfig = config.get('httpProxy') // bound to HTTP_PROXY
 
   if (!proxyUrlConfig) {
     return fetchWithTimeout(url, options)

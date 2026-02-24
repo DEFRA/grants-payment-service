@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import { proxyFetch } from '#~/common/helpers/fetch.js'
-import { index } from '#~/config/index.js'
+import { config } from '#~/config/index.js'
 import { initCache } from '#~/common/helpers/cache.js'
 
 let cache = null
@@ -10,14 +10,14 @@ let cache = null
  * @returns {string} The generated token
  */
 export const getPaymentHubToken = () => {
-  const encoded = encodeURIComponent(index.get('paymentHub.uri'))
-  const ttl = Math.round(Date.now() / 1000) + index.get('paymentHub.ttl')
+  const encoded = encodeURIComponent(config.get('paymentHub.uri'))
+  const ttl = Math.round(Date.now() / 1000) + config.get('paymentHub.ttl')
   const signature = `${encoded}\n${ttl}`
   const hash = crypto
-    .createHmac('sha256', index.get('paymentHub.key'))
+    .createHmac('sha256', config.get('paymentHub.key'))
     .update(signature)
     .digest('base64')
-  return `SharedAccessSignature sr=${encoded}&sig=${encodeURIComponent(hash)}&se=${ttl}&skn=${index.get('paymentHub.keyName')}`
+  return `SharedAccessSignature sr=${encoded}&sig=${encodeURIComponent(hash)}&se=${ttl}&skn=${config.get('paymentHub.keyName')}`
 }
 
 /**
@@ -28,7 +28,7 @@ export const getPaymentHubToken = () => {
 export const getCachedToken = (server) => {
   if (!cache) {
     cache = initCache(server, 'token', getPaymentHubToken, {
-      expiresIn: index.get('paymentHub.ttl')
+      expiresIn: config.get('paymentHub.ttl')
     })
   }
   return cache
@@ -42,7 +42,7 @@ export const getCachedToken = (server) => {
  */
 export const sendPaymentHubRequest = async (server, body) => {
   const { logger } = server
-  if (!index.get('featureFlags.isPaymentHubEnabled')) {
+  if (!config.get('featureFlags.isPaymentHubEnabled')) {
     logger.warn(
       `The PaymentHub feature flag is disabled. The request has not been sent to payment hub: ${JSON.stringify(body, null, 2)}`
     )
@@ -56,7 +56,7 @@ export const sendPaymentHubRequest = async (server, body) => {
     }
   }
 
-  if (!index.get('paymentHub.keyName') || !index.get('paymentHub.key')) {
+  if (!config.get('paymentHub.keyName') || !config.get('paymentHub.key')) {
     throw new Error('Payment Hub keyname or key is not set')
   }
 
@@ -65,7 +65,7 @@ export const sendPaymentHubRequest = async (server, body) => {
     SessionId: '123'
   }
 
-  const url = new URL(`${index.get('paymentHub.uri')}/messages`)
+  const url = new URL(`${config.get('paymentHub.uri')}/messages`)
   const response = await proxyFetch(url, {
     method: 'POST',
     headers: {

@@ -1,4 +1,4 @@
-import { index } from '#~/config/index.js'
+import { config } from '#~/config/index.js'
 
 import { createServer } from '#~/server.js'
 
@@ -8,7 +8,7 @@ async function startServer() {
 
   server.logger.info('Server started successfully')
   server.logger.info(
-    `Access your backend on http://localhost:${index.get('port')}`
+    `Access your backend on http://localhost:${config.get('port')}`
   )
 
   return server
