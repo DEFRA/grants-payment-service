@@ -1,6 +1,8 @@
 import {
   postTestCreateGrantPaymentController,
-  getTestGrantPaymentController
+  getTestGrantPaymentController,
+  postTestProcessPaymentsController,
+  getTestDailyPaymentsController
 } from './controllers/index.js'
 
 /**
@@ -12,7 +14,17 @@ const testEndpoints = {
     register: (server) => {
       server.route([
         postTestCreateGrantPaymentController,
-        getTestGrantPaymentController
+        getTestGrantPaymentController,
+        {
+          method: 'POST',
+          path: '/test/process-payments/{date?}',
+          ...postTestProcessPaymentsController
+        },
+        {
+          method: 'GET',
+          path: '/test/daily-payments/{date?}',
+          ...getTestDailyPaymentsController
+        }
       ])
     }
   }
