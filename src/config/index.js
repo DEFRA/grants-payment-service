@@ -176,7 +176,8 @@ const config = convict({
     queueUrl: {
       doc: 'Inbound SQS queue URL (e.g. gps__sqs__create_payment)',
       format: String,
-      default: 'http://localhost:4566/000000000000/gps__sqs__create_payment.fifo',
+      default:
+        'http://localhost:4566/000000000000/gps__sqs__create_payment.fifo',
       env: 'QUEUE_URL'
     },
     maxMessages: {
