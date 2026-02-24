@@ -1,4 +1,4 @@
-import { health } from '#~/routes/health/index.js'
+import { health } from '#~/api/health/index.js'
 import { testEndpoints } from '#~/api/test-endpoints/index.js'
 import { config } from '#~/config/index.js'
 

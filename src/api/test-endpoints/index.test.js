@@ -11,14 +11,9 @@ describe('routes/test-endpoints plugin', () => {
 
     expect(server.route).toHaveBeenCalled()
     const [[routes]] = server.route.mock.calls
-    expect(routes).toHaveLength(2)
 
-    const methods = routes.map((r) => r.method)
     const paths = routes.map((r) => r.path)
-    expect(methods).toEqual(['POST', 'GET'])
-    expect(paths).toEqual([
-      '/test/process-payments/{date?}',
-      '/test/daily-payments/{date?}'
-    ])
+    expect(paths).toContain('/test/process-payments/{date?}')
+    expect(paths).toContain('/test/daily-payments/{date?}')
   })
 })

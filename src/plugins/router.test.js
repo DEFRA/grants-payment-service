@@ -17,7 +17,11 @@ describe('router plugin', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    healthRoute = { path: '/health' }
+    healthRoute = {
+      method: 'GET',
+      path: '/health',
+      handler: expect.any(Function)
+    }
 
     server = {
       route: vi.fn(),
