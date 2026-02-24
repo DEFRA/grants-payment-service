@@ -3,7 +3,10 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { SQSClient } from '@aws-sdk/client-sqs'
 import { Consumer } from 'sqs-consumer'
 
-import { createSqsConsumerPlugin } from './sqs-consumer-plugin.js'
+import {
+  createSqsConsumerPlugin,
+  processMessage
+} from './sqs-consumer-plugin.js'
 
 vi.mock('@aws-sdk/client-sqs')
 
@@ -13,7 +16,7 @@ vi.mock('sqs-consumer', () => ({
   }
 }))
 
-vi.mock('#~/config.js', () => ({
+vi.mock('#~/config/index.js', () => ({
   config: {
     get: vi.fn((key) => {
       switch (key) {
@@ -123,5 +126,59 @@ describe('createSqsConsumerPlugin', () => {
 
     expect(mockConsumer.stop).toHaveBeenCalled()
     expect(mockSqsClient.destroy).toHaveBeenCalled()
+  })
+})
+
+describe('processMessage', () => {
+  const logger = {
+    info: vi.fn(),
+    error: vi.fn()
+  }
+
+  const baseMessage = {
+    MessageId: '123',
+    Body: JSON.stringify({ foo: 'bar' })
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('throws badData when message Body is missing', async () => {
+    const handler = vi.fn()
+
+    await expect(
+      processMessage(handler, { MessageId: '1' }, logger)
+    ).rejects.toMatchObject({
+      isBoom: true,
+      message: 'SQS message missing Body'
+    })
+  })
+
+  it('throws badData when message Body is invalid JSON', async () => {
+    const handler = vi.fn()
+    const message = {
+      MessageId: '2',
+      Body: '{ not: "json"'
+    }
+
+    await expect(
+      processMessage(handler, message, logger)
+    ).rejects.toMatchObject({
+      isBoom: true,
+      message: `Invalid message format: ${message.Body}`
+    })
+  })
+
+  it('wraps non-SyntaxError exceptions with Boom', async () => {
+    const handlerError = new Error('handler failed')
+    const handler = vi.fn().mockRejectedValue(handlerError)
+
+    await expect(
+      processMessage(handler, baseMessage, logger)
+    ).rejects.toMatchObject({
+      isBoom: true,
+      message: handlerError.message
+    })
   })
 })
