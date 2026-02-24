@@ -14,52 +14,54 @@ export const processDailyPayments = async (server, date = getTodaysDate()) => {
       `Found ${docs.length} payment record(s) matching due date ${date}`
     )
 
-    const actions = []
-
-    for (const doc of docs) {
-      const docId = doc._id
-      // the aggregation pipeline returns the payments nested inside grants array
+    // flatten document/grant/payment hierarchy into a simple list of payment items
+    const extractPaymentItems = (doc) => {
+      const items = []
       for (const grant of doc.grants || []) {
         for (const payment of grant.payments || []) {
-          actions.push(
-            (async () => {
-              // attempt to lock the payment; only succeed if it is still pending.
-              const lockResult = await updatePaymentStatus(
-                docId,
-                payment._id,
-                'locked',
-                'pending'
-              )
-
-              // some drivers return { n: 0/1 } others return modifiedCount
-              const wasLocked =
-                lockResult &&
-                (lockResult.nModified === 1 ||
-                  lockResult.modifiedCount === 1 ||
-                  lockResult.n === 1)
-
-              if (!wasLocked) {
-                logger.info(
-                  `Skipping payment ${payment._id} (already locked or processed)`
-                )
-                return null
-              }
-
-              try {
-                const res = await sendPaymentHubRequest(server, payment)
-                await updatePaymentStatus(docId, payment._id, 'submitted')
-                return res
-              } catch (e) {
-                logger.error(e, `PaymentHub request failed for record ${docId}`)
-                await updatePaymentStatus(docId, payment._id, 'failed')
-                return null
-              }
-            })()
-          )
+          items.push({ docId: doc._id, payment })
         }
+      }
+      return items
+    }
+
+    const paymentItems = docs.flatMap(extractPaymentItems)
+
+    // helper performs the lock + send sequence for a single payment
+    const handlePayment = async ({ docId, payment }) => {
+      // attempt to lock the payment; only succeed if it is still pending.
+      const lockResult = await updatePaymentStatus(
+        docId,
+        payment._id,
+        'locked',
+        'pending'
+      )
+
+      const wasLocked =
+        lockResult &&
+        (lockResult.nModified === 1 ||
+          lockResult.modifiedCount === 1 ||
+          lockResult.n === 1)
+
+      if (!wasLocked) {
+        logger.info(
+          `Skipping payment ${payment._id} (already locked or processed)`
+        )
+        return null
+      }
+
+      try {
+        const res = await sendPaymentHubRequest(server, payment)
+        await updatePaymentStatus(docId, payment._id, 'submitted')
+        return res
+      } catch (e) {
+        logger.error(e, `PaymentHub request failed for record ${docId}`)
+        await updatePaymentStatus(docId, payment._id, 'failed')
+        return null
       }
     }
 
+    const actions = paymentItems.map(handlePayment)
     const results = await Promise.all(actions)
 
     return results
