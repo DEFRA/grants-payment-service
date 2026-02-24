@@ -1,6 +1,7 @@
 import {
   postTestCreateGrantPaymentController,
-  getTestGrantPaymentController
+  getTestGrantPaymentController,
+  getTestPaymentsBySbiController
 } from './controllers/index.js'
 
 /**
@@ -12,7 +13,8 @@ const testEndpoints = {
     register: (server) => {
       server.route([
         postTestCreateGrantPaymentController,
-        getTestGrantPaymentController
+        getTestGrantPaymentController,
+        getTestPaymentsBySbiController
       ])
     }
   }
