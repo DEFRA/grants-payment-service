@@ -2,7 +2,7 @@ import {
   transformFpttPaymentDataToPaymentHubFormat,
   validateDebtType,
   validateRemittanceDescription
-} from './fptt-data-transformer'
+} from '#~/common/helpers/payment-hub/fptt-data-transformer.js'
 
 describe('transformFpttPaymentDataToPaymentHubFormat', () => {
   const baseIdentifiers = { sbi: '111', frn: '222', claimId: '333' }
