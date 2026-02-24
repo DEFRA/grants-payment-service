@@ -1,13 +1,26 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
-import GrantPaymentsModel from '../../common/grant_payments.js'
+import { fetchGrantPaymentsBySbi } from '#~/common/helpers/fetch-grant-payments-by-sbi.js'
+import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
-import { postTestCreateGrantPaymentController } from './post-test-create-grant-payments.controller.js'
+import { postTestGrantPaymentController } from './post-test-grant-payments.controller.js'
 
 vi.mock('../../common/grant_payments.js', () => {
   return {
     default: {
-      create: vi.fn()
+      find: vi.fn()
     }
+  }
+})
+
+vi.mock('#~/common/helpers/fetch-grant-payments-by-sbi.js', () => {
+  return {
+    fetchGrantPaymentsBySbi: vi.fn()
+  }
+})
+
+vi.mock('#~/common/helpers/create-grant-payment.js', () => {
+  return {
+    createGrantPayment: vi.fn()
   }
 })
 
@@ -24,13 +37,11 @@ const makeH = () => {
   }
 }
 
-describe('postTestCreateGrantPaymentController', () => {
+describe('postTestGrantPaymentController', () => {
   const validPayload = {
-    businessIdentifier: {
-      sbi: '106284736',
-      frn: '12544567',
-      claimId: 'R00000004'
-    },
+    sbi: '106284736',
+    frn: '12544567',
+    claimId: 'R00000004',
     grants: [
       {
         sourceSystem: 'FPTT',
@@ -75,15 +86,15 @@ describe('postTestCreateGrantPaymentController', () => {
   })
 
   test('returns 201 with id when creation succeeds', async () => {
-    GrantPaymentsModel.create.mockResolvedValue({ _id: 'abc123' })
+    createGrantPayment.mockResolvedValue({ _id: 'abc123' })
 
     const h = makeH()
-    const result = await postTestCreateGrantPaymentController.handler(
+    const result = await postTestGrantPaymentController.handler(
       { payload: validPayload },
       h
     )
 
-    expect(GrantPaymentsModel.create).toHaveBeenCalledWith(validPayload)
+    expect(createGrantPayment).toHaveBeenCalledWith(validPayload)
     expect(result.statusCode).toBe(statusCodes.created)
     expect(result.source).toEqual({
       id: 'abc123',
@@ -94,10 +105,10 @@ describe('postTestCreateGrantPaymentController', () => {
   test('returns 400 for validation error (ValidationError)', async () => {
     const error = new Error('validation failed')
     error.name = 'ValidationError'
-    GrantPaymentsModel.create.mockRejectedValue(error)
+    createGrantPayment.mockRejectedValue(error)
 
     const h = makeH()
-    const result = await postTestCreateGrantPaymentController.handler(
+    const result = await postTestGrantPaymentController.handler(
       { payload: validPayload },
       h
     )
@@ -109,10 +120,10 @@ describe('postTestCreateGrantPaymentController', () => {
   test('returns 400 for validation error (ValidatorError)', async () => {
     const error = new Error('validation failed')
     error.name = 'ValidatorError'
-    GrantPaymentsModel.create.mockRejectedValue(error)
+    createGrantPayment.mockRejectedValue(error)
 
     const h = makeH()
-    const result = await postTestCreateGrantPaymentController.handler(
+    const result = await postTestGrantPaymentController.handler(
       { payload: validPayload },
       h
     )
@@ -122,10 +133,10 @@ describe('postTestCreateGrantPaymentController', () => {
   })
 
   test('returns 500 for unexpected error', async () => {
-    GrantPaymentsModel.create.mockRejectedValue(new Error('db down'))
+    createGrantPayment.mockRejectedValue(new Error('db down'))
 
     const h = makeH()
-    const result = await postTestCreateGrantPaymentController.handler(
+    const result = await postTestGrantPaymentController.handler(
       { payload: validPayload },
       h
     )
@@ -135,10 +146,10 @@ describe('postTestCreateGrantPaymentController', () => {
   })
 
   test('returns 500 when error is null/undefined', async () => {
-    GrantPaymentsModel.create.mockRejectedValue(undefined)
+    createGrantPayment.mockRejectedValue(undefined)
 
     const h = makeH()
-    const result = await postTestCreateGrantPaymentController.handler(
+    const result = await postTestGrantPaymentController.handler(
       { payload: validPayload },
       h
     )
@@ -148,10 +159,10 @@ describe('postTestCreateGrantPaymentController', () => {
   })
 
   test('handles missing _id in created document (using id property)', async () => {
-    GrantPaymentsModel.create.mockResolvedValue({ id: 'id123' })
+    createGrantPayment.mockResolvedValue({ id: 'id123' })
 
     const h = makeH()
-    const result = await postTestCreateGrantPaymentController.handler(
+    const result = await postTestGrantPaymentController.handler(
       { payload: validPayload },
       h
     )
@@ -161,15 +172,60 @@ describe('postTestCreateGrantPaymentController', () => {
   })
 
   test('handles missing _id and id in created document', async () => {
-    GrantPaymentsModel.create.mockResolvedValue({ someOtherProp: 'value' })
+    createGrantPayment.mockResolvedValue({ someOtherProp: 'value' })
 
     const h = makeH()
-    const result = await postTestCreateGrantPaymentController.handler(
+    const result = await postTestGrantPaymentController.handler(
       { payload: validPayload },
       h
     )
 
     expect(result.statusCode).toBe(statusCodes.created)
     expect(result.source.id).toBeUndefined()
+  })
+
+  test('returns 400 when overlapping dates are found', async () => {
+    const existingPayments = [
+      {
+        sbi: '106284736',
+        grants: [
+          {
+            dueDate: '2026-06-05',
+            payments: [{ dueDate: '2026-06-05' }]
+          }
+        ]
+      }
+    ]
+
+    fetchGrantPaymentsBySbi.mockResolvedValue(existingPayments)
+
+    const h = makeH()
+    const result = await postTestGrantPaymentController.handler(
+      { payload: validPayload },
+      h
+    )
+
+    expect(fetchGrantPaymentsBySbi).toHaveBeenCalledWith('106284736')
+    expect(result.statusCode).toBe(statusCodes.badRequest)
+    expect(result.source).toEqual({
+      error: 'Validation error',
+      message: 'For the given sbi overlapping grant payment already exists'
+    })
+    expect(createGrantPayment).not.toHaveBeenCalled()
+  })
+
+  test('returns 201 when no overlapping dates are found', async () => {
+    fetchGrantPaymentsBySbi.mockResolvedValue([])
+    createGrantPayment.mockResolvedValue({ _id: 'abc123' })
+
+    const h = makeH()
+    const result = await postTestGrantPaymentController.handler(
+      { payload: validPayload },
+      h
+    )
+
+    expect(fetchGrantPaymentsBySbi).toHaveBeenCalledWith('106284736')
+    expect(result.statusCode).toBe(statusCodes.created)
+    expect(createGrantPayment).toHaveBeenCalled()
   })
 })
