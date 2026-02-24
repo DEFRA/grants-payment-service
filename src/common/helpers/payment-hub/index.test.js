@@ -27,7 +27,7 @@ vi.mock('#~/api/common/helpers/logging/logger-options.js', () => ({
 }))
 
 vi.mock('#~/api/common/helpers/logging/logger.js', () => ({
-  createLogger: vi.fn().mockReturnValue({
+  getLogger: vi.fn().mockReturnValue({
     info: vi.fn(),
     error: vi.fn(),
     debug: vi.fn(),
