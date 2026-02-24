@@ -19,7 +19,7 @@ convict.addFormats(convictFormatWithValidator)
 const isProduction = process.env.NODE_ENV === 'production'
 const isTest = process.env.NODE_ENV === 'test'
 
-const index = convict({
+const config = convict({
   serviceVersion: {
     doc: 'The service version, this variable is injected into your docker container in CDP environments',
     format: String,
@@ -158,6 +158,6 @@ const index = convict({
   }
 })
 
-index.validate({ allowed: 'strict' })
+config.validate({ allowed: 'strict' })
 
-export { index }
+export { config }
