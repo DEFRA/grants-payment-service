@@ -1,4 +1,4 @@
-import { config } from '#~/config.js'
+import { config } from '#~/config/index.js'
 import { createSqsConsumerPlugin } from '#~/common/helpers/sqs/sqs-consumer-plugin.js'
 import { handleCreatePaymentEvent } from '#~/create-payment/handlers/handle-create-payment.js'
 

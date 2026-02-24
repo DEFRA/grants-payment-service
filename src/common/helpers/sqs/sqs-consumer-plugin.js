@@ -2,7 +2,7 @@ import { SQSClient } from '@aws-sdk/client-sqs'
 import Boom from '@hapi/boom'
 import { Consumer } from 'sqs-consumer'
 
-import { config } from '#~/config.js'
+import { config } from '#~/config/index.js'
 
 /**
  * Parse and process a single SQS message.
@@ -29,7 +29,7 @@ export const processMessage = async (handler, message, logger) => {
 }
 
 /**
- * Minimal Hapi plugin factory to start an SQS consumer.
+ * Hapi plugin factory to start an SQS consumer.
  *
  * Uses AWS SDK v3 (`SQSClient`) plus `sqs-consumer` to:
  * - long-poll an SQS queue

@@ -6,7 +6,6 @@
  * @param {import('pino').Logger} logger
  */
 export async function handleCreatePaymentEvent(messageId, payload, logger) {
-  // Minimal behaviour: log receipt. Business logic comes in later tickets.
   logger.info(
     { messageId, eventType: payload?.type, agreementId: payload?.agreementId },
     'Received create_payment message'
