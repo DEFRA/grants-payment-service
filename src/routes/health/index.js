@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 
-import { config } from '#~/config.js'
+import { config } from '#~/config/index.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 
 const health = {
