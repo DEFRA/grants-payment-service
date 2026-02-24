@@ -1,7 +1,9 @@
 import {
   postTestCreateGrantPaymentController,
   getTestGrantPaymentController,
-  getTestPaymentsBySbiController
+  getTestPaymentsBySbiController,
+  postTestProcessPaymentsController,
+  getTestDailyPaymentsController
 } from './controllers/index.js'
 
 /**
@@ -14,7 +16,17 @@ const testEndpoints = {
       server.route([
         postTestCreateGrantPaymentController,
         getTestGrantPaymentController,
-        getTestPaymentsBySbiController
+        getTestPaymentsBySbiController,
+        {
+          method: 'POST',
+          path: '/test/process-payments/{date?}',
+          ...postTestProcessPaymentsController
+        },
+        {
+          method: 'GET',
+          path: '/test/daily-payments/{date?}',
+          ...getTestDailyPaymentsController
+        }
       ])
     }
   }
