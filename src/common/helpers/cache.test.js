@@ -1,5 +1,5 @@
 import { initCache } from '#~/common/helpers/cache.js'
-import { config } from '#~/config.js'
+import { index as config } from '#~/config/index.js'
 import { vi } from 'vitest'
 
 describe('initCache', () => {

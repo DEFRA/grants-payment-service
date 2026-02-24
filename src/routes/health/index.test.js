@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
 import { statusCodes } from '#~/common/constants/status-codes.js'
-import { index } from '#~/config/index.js'
+import { index as config } from '#~/config/index.js'
 
 vi.mock('mongoose', async () => await import('./__mocks__/mongoose.js'))
 
@@ -13,7 +13,7 @@ describe('#healthController', () => {
     // import the mocked mongoose (manual mock default export)
     mongooseModule = await import('mongoose')
 
-    index.set('serviceVersion', 'versionMock')
+    config.set('serviceVersion', 'versionMock')
 
     // import createServer after mongoose is mocked so controllers picks up the mock
     const { createServer } = await import('../../server.js')

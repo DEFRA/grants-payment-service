@@ -1,4 +1,4 @@
-import { config } from '#~/config.js'
+import { index } from '#~/config/index.js'
 
 /**
  *
@@ -10,7 +10,7 @@ import { config } from '#~/config.js'
  */
 export function initCache(server, segment, generateFunc, options = {}) {
   return server.cache({
-    cache: config.get('serviceName'),
+    cache: index.get('serviceName'),
     segment,
     generateTimeout: 2000,
     generateFunc,
