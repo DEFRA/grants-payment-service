@@ -1,6 +1,7 @@
 import {
   postTestCreateGrantPaymentController,
   getTestGrantPaymentController,
+  getTestPaymentsBySbiController,
   postTestProcessPaymentsController,
   getTestDailyPaymentsController
 } from './controllers/index.js'
@@ -15,6 +16,7 @@ const testEndpoints = {
       server.route([
         postTestCreateGrantPaymentController,
         getTestGrantPaymentController,
+        getTestPaymentsBySbiController,
         {
           method: 'POST',
           path: '/test/process-payments/{date?}',

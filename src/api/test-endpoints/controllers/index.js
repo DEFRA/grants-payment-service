@@ -1,4 +1,5 @@
 export { postTestCreateGrantPaymentController } from './post-test-create-grant-payments.controller.js'
 export { getTestGrantPaymentController } from './get-test-grant-payments.controller.js'
+export { getTestPaymentsBySbiController } from './get-test-payments-by-sbi.controller.js'
 export { getTestDailyPaymentsController } from './get-test-daily-payments.controller.js'
 export { postTestProcessPaymentsController } from './post-test-process-payments.controller.js'
