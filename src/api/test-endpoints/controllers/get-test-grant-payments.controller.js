@@ -1,5 +1,5 @@
-import GrantPaymentsModel from '../../common/grant_payments.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
+import { fetchAllGrantPayments } from '#~/common/helpers/fetch-all-grant-payments.js'
 
 const getTestGrantPaymentController = {
   method: 'GET',
@@ -15,7 +15,7 @@ const getTestGrantPaymentController = {
   },
   handler: async (req, res) => {
     try {
-      const grantPayments = await GrantPaymentsModel.find({})
+      const grantPayments = await fetchAllGrantPayments()
 
       return res.response(grantPayments).code(statusCodes.ok)
     } catch (err) {

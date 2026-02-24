@@ -1,7 +1,7 @@
 import GrantPaymentsModel from '../../common/grant_payments.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 
-const postTestCreateGrantPaymentController = {
+const postTestGrantPaymentController = {
   method: 'POST',
   path: '/api/test/grant-payments',
   options: {
@@ -16,6 +16,18 @@ const postTestCreateGrantPaymentController = {
   handler: async (req, res) => {
     try {
       const payload = req.payload
+      const { sbi } = payload
+
+      if (await validationCheckForOverlappingGrantPayment(sbi)) {
+        return res
+          .response({
+            error: 'Validation error',
+            message:
+              'For the given sbi overlapping grant payment already exists'
+          })
+          .code(statusCodes.badRequest)
+      }
+
       const created = await GrantPaymentsModel.create(payload)
 
       const id = created?._id?.toString?.() || created?.id || created?._id
@@ -45,4 +57,9 @@ const postTestCreateGrantPaymentController = {
   }
 }
 
-export { postTestCreateGrantPaymentController }
+const validationCheckForOverlappingGrantPayment = async (sbi) => {
+  // const existingGrantsMatchingSbi = fetchGrantPaymentsBySbi(sbi)
+  return false
+}
+
+export { postTestGrantPaymentController }

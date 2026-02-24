@@ -1,7 +1,7 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import GrantPaymentsModel from '../../common/grant_payments.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
-import { postTestCreateGrantPaymentController } from './post-test-create-grant-payments.controller.js'
+import { postTestGrantPaymentController } from './post-test-grant-payments.controller.js'
 
 vi.mock('../../common/grant_payments.js', () => {
   return {
@@ -24,7 +24,7 @@ const makeH = () => {
   }
 }
 
-describe('postTestCreateGrantPaymentController', () => {
+describe('postTestGrantPaymentController', () => {
   const validPayload = {
     businessIdentifier: {
       sbi: '106284736',
@@ -72,7 +72,7 @@ describe('postTestCreateGrantPaymentController', () => {
     GrantPaymentsModel.create.mockResolvedValue({ _id: 'abc123' })
 
     const h = makeH()
-    const result = await postTestCreateGrantPaymentController.handler(
+    const result = await postTestGrantPaymentController.handler(
       { payload: validPayload },
       h
     )
@@ -91,7 +91,7 @@ describe('postTestCreateGrantPaymentController', () => {
     GrantPaymentsModel.create.mockRejectedValue(error)
 
     const h = makeH()
-    const result = await postTestCreateGrantPaymentController.handler(
+    const result = await postTestGrantPaymentController.handler(
       { payload: validPayload },
       h
     )
@@ -106,7 +106,7 @@ describe('postTestCreateGrantPaymentController', () => {
     GrantPaymentsModel.create.mockRejectedValue(error)
 
     const h = makeH()
-    const result = await postTestCreateGrantPaymentController.handler(
+    const result = await postTestGrantPaymentController.handler(
       { payload: validPayload },
       h
     )
@@ -119,7 +119,7 @@ describe('postTestCreateGrantPaymentController', () => {
     GrantPaymentsModel.create.mockRejectedValue(new Error('db down'))
 
     const h = makeH()
-    const result = await postTestCreateGrantPaymentController.handler(
+    const result = await postTestGrantPaymentController.handler(
       { payload: validPayload },
       h
     )
@@ -132,7 +132,7 @@ describe('postTestCreateGrantPaymentController', () => {
     GrantPaymentsModel.create.mockRejectedValue(undefined)
 
     const h = makeH()
-    const result = await postTestCreateGrantPaymentController.handler(
+    const result = await postTestGrantPaymentController.handler(
       { payload: validPayload },
       h
     )
@@ -145,7 +145,7 @@ describe('postTestCreateGrantPaymentController', () => {
     GrantPaymentsModel.create.mockResolvedValue({ id: 'id123' })
 
     const h = makeH()
-    const result = await postTestCreateGrantPaymentController.handler(
+    const result = await postTestGrantPaymentController.handler(
       { payload: validPayload },
       h
     )
@@ -158,7 +158,7 @@ describe('postTestCreateGrantPaymentController', () => {
     GrantPaymentsModel.create.mockResolvedValue({ someOtherProp: 'value' })
 
     const h = makeH()
-    const result = await postTestCreateGrantPaymentController.handler(
+    const result = await postTestGrantPaymentController.handler(
       { payload: validPayload },
       h
     )
