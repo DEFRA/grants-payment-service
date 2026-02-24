@@ -1,10 +1,10 @@
 import { vi } from 'vitest'
 import { sendPaymentHubRequest, getPaymentHubToken } from './index.js'
-import { config } from '#~/config.js'
+import { config } from '#~/config/index.js'
 import { initCache } from '#~/common/helpers/cache.js'
 import crypto from 'crypto'
 
-vi.mock('#~/config.js')
+vi.mock('#~/config/index.js')
 vi.mock('#~/common/helpers/cache.js')
 vi.mock('crypto', () => ({
   __esModule: true,

@@ -1,4 +1,4 @@
-import { config } from '#~/config.js'
+import { config } from '#~/config/index.js'
 import { getGlobalDispatcher, ProxyAgent } from 'undici'
 import { setupProxy } from '#~/common/helpers/proxy/setup-proxy.js'
 

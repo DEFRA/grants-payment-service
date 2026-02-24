@@ -1,6 +1,6 @@
-import { config } from '#~/config.js'
 import { health } from '#~/routes/health/index.js'
-import { testEndpoints } from '#~/routes/test-endpoints/index.js'
+import { testEndpoints } from '#~/api/test-endpoints/index.js'
+import { config } from '#~/config/index.js'
 
 const router = {
   plugin: {
@@ -12,6 +12,7 @@ const router = {
         server.logger.warn(
           'Test endpoints are enabled. These should not be used in production.'
         )
+
         await server.register([testEndpoints])
       }
     }

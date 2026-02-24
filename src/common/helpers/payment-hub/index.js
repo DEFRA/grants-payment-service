@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import { proxyFetch } from '#~/common/helpers/fetch.js'
-import { config } from '#~/config.js'
+import { config } from '#~/config/index.js'
 import { initCache } from '#~/common/helpers/cache.js'
 
 let cache = null

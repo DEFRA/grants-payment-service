@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
 import { statusCodes } from '#~/common/constants/status-codes.js'
-import { config } from '#~/config.js'
+import { config } from '#~/config/index.js'
 
 vi.mock('mongoose', async () => await import('./__mocks__/mongoose.js'))
 
@@ -15,7 +15,7 @@ describe('#healthController', () => {
 
     config.set('serviceVersion', 'versionMock')
 
-    // import createServer after mongoose is mocked so controller picks up the mock
+    // import createServer after mongoose is mocked so controllers picks up the mock
     const { createServer } = await import('../../server.js')
 
     server = await createServer({

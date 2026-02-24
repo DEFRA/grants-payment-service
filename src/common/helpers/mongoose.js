@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 
-import { config } from '#~/config.js'
+import { config } from '#~/config/index.js'
 
 /**
  * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<*> }
