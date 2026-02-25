@@ -34,7 +34,10 @@ describe('router plugin', () => {
     // default config.get behavior
     config.get = vi.fn((key) => {
       const values = {
-        'featureFlags.testEndpoints': false
+        'featureFlags.testEndpoints': false,
+        log: { isEnabled: false, redact: [], level: 'info', format: 'ecs' },
+        serviceName: 'test',
+        serviceVersion: '1'
       }
       return values[key]
     })

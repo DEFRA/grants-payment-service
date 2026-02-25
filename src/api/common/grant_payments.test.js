@@ -25,6 +25,7 @@ describe('grant_payments schema', () => {
       claimId: 'R00000004',
       grants: [
         {
+          scheme: 'SFI',
           paymentRequestNumber: 1,
           correlationId: '7cf9bd11-c791-42c9-bd28-fa0fecb2d92c',
           invoiceNumber: 'R00000004-V001Q2',
@@ -59,6 +60,7 @@ describe('grant_payments schema', () => {
       claimId: 'R00000004',
       grants: [
         {
+          scheme: 'SFI',
           paymentRequestNumber: 1,
           correlationId: '7cf9bd11-c791-42c9-bd28-fa0fecb2d92c',
           invoiceNumber: 'R00000004-V001Q2',

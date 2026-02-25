@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { processDailyPayments } from './payment-processor.js'
 import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
+import { updatePaymentStatus } from '#~/common/helpers/update-payment-status.js'
 import { getTodaysDate } from './date.js'
 
 vi.mock('#~/common/helpers/fetch-grants-by-date.js', () => ({
@@ -9,6 +10,9 @@ vi.mock('#~/common/helpers/fetch-grants-by-date.js', () => ({
 }))
 vi.mock('#~/common/helpers/payment-hub/index.js', () => ({
   sendPaymentHubRequest: vi.fn()
+}))
+vi.mock('#~/common/helpers/update-payment-status.js', () => ({
+  updatePaymentStatus: vi.fn()
 }))
 
 describe('processDailyPayments', () => {
@@ -19,39 +23,88 @@ describe('processDailyPayments', () => {
   const server = { logger }
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    vi.resetAllMocks()
   })
 
-  it('uses provided date, proxies each doc to PaymentHub and returns hub results', async () => {
+  it('uses provided date, locks each payment and proxies to PaymentHub, returning results', async () => {
     const fakeDate = '2026-02-20'
-    const fakeDocs = [{ _id: '1' }, { _id: '2' }]
+    const fakeDocs = [
+      { _id: '1', grants: [{ payments: [{ _id: 'p1', amount: 10 }] }] },
+      { _id: '2', grants: [{ payments: [{ _id: 'p2' }] }] }
+    ]
     fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
     const responses = ['a', 'b']
     sendPaymentHubRequest
       .mockResolvedValueOnce(responses[0])
       .mockResolvedValueOnce(responses[1])
 
+    // locks should succeed so we return n:1 each time
+    updatePaymentStatus.mockResolvedValue({ n: 1 })
+
     const result = await processDailyPayments(server, fakeDate)
 
-    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(fakeDate)
+    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(fakeDate, 'pending')
     expect(logger.info).toHaveBeenCalledWith(
       `Processing daily payments for date: ${fakeDate}`
     )
     expect(logger.info).toHaveBeenCalledWith(
       `Found ${fakeDocs.length} payment record(s) matching due date ${fakeDate}`
     )
-    expect(sendPaymentHubRequest).toHaveBeenCalledTimes(fakeDocs.length)
+
+    // each payment should be locked (pending->locked) then submitted
+    expect(updatePaymentStatus).toHaveBeenCalledWith(
+      '1',
+      'p1',
+      'locked',
+      'pending'
+    )
+    expect(updatePaymentStatus).toHaveBeenCalledWith('1', 'p1', 'submitted')
+    expect(updatePaymentStatus).toHaveBeenCalledWith(
+      '2',
+      'p2',
+      'locked',
+      'pending'
+    )
+    expect(updatePaymentStatus).toHaveBeenCalledWith('2', 'p2', 'submitted')
+
+    expect(sendPaymentHubRequest).toHaveBeenCalledTimes(2)
     expect(sendPaymentHubRequest).toHaveBeenNthCalledWith(
       1,
       server,
-      fakeDocs[0]
+      fakeDocs[0].grants[0].payments[0]
     )
     expect(sendPaymentHubRequest).toHaveBeenNthCalledWith(
       2,
       server,
-      fakeDocs[1]
+      fakeDocs[1].grants[0].payments[0]
     )
     expect(result).toEqual(responses)
+  })
+
+  it('skips payments that cannot be locked by another instance', async () => {
+    const fakeDate = '2026-02-20'
+    // two payments, but the second fails to lock
+    const fakeDocs = [
+      { _id: '1', grants: [{ payments: [{ _id: 'x' }] }] },
+      { _id: '2', grants: [{ payments: [{ _id: 'y' }] }] }
+    ]
+    fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+
+    // first lock succeeds, second returns {n:0} meaning already handled
+    updatePaymentStatus
+      .mockResolvedValueOnce({ n: 1 })
+      .mockResolvedValueOnce({ n: 0 })
+
+    sendPaymentHubRequest.mockResolvedValue('ok')
+
+    const result = await processDailyPayments(server, fakeDate)
+
+    // only one hub request should be made
+    expect(sendPaymentHubRequest).toHaveBeenCalledTimes(1)
+    expect(result).toEqual(['ok', null])
+    expect(logger.info).toHaveBeenCalledWith(
+      `Skipping payment y (already locked or processed)`
+    )
   })
 
   it('defaults to today if no date supplied', async () => {
@@ -61,7 +114,7 @@ describe('processDailyPayments', () => {
 
     const result = await processDailyPayments(server)
 
-    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(today)
+    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(today, 'pending')
     expect(result).toEqual([])
   })
 
@@ -78,9 +131,13 @@ describe('processDailyPayments', () => {
     )
   })
 
-  it('logs individual hub failures and continues', async () => {
+  it('logs individual hub failures and continues, updating status appropriately', async () => {
     const fakeDate = '2026-02-20'
-    const fakeDocs = [{ _id: '1' }, { _id: '2' }, { _id: '3' }]
+    const fakeDocs = [
+      { _id: '1', grants: [{ payments: [{ _id: 'a' }] }] },
+      { _id: '2', grants: [{ payments: [{ _id: 'b' }] }] },
+      { _id: '3', grants: [{ payments: [{ _id: 'c' }] }] }
+    ]
     fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
 
     // first and third succeed, second fails
@@ -89,9 +146,34 @@ describe('processDailyPayments', () => {
       .mockRejectedValueOnce(new Error('hub down'))
       .mockResolvedValueOnce('ok3')
 
+    // allow locking for each payment
+    updatePaymentStatus.mockResolvedValue({ n: 1 })
+
     const result = await processDailyPayments(server, fakeDate)
 
     expect(result).toEqual(['ok1', null, 'ok3'])
+    // lock called for each payment
+    expect(updatePaymentStatus).toHaveBeenCalledWith(
+      '1',
+      'a',
+      'locked',
+      'pending'
+    )
+    expect(updatePaymentStatus).toHaveBeenCalledWith(
+      '2',
+      'b',
+      'locked',
+      'pending'
+    )
+    expect(updatePaymentStatus).toHaveBeenCalledWith(
+      '3',
+      'c',
+      'locked',
+      'pending'
+    )
+    // second payment should be marked failed when hub errors
+    expect(updatePaymentStatus).toHaveBeenCalledWith('2', 'b', 'failed')
+
     expect(logger.error).toHaveBeenCalledWith(
       expect.any(Error),
       `PaymentHub request failed for record ${fakeDocs[1]._id}`
