@@ -183,6 +183,23 @@ describe('processDailyPayments', () => {
     expect(result).toEqual([])
   })
 
+  it('handles documents with no grants and grants with no payments gracefully', async () => {
+    const fakeDate = '2026-02-20'
+    const fakeDocs = [
+      // document with no grants (undefined)
+      { _id: 'no-grants' },
+      // document with a grant that has no payments (undefined)
+      { _id: 'no-payments', grants: [{ invoiceNumber: 'INV1' }] }
+    ]
+    fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+
+    const result = await processDailyPayments(server, fakeDate)
+
+    // no payments to process, hub is never called, result is empty
+    expect(sendPaymentHubRequest).not.toHaveBeenCalled()
+    expect(result).toEqual([])
+  })
+
   it('logs and rethrows when the database query fails', async () => {
     const fakeDate = '2026-02-20'
     const error = new Error('db failure')
@@ -194,6 +211,43 @@ describe('processDailyPayments', () => {
       error,
       `Failed to query grant payments for date ${fakeDate}`
     )
+  })
+
+  it('skips and marks as failed payments with an unsupported sourceSystem', async () => {
+    const fakeDate = '2026-02-20'
+    const fakeDocs = [
+      {
+        _id: '1',
+        grants: [
+          {
+            payments: [
+              {
+                _id: 'p1',
+                sourceSystem: 'UNKNOWN',
+                dueDate: '2026-01-01',
+                recoveryDate: '2026-01-01',
+                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+    fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+    updatePaymentStatus.mockResolvedValue({ n: 1 })
+
+    const result = await processDailyPayments(server, fakeDate)
+
+    // hub should never be called for an unsupported sourceSystem
+    expect(sendPaymentHubRequest).not.toHaveBeenCalled()
+    // payment should be marked as failed
+    expect(updatePaymentStatus).toHaveBeenCalledWith('1', 'p1', 'failed')
+    // an error should be logged
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Unsupported grant sourceSystem UNKNOWN')
+    )
+    expect(result).toEqual([null])
   })
 
   it('logs individual hub failures and continues, updating status appropriately', async () => {

@@ -3,7 +3,7 @@ import { formatPaymentDate } from '../format-payment-date'
 const DEBT_TYPE_MAX_LENGTH = 3
 const deliveryBody = 'RP00'
 
-const validateDebtType = (debtType) => {
+export const validateDebtType = (debtType) => {
   if (debtType.length > DEBT_TYPE_MAX_LENGTH) {
     throw new Error(
       `value of ${debtType} must be no more than ${DEBT_TYPE_MAX_LENGTH} characters`
@@ -14,7 +14,7 @@ const validateDebtType = (debtType) => {
 
 const REMITTANCE_DESCRIPTION_MAX_LENGTH = 60
 
-const validateRemittanceDescription = (remittanceDescription) => {
+export const validateRemittanceDescription = (remittanceDescription) => {
   if (remittanceDescription.length > REMITTANCE_DESCRIPTION_MAX_LENGTH) {
     throw new Error(
       `value of ${remittanceDescription} must be no more than ${REMITTANCE_DESCRIPTION_MAX_LENGTH} characters`

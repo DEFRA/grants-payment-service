@@ -1,4 +1,8 @@
-import { transformFpttPaymentDataToPaymentHubFormat } from './fptt-data-transformer'
+import {
+  transformFpttPaymentDataToPaymentHubFormat,
+  validateDebtType,
+  validateRemittanceDescription
+} from './fptt-data-transformer'
 
 describe('transformFpttPaymentDataToPaymentHubFormat', () => {
   const baseIdentifiers = { sbi: '111', frn: '222', claimId: '333' }
@@ -97,5 +101,44 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
         invoiceLines: []
       })
     ).toThrow(/Payment date must be a string/)
+  })
+
+  it('defaults marketingYear to the current year when not provided in grant', () => {
+    const grantWithoutYear = { ...baseGrant, marketingYear: undefined }
+    const payment = { dueDate: '2026-06-05', invoiceLines: [] }
+    const result = transformFpttPaymentDataToPaymentHubFormat(
+      baseIdentifiers,
+      grantWithoutYear,
+      payment
+    )
+    expect(result.marketingYear).toBe(new Date().getFullYear())
+  })
+})
+
+describe('validateDebtType', () => {
+  it('returns the debtType when it is within limit', () => {
+    expect(validateDebtType('OK')).toBe('OK')
+    expect(validateDebtType('')).toBe('')
+    expect(validateDebtType('ABC')).toBe('ABC')
+  })
+
+  it('throws when debtType exceeds 3 characters', () => {
+    expect(() => validateDebtType('TOOLONG')).toThrow(
+      /must be no more than 3 characters/
+    )
+  })
+})
+
+describe('validateRemittanceDescription', () => {
+  it('returns the description when it is within limit', () => {
+    const short = 'Short description'
+    expect(validateRemittanceDescription(short)).toBe(short)
+  })
+
+  it('throws when remittanceDescription exceeds 60 characters', () => {
+    const tooLong = 'A'.repeat(61)
+    expect(() => validateRemittanceDescription(tooLong)).toThrow(
+      /must be no more than 60 characters/
+    )
   })
 })
