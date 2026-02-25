@@ -12,11 +12,12 @@ const Payment = new mongoose.Schema({
     type: String,
     required: true,
     default: 'pending',
-    enum: ['pending', 'cancelled', 'submitted', 'failed']
+    enum: ['pending', 'locked', 'cancelled', 'submitted', 'failed']
   }
 })
 
 const Grant = new mongoose.Schema({
+  scheme: { type: String, required: true },
   paymentRequestNumber: { type: Number, required: true },
   correlationId: { type: String, required: true },
   invoiceNumber: { type: String, required: true },

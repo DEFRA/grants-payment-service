@@ -2,9 +2,9 @@ import { ecsFormat } from '@elastic/ecs-pino-format'
 import { config } from '#~/config/index.js'
 import { getTraceId } from '@defra/hapi-tracing'
 
-const logConfig = config.get('log')
-const serviceName = config.get('serviceName')
-const serviceVersion = config.get('serviceVersion')
+const logConfig = config.get('log') || {}
+const serviceName = config.get('serviceName') || ''
+const serviceVersion = config.get('serviceVersion') || ''
 
 const formatters = {
   ecs: {
@@ -17,14 +17,14 @@ const formatters = {
 }
 
 export const loggerOptions = {
-  enabled: logConfig.isEnabled,
+  enabled: logConfig.isEnabled ?? false,
   ignorePaths: ['/health'],
   redact: {
-    paths: logConfig.redact,
+    paths: logConfig.redact || [],
     remove: true
   },
-  level: logConfig.level,
-  ...formatters[logConfig.format],
+  level: logConfig.level || 'info',
+  ...(formatters[logConfig.format] || {}),
   nesting: true,
   mixin() {
     const mixinValues = {}
