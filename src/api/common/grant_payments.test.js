@@ -25,23 +25,27 @@ describe('grant_payments schema', () => {
       claimId: 'R00000004',
       grants: [
         {
-          scheme: 'SFI',
+          sourceSystem: 'FPTT',
           paymentRequestNumber: 1,
           correlationId: '7cf9bd11-c791-42c9-bd28-fa0fecb2d92c',
           invoiceNumber: 'R00000004-V001Q2',
           originalInvoiceNumber: 'R00000004-V001Q1',
           agreementNumber: 'FPTT264870631',
-          totalAmount: 702.85,
+          totalAmount: '702.85',
           currency: 'GBP',
           marketingYear: '2026',
           payments: [
             {
-              amount: 12.63,
-              description: '2026-06-05: Parcel 8083',
-              accountCode: 'SOS710',
-              fundCode: 'DRD10',
-              schemaCode: 'CMOR1',
               dueDate: '2026-06-05',
+              invoiceLines: [
+                {
+                  schemeCode: 'CMOR1',
+                  accountCode: 'SOS710',
+                  fundCode: 'DRD10',
+                  description: '2026-06-05: Parcel 8083',
+                  amount: '12.63'
+                }
+              ],
               status: 'pending'
             }
           ]
@@ -60,23 +64,27 @@ describe('grant_payments schema', () => {
       claimId: 'R00000004',
       grants: [
         {
-          scheme: 'SFI',
+          sourceSystem: 'FPTT',
           paymentRequestNumber: 1,
           correlationId: '7cf9bd11-c791-42c9-bd28-fa0fecb2d92c',
           invoiceNumber: 'R00000004-V001Q2',
           originalInvoiceNumber: 'R00000004-V001Q1',
           agreementNumber: 'FPTT264870631',
-          totalAmount: 702.85,
+          totalAmount: '702.85',
           currency: 'GBP',
           marketingYear: '2026',
           payments: [
             {
-              amount: 12.63,
-              description: '2026-06-05: Parcel 8083',
-              accountCode: 'SOS710',
-              fundCode: 'DRD10',
-              schemaCode: 'CMOR1',
               dueDate: '2026-06-05',
+              invoiceLines: [
+                {
+                  schemeCode: 'CMOR1',
+                  accountCode: 'SOS710',
+                  fundCode: 'DRD10',
+                  description: '2026-06-05: Parcel 8083',
+                  amount: 12.63
+                }
+              ],
               status: 'failed'
             }
           ]

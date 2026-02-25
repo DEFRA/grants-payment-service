@@ -1,13 +1,19 @@
 import mongoose from 'mongoose'
 const collection = 'grant_payments'
 
-const Payment = new mongoose.Schema({
-  amount: { type: Number, required: true },
+const { Decimal128 } = mongoose.Types
+
+const InvoiceLine = new mongoose.Schema({
+  schemeCode: { type: String, required: true },
+  accountCode: { type: String },
+  fundCode: { type: String },
   description: { type: String, required: true },
-  accountCode: { type: String, required: true },
-  fundCode: { type: String, required: true },
-  schemaCode: { type: String, required: true },
+  amount: { type: Decimal128, required: true }
+})
+
+const Payment = new mongoose.Schema({
   dueDate: { type: String, required: true },
+  invoiceLines: [{ type: InvoiceLine, required: true }],
   status: {
     type: String,
     required: true,
@@ -17,7 +23,7 @@ const Payment = new mongoose.Schema({
 })
 
 const Grant = new mongoose.Schema({
-  scheme: { type: String, required: true },
+  sourceSystem: { type: String, required: true },
   paymentRequestNumber: { type: Number, required: true },
   correlationId: { type: String, required: true },
   invoiceNumber: { type: String, required: true },
@@ -27,9 +33,9 @@ const Grant = new mongoose.Schema({
   recoveryDate: { type: String },
   originalSettlementDate: { type: String },
   remittanceDescription: { type: String },
-  totalAmount: { type: Number, required: true },
+  totalAmount: { type: Decimal128, required: true },
   currency: { type: String, required: true },
-  marketingYear: { type: String, required: true },
+  marketingYear: { type: String },
   payments: [{ type: Payment, required: true }]
 })
 
