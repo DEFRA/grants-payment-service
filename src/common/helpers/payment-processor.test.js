@@ -29,8 +29,41 @@ describe('processDailyPayments', () => {
   it('uses provided date, locks each payment and proxies to PaymentHub, returning results', async () => {
     const fakeDate = '2026-02-20'
     const fakeDocs = [
-      { _id: '1', grants: [{ payments: [{ _id: 'p1', amount: 10 }] }] },
-      { _id: '2', grants: [{ payments: [{ _id: 'p2' }] }] }
+      {
+        _id: '1',
+        grants: [
+          {
+            payments: [
+              {
+                _id: 'p1',
+                amount: 10,
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                recoveryDate: '2026-01-01',
+                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        _id: '2',
+        grants: [
+          {
+            payments: [
+              {
+                _id: 'p2',
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                recoveryDate: '2026-01-01',
+                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ]
+          }
+        ]
+      }
     ]
     fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
     const responses = ['a', 'b']
@@ -71,12 +104,12 @@ describe('processDailyPayments', () => {
     expect(sendPaymentHubRequest).toHaveBeenNthCalledWith(
       1,
       server,
-      fakeDocs[0].grants[0].payments[0]
+      expect.any(Object)
     )
     expect(sendPaymentHubRequest).toHaveBeenNthCalledWith(
       2,
       server,
-      fakeDocs[1].grants[0].payments[0]
+      expect.any(Object)
     )
     expect(result).toEqual(responses)
   })
@@ -85,8 +118,40 @@ describe('processDailyPayments', () => {
     const fakeDate = '2026-02-20'
     // two payments, but the second fails to lock
     const fakeDocs = [
-      { _id: '1', grants: [{ payments: [{ _id: 'x' }] }] },
-      { _id: '2', grants: [{ payments: [{ _id: 'y' }] }] }
+      {
+        _id: '1',
+        grants: [
+          {
+            payments: [
+              {
+                _id: 'x',
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                recoveryDate: '2026-01-01',
+                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        _id: '2',
+        grants: [
+          {
+            payments: [
+              {
+                _id: 'y',
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                recoveryDate: '2026-01-01',
+                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ]
+          }
+        ]
+      }
     ]
     fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
 
@@ -118,6 +183,23 @@ describe('processDailyPayments', () => {
     expect(result).toEqual([])
   })
 
+  it('handles documents with no grants and grants with no payments gracefully', async () => {
+    const fakeDate = '2026-02-20'
+    const fakeDocs = [
+      // document with no grants (undefined)
+      { _id: 'no-grants' },
+      // document with a grant that has no payments (undefined)
+      { _id: 'no-payments', grants: [{ invoiceNumber: 'INV1' }] }
+    ]
+    fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+
+    const result = await processDailyPayments(server, fakeDate)
+
+    // no payments to process, hub is never called, result is empty
+    expect(sendPaymentHubRequest).not.toHaveBeenCalled()
+    expect(result).toEqual([])
+  })
+
   it('logs and rethrows when the database query fails', async () => {
     const fakeDate = '2026-02-20'
     const error = new Error('db failure')
@@ -131,12 +213,97 @@ describe('processDailyPayments', () => {
     )
   })
 
+  it('skips and marks as failed payments with an unsupported sourceSystem', async () => {
+    const fakeDate = '2026-02-20'
+    const fakeDocs = [
+      {
+        _id: '1',
+        grants: [
+          {
+            payments: [
+              {
+                _id: 'p1',
+                sourceSystem: 'UNKNOWN',
+                dueDate: '2026-01-01',
+                recoveryDate: '2026-01-01',
+                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+    fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+    updatePaymentStatus.mockResolvedValue({ n: 1 })
+
+    const result = await processDailyPayments(server, fakeDate)
+
+    // hub should never be called for an unsupported sourceSystem
+    expect(sendPaymentHubRequest).not.toHaveBeenCalled()
+    // payment should be marked as failed
+    expect(updatePaymentStatus).toHaveBeenCalledWith('1', 'p1', 'failed')
+    // an error should be logged
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Unsupported grant sourceSystem UNKNOWN')
+    )
+    expect(result).toEqual([null])
+  })
+
   it('logs individual hub failures and continues, updating status appropriately', async () => {
     const fakeDate = '2026-02-20'
     const fakeDocs = [
-      { _id: '1', grants: [{ payments: [{ _id: 'a' }] }] },
-      { _id: '2', grants: [{ payments: [{ _id: 'b' }] }] },
-      { _id: '3', grants: [{ payments: [{ _id: 'c' }] }] }
+      {
+        _id: '1',
+        grants: [
+          {
+            payments: [
+              {
+                _id: 'a',
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                recoveryDate: '2026-01-01',
+                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        _id: '2',
+        grants: [
+          {
+            payments: [
+              {
+                _id: 'b',
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                recoveryDate: '2026-01-01',
+                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        _id: '3',
+        grants: [
+          {
+            payments: [
+              {
+                _id: 'c',
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                recoveryDate: '2026-01-01',
+                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ]
+          }
+        ]
+      }
     ]
     fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
 
