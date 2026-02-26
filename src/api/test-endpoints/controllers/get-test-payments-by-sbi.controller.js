@@ -2,8 +2,6 @@ import { fetchGrantPaymentsBySbi } from '#~/common/helpers/fetch-grant-payments-
 import { statusCodes } from '#~/common/constants/status-codes.js'
 
 const getTestPaymentsBySbiController = {
-  method: 'GET',
-  path: '/api/test/grant-payments/{sbi}',
   options: {
     description: 'Fetch all grant-payments for a given SBI',
     tags: ['api', 'test'],

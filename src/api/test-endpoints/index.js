@@ -3,7 +3,8 @@ import {
   getTestGrantPaymentController,
   getTestPaymentsBySbiController,
   postTestProcessPaymentsController,
-  getTestDailyPaymentsController
+  getTestDailyPaymentsController,
+  getTestGrantPaymentsBySbiAndGrantCodeController
 } from './controllers/index.js'
 
 /**
@@ -14,9 +15,26 @@ const testEndpoints = {
     name: 'testEndpoints',
     register: (server) => {
       server.route([
-        postTestCreateGrantPaymentController,
-        getTestGrantPaymentController,
-        getTestPaymentsBySbiController,
+        {
+          method: 'POST',
+          path: '/api/test/grant-payments',
+          ...postTestCreateGrantPaymentController
+        },
+        {
+          method: 'GET',
+          path: '/api/test/grant-payments',
+          ...getTestGrantPaymentController
+        },
+        {
+          method: 'GET',
+          path: '/api/test/grant-payments/{sbi}',
+          ...getTestPaymentsBySbiController
+        },
+        {
+          method: 'GET',
+          path: '/api/test/grant-payments/{sbi}/{grantCode}',
+          ...getTestGrantPaymentsBySbiAndGrantCodeController
+        },
         {
           method: 'POST',
           path: '/test/process-payments/{date?}',

@@ -3,3 +3,4 @@ export { getTestGrantPaymentController } from './get-test-grant-payments.control
 export { getTestPaymentsBySbiController } from './get-test-payments-by-sbi.controller.js'
 export { getTestDailyPaymentsController } from './get-test-daily-payments.controller.js'
 export { postTestProcessPaymentsController } from './post-test-process-payments.controller.js'
+export { getTestGrantPaymentsBySbiAndGrantCodeController } from './get-test-grant-payments-by-sbi-and-grant-code.controller.js'

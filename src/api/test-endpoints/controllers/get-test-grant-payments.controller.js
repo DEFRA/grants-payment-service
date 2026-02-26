@@ -2,8 +2,6 @@ import GrantPaymentsModel from '../../common/grant_payments.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 
 const getTestGrantPaymentController = {
-  method: 'GET',
-  path: '/api/test/grant-payments',
   options: {
     description: 'Fetch all grant-payments in the database',
     tags: ['api', 'test'],

@@ -2,8 +2,6 @@ import GrantPaymentsModel from '../../common/grant_payments.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 
 const postTestCreateGrantPaymentController = {
-  method: 'POST',
-  path: '/api/test/grant-payments',
   options: {
     description: 'Populate grant payment with sample data for testing',
     tags: ['api', 'test'],
