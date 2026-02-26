@@ -56,7 +56,6 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       recoveryDate: '06/06/2026',
       originalInvoiceNumber: 'OINV',
       originalSettlementDate: '07/06/2026',
-      schedule: 'T4',
       correlationId: 'CORR'
     })
 

@@ -72,8 +72,7 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
   invoiceLines: buildInvoiceLines(grant, payment),
 
   // Not listed in Service Bus Payment Requests - FPTT.xlsx
-  correlationId: grant.correlationId,
-  schedule: 'T4'
+  correlationId: grant.correlationId
 })
 
 /** @import { schema, Grant, Payment } from '#~/api/common/grant_payments.js' */
