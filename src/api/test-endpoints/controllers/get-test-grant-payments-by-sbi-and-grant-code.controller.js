@@ -1,9 +1,9 @@
-import { fetchGrantPaymentsBySbi } from '#~/common/helpers/fetch-grant-payments-by-sbi.js'
+import { fetchGrantPaymentsBySbiAndGrantCode } from '#~/common/helpers/fetch-grant-payments-by-sbi-and-grant-code.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 
-const getTestPaymentsBySbiController = {
+const getTestGrantPaymentsBySbiAndGrantCodeController = {
   options: {
-    description: 'Fetch all grant-payments for a given SBI',
+    description: 'Fetch all grant-payments for a given SBI and grant code',
     tags: ['api', 'test'],
     auth: false,
     timeout: {
@@ -13,8 +13,8 @@ const getTestPaymentsBySbiController = {
   },
   handler: async (req, res) => {
     try {
-      const { sbi } = req.params
-      const payments = await fetchGrantPaymentsBySbi(sbi)
+      const { sbi, grantCode } = req.params
+      const payments = await fetchGrantPaymentsBySbiAndGrantCode(sbi, grantCode)
 
       return res.response(payments).code(statusCodes.ok)
     } catch (err) {
@@ -28,4 +28,4 @@ const getTestPaymentsBySbiController = {
   }
 }
 
-export { getTestPaymentsBySbiController }
+export { getTestGrantPaymentsBySbiAndGrantCodeController }
