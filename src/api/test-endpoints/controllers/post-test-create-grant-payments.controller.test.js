@@ -39,7 +39,8 @@ describe('postTestCreateGrantPaymentController', () => {
         invoiceNumber: 'R00000004-V001Q2',
         originalInvoiceNumber: '',
         agreementNumber: 'FPTT264870631',
-        dueDate: '2026-06-05',
+        accountCode: 'SOS710',
+        fundCode: 'DRD10',
         recoveryDate: '',
         originalSettlementDate: '',
         remittanceDescription: 'Farm Payments Technical Test Payment',
@@ -49,11 +50,10 @@ describe('postTestCreateGrantPaymentController', () => {
         payments: [
           {
             dueDate: '2026-06-05',
+            totalAmount: '12.63',
             invoiceLines: [
               {
                 schemeCode: 'CMOR1',
-                accountCode: 'SOS710',
-                fundCode: 'DRD10',
                 description:
                   'Parcel 8083 - Assess moorland and produce a written record',
                 amount: '12.63'

@@ -31,17 +31,18 @@ describe('grant_payments schema', () => {
           invoiceNumber: 'R00000004-V001Q2',
           originalInvoiceNumber: 'R00000004-V001Q1',
           agreementNumber: 'FPTT264870631',
+          accountCode: 'SOS710',
+          fundCode: 'DRD10',
           totalAmount: '702.85',
           currency: 'GBP',
           marketingYear: '2026',
           payments: [
             {
               dueDate: '2026-06-05',
+              totalAmount: '12.63',
               invoiceLines: [
                 {
                   schemeCode: 'CMOR1',
-                  accountCode: 'SOS710',
-                  fundCode: 'DRD10',
                   description: '2026-06-05: Parcel 8083',
                   amount: '12.63'
                 }
@@ -70,17 +71,18 @@ describe('grant_payments schema', () => {
           invoiceNumber: 'R00000004-V001Q2',
           originalInvoiceNumber: 'R00000004-V001Q1',
           agreementNumber: 'FPTT264870631',
+          accountCode: 'SOS710',
+          fundCode: 'DRD10',
           totalAmount: '702.85',
           currency: 'GBP',
           marketingYear: '2026',
           payments: [
             {
               dueDate: '2026-06-05',
+              totalAmount: 12.63,
               invoiceLines: [
                 {
                   schemeCode: 'CMOR1',
-                  accountCode: 'SOS710',
-                  fundCode: 'DRD10',
                   description: '2026-06-05: Parcel 8083',
                   amount: 12.63
                 }

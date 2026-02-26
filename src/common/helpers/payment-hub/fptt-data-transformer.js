@@ -23,16 +23,16 @@ export const validateRemittanceDescription = (remittanceDescription) => {
   return remittanceDescription
 }
 
-const buildInvoiceLines = (agreementNumber, marketingYear, invoiceLines) =>
-  invoiceLines.map((invoiceLine) => ({
+const buildInvoiceLines = (grant, payment) =>
+  payment.invoiceLines.map((invoiceLine) => ({
     schemeCode: invoiceLine.schemeCode,
-    accountCode: invoiceLine.accountCode || 'SOS710',
-    fundCode: invoiceLine.fundCode || 'DRD10',
-    agreementNumber,
+    accountCode: grant.accountCode || 'SOS710',
+    fundCode: grant.fundCode || 'DRD10',
+    agreementNumber: grant.agreementNumber,
     description: invoiceLine.description,
     value: invoiceLine.amount,
     deliveryBody,
-    marketingYear
+    marketingYear: grant.marketingYear
   }))
 
 /**
@@ -69,11 +69,7 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
   recoveryDate: formatPaymentDate(payment.recoveryDate),
   originalInvoiceNumber: grant.originalInvoiceNumber,
   originalSettlementDate: formatPaymentDate(payment.originalSettlementDate),
-  invoiceLines: buildInvoiceLines(
-    grant.agreementNumber,
-    grant.marketingYear,
-    payment.invoiceLines
-  ),
+  invoiceLines: buildInvoiceLines(grant, payment),
 
   // Not listed in Service Bus Payment Requests - FPTT.xlsx
   correlationId: grant.correlationId,
