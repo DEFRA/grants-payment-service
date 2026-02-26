@@ -18,7 +18,7 @@ const postTestGrantPaymentController = {
       const payload = req.payload
       const { sbi } = payload
 
-      if (await validationCheckForOverlappingGrantPayment(sbi)) {
+      if (await overlappingDatesInGrantPayments(sbi)) {
         return res
           .response({
             error: 'Validation error',
@@ -57,7 +57,7 @@ const postTestGrantPaymentController = {
   }
 }
 
-const validationCheckForOverlappingGrantPayment = async (sbi) => {
+const overlappingDatesInGrantPayments = async (sbi) => {
   // const existingGrantsMatchingSbi = fetchGrantPaymentsBySbi(sbi)
   return false
 }
