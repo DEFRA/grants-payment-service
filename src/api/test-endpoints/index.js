@@ -1,5 +1,5 @@
 import {
-  postTestCreateGrantPaymentController,
+  postTestGrantPaymentController,
   getTestGrantPaymentController,
   getTestPaymentsBySbiController,
   postTestProcessPaymentsController,
@@ -18,7 +18,7 @@ const testEndpoints = {
         {
           method: 'POST',
           path: '/api/test/grant-payments',
-          ...postTestCreateGrantPaymentController
+          ...postTestGrantPaymentController
         },
         {
           method: 'GET',
