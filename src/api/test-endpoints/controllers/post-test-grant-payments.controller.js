@@ -58,13 +58,7 @@ const postTestGrantPaymentController = {
   }
 }
 
-const overlappingDatesInGrantPayments = async (sbi, incomingPayload) => {
-  const existingGrantsMatchingSbi = await fetchGrantPaymentsBySbi(sbi)
-
-  if (!existingGrantsMatchingSbi || existingGrantsMatchingSbi.length === 0) {
-    return false
-  }
-
+const fetchAllDueDates = (incomingPayload) => {
   const incomingDueDates = new Set()
   incomingPayload.grants?.forEach((grant) => {
     if (grant.dueDate) {
@@ -76,7 +70,13 @@ const overlappingDatesInGrantPayments = async (sbi, incomingPayload) => {
       }
     })
   })
+  return incomingDueDates
+}
 
+const dueDatesComparisionCheckWithExistingGrantPaymentsDates = async (
+  incomingDueDates,
+  existingGrantsMatchingSbi
+) => {
   for (const existingRecord of existingGrantsMatchingSbi) {
     for (const grant of existingRecord.grants || []) {
       if (grant.dueDate && incomingDueDates.has(grant.dueDate)) {
@@ -91,6 +91,21 @@ const overlappingDatesInGrantPayments = async (sbi, incomingPayload) => {
   }
 
   return false
+}
+
+const overlappingDatesInGrantPayments = async (sbi, incomingPayload) => {
+  const existingGrantsMatchingSbi = await fetchGrantPaymentsBySbi(sbi)
+
+  if (!existingGrantsMatchingSbi || existingGrantsMatchingSbi.length === 0) {
+    return false
+  }
+
+  const incomingDueDates = fetchAllDueDates(incomingPayload)
+
+  return dueDatesComparisionCheckWithExistingGrantPaymentsDates(
+    incomingDueDates,
+    existingGrantsMatchingSbi
+  )
 }
 
 export { postTestGrantPaymentController }
