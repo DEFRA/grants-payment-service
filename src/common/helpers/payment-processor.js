@@ -2,7 +2,7 @@ import { getTodaysDate } from '#~/common/helpers/date.js'
 import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
 import { updatePaymentStatus } from '#~/common/helpers/update-payment-status.js'
-import { transformFpttPaymentDataToPaymentHubFormat } from './payment-hub/fptt-data-transformer'
+import { transformFpttPaymentDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/fptt-data-transformer.js'
 
 export const processDailyPayments = async (server, date = getTodaysDate()) => {
   const { logger } = server

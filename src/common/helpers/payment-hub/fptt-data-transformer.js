@@ -1,4 +1,4 @@
-import { formatPaymentDate } from '../format-payment-date'
+import { formatPaymentDate } from '#~/common/helpers/format-payment-date.js'
 
 const DEBT_TYPE_MAX_LENGTH = 3
 const deliveryBody = 'RP00'
