@@ -33,7 +33,7 @@ describe('getTestDailyPaymentsController', () => {
 
     const h = makeH()
     const result = await getTestDailyPaymentsController.handler(
-      { query: { date: fakeDate }, logger: { error: vi.fn() } },
+      { params: { date: fakeDate }, logger: { error: vi.fn() } },
       h
     )
 
@@ -49,7 +49,7 @@ describe('getTestDailyPaymentsController', () => {
 
     const h = makeH()
     const result = await getTestDailyPaymentsController.handler(
-      { query: {}, logger: { error: vi.fn() } },
+      { params: {}, logger: { error: vi.fn() } },
       h
     )
 
@@ -64,7 +64,7 @@ describe('getTestDailyPaymentsController', () => {
     const logger = { error: vi.fn() }
 
     const result = await getTestDailyPaymentsController.handler(
-      { query: { date: '2026-02-20' }, logger },
+      { params: { date: '2026-02-20' }, logger },
       h
     )
 
@@ -89,7 +89,7 @@ describe('getTestDailyPaymentsController', () => {
     const logger = { error: vi.fn() }
 
     const result = await getTestDailyPaymentsController.handler(
-      { query: { date: '2026-02-20' }, logger },
+      { params: { date: '2026-02-20' }, logger },
       h
     )
 
