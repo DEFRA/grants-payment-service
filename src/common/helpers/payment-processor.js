@@ -45,7 +45,7 @@ export const processDailyPayments = async (server, date = getTodaysDate()) => {
           }
 
           let paymentHubData
-          if (payment.sourceSystem === 'FPTT') {
+          if (grant.sourceSystem === 'FPTT') {
             const identifiers = { sbi, frn, claimId }
             paymentHubData = transformFpttPaymentDataToPaymentHubFormat(
               identifiers,
@@ -54,7 +54,7 @@ export const processDailyPayments = async (server, date = getTodaysDate()) => {
             )
           } else {
             logger.error(
-              `Unsupported grant sourceSystem ${payment.sourceSystem} for payment ${payment._id}`
+              `Unsupported grant sourceSystem ${grant.sourceSystem} for payment ${payment._id}`
             )
             await updatePaymentStatus(docId, payment._id, 'failed')
             return null

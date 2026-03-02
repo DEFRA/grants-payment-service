@@ -33,6 +33,7 @@ describe('processDailyPayments', () => {
         _id: '1',
         grants: [
           {
+            sourceSystem: 'FPTT',
             payments: [
               {
                 _id: 'p1',
@@ -51,6 +52,7 @@ describe('processDailyPayments', () => {
         _id: '2',
         grants: [
           {
+            sourceSystem: 'FPTT',
             payments: [
               {
                 _id: 'p2',
@@ -122,6 +124,7 @@ describe('processDailyPayments', () => {
         _id: '1',
         grants: [
           {
+            sourceSystem: 'FPTT',
             payments: [
               {
                 _id: 'x',
@@ -139,6 +142,7 @@ describe('processDailyPayments', () => {
         _id: '2',
         grants: [
           {
+            sourceSystem: 'FPTT',
             payments: [
               {
                 _id: 'y',
@@ -220,6 +224,7 @@ describe('processDailyPayments', () => {
         _id: '1',
         grants: [
           {
+            sourceSystem: 'UNKNOWN',
             payments: [
               {
                 _id: 'p1',
@@ -257,6 +262,7 @@ describe('processDailyPayments', () => {
         _id: '1',
         grants: [
           {
+            sourceSystem: 'FPTT',
             payments: [
               {
                 _id: 'a',
@@ -274,6 +280,7 @@ describe('processDailyPayments', () => {
         _id: '2',
         grants: [
           {
+            sourceSystem: 'FPTT',
             payments: [
               {
                 _id: 'b',
@@ -291,6 +298,7 @@ describe('processDailyPayments', () => {
         _id: '3',
         grants: [
           {
+            sourceSystem: 'FPTT',
             payments: [
               {
                 _id: 'c',

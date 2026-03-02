@@ -9,7 +9,7 @@ import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date
 const getTestDailyPaymentsController = {
   handler: async (request, h) => {
     try {
-      const { date = getTodaysDate() } = request.query
+      const { date = getTodaysDate() } = request.params
       const docs = await fetchGrantPaymentsByDate(date)
 
       return h.response({ date, docs }).code(statusCodes.ok)
