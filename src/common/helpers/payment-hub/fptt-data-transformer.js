@@ -60,19 +60,26 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
   contractNumber: identifiers.claimId,
   currency: payment.currency || 'GBP',
   dueDate: formatPaymentDate(payment.dueDate),
-  value: grant.totalAmount,
-  annualValue: grant.totalAmount,
   remittanceDescription: validateRemittanceDescription(
     'Farm Payments Technical Test Payment'
   ),
-  debtType: validateDebtType(''),
-  recoveryDate: formatPaymentDate(payment.recoveryDate),
-  originalInvoiceNumber: grant.originalInvoiceNumber,
-  originalSettlementDate: formatPaymentDate(payment.originalSettlementDate),
   invoiceLines: buildInvoiceLines(grant, payment),
 
   // Not listed in Service Bus Payment Requests - FPTT.xlsx
-  correlationId: grant.correlationId
+  correlationId: grant.correlationId,
+
+  // AR fields — only included when valid data is present
+  ...(grant.debtType && { debtType: validateDebtType(grant.debtType) }),
+  ...(payment.recoveryDate && {
+    recoveryDate: formatPaymentDate(payment.recoveryDate)
+  }),
+  ...(grant.originalInvoiceNumber && {
+    originalInvoiceNumber: grant.originalInvoiceNumber
+  }),
+  ...(payment.originalSettlementDate && {
+    originalSettlementDate: formatPaymentDate(payment.originalSettlementDate)
+  }),
+  ...(grant.totalAmount != null && { value: grant.totalAmount })
 })
 
 /** @import { schema, Grant, Payment } from '#~/api/common/grant_payments.js' */

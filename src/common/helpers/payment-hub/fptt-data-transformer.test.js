@@ -14,8 +14,6 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     totalAmount: '1000',
     currency: 'GBP',
     originalInvoiceNumber: 'OINV',
-    originalSettlementDate: '2026-01-02',
-    recoveryDate: '2026-01-03',
     remittanceDescription: 'ignored',
     correlationId: 'CORR'
   }
@@ -50,9 +48,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       currency: 'EUR',
       dueDate: '05/06/2026',
       value: '1000',
-      annualValue: '1000',
       remittanceDescription: 'Farm Payments Technical Test Payment',
-      debtType: '',
       recoveryDate: '06/06/2026',
       originalInvoiceNumber: 'OINV',
       originalSettlementDate: '07/06/2026',
@@ -67,6 +63,46 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       agreementNumber: 'AGR1',
       marketingYear: '2026'
     })
+  })
+
+  it('omits AR fields entirely when no AR data is present', () => {
+    const payment = { dueDate: '2026-06-05', invoiceLines: [] }
+    const result = transformFpttPaymentDataToPaymentHubFormat(
+      baseIdentifiers,
+      { ...baseGrant, originalInvoiceNumber: undefined },
+      payment
+    )
+
+    expect(result).not.toHaveProperty('debtType')
+    expect(result).not.toHaveProperty('recoveryDate')
+    expect(result).not.toHaveProperty('originalInvoiceNumber')
+    expect(result).not.toHaveProperty('originalSettlementDate')
+    expect(result).not.toHaveProperty('totalAmount')
+  })
+
+  it('includes AR fields when valid data is present', () => {
+    const grant = {
+      ...baseGrant,
+      debtType: 'irr'
+    }
+    const payment = {
+      dueDate: '2026-06-05',
+      recoveryDate: '2026-07-01',
+      originalSettlementDate: '2026-05-01',
+      invoiceLines: []
+    }
+
+    const result = transformFpttPaymentDataToPaymentHubFormat(
+      baseIdentifiers,
+      grant,
+      payment
+    )
+
+    expect(result.debtType).toBe('irr')
+    expect(result.recoveryDate).toBe('01/07/2026')
+    expect(result.originalInvoiceNumber).toBe('OINV')
+    expect(result.originalSettlementDate).toBe('01/05/2026')
+    expect(result.value).toBe('1000')
   })
 
   it('uses default accountCode/fundCode when not provided in invoice line', () => {
