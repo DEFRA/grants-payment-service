@@ -1,8 +1,9 @@
+import mongoose from 'mongoose'
 import {
   transformFpttPaymentDataToPaymentHubFormat,
   validateDebtType,
   validateRemittanceDescription
-} from './fptt-data-transformer'
+} from './fptt-data-transformer.js'
 
 describe('transformFpttPaymentDataToPaymentHubFormat', () => {
   const baseIdentifiers = { sbi: '111', frn: '222', claimId: '333' }
@@ -147,6 +148,31 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       payment
     )
     expect(result.marketingYear).toBe(new Date().getFullYear())
+  })
+
+  it('stringifies Decimal128 currency fields to plain strings', () => {
+    const { Decimal128 } = mongoose.Types
+    const grant = {
+      ...baseGrant,
+      totalAmount: Decimal128.fromString('2000.00')
+    }
+    const payment = {
+      dueDate: '2026-06-05',
+      invoiceLines: [
+        {
+          schemeCode: 'SC',
+          description: 'D',
+          amount: Decimal128.fromString('12.34')
+        }
+      ]
+    }
+    const out = transformFpttPaymentDataToPaymentHubFormat(
+      baseIdentifiers,
+      grant,
+      payment
+    )
+    expect(out.value).toBe('2000.00')
+    expect(out.invoiceLines[0].value).toBe('12.34')
   })
 })
 
