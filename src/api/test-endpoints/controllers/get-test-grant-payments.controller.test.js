@@ -1,15 +1,11 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
-import GrantPaymentsModel from '../../common/grant_payments.js'
+import { fetchAllGrantPayments } from '#~/common/helpers/fetch-all-grant-payments.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { getTestGrantPaymentController } from './get-test-grant-payments.controller.js'
 
-vi.mock('../../common/grant_payments.js', () => {
-  return {
-    default: {
-      find: vi.fn()
-    }
-  }
-})
+vi.mock('#~/common/helpers/fetch-all-grant-payments.js', () => ({
+  fetchAllGrantPayments: vi.fn()
+}))
 
 const makeH = () => {
   const res = { statusCode: 200, source: undefined }
@@ -38,20 +34,22 @@ describe('getTestGrantPaymentController', () => {
       { id: '1', amount: 100 },
       { id: '2', amount: 200 }
     ]
-    GrantPaymentsModel.find.mockResolvedValue(mockPayments)
+    fetchAllGrantPayments.mockResolvedValue(mockPayments)
 
-    const req = {}
+    const req = {
+      log: vi.fn()
+    }
     const h = makeH()
     const result = await getTestGrantPaymentController.handler(req, h)
 
-    expect(GrantPaymentsModel.find).toHaveBeenCalledWith({})
+    expect(fetchAllGrantPayments).toHaveBeenCalled()
     expect(result.statusCode).toBe(statusCodes.ok)
     expect(result.source).toEqual(mockPayments)
   })
 
   test('returns 500 for unexpected error', async () => {
     const mockError = new Error('db down')
-    GrantPaymentsModel.find.mockRejectedValue(mockError)
+    fetchAllGrantPayments.mockRejectedValue(mockError)
 
     const req = {
       log: vi.fn()
