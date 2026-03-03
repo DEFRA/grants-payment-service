@@ -30,7 +30,7 @@ const buildInvoiceLines = (grant, payment) =>
     fundCode: grant.fundCode || 'DRD10',
     agreementNumber: grant.agreementNumber,
     description: invoiceLine.description,
-    value: invoiceLine.amount,
+    value: `${invoiceLine.amount}`,
     deliveryBody,
     marketingYear: grant.marketingYear
   }))
@@ -79,7 +79,7 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
   ...(payment.originalSettlementDate && {
     originalSettlementDate: formatPaymentDate(payment.originalSettlementDate)
   }),
-  ...(grant.totalAmount != null && { value: grant.totalAmount })
+  ...(grant.totalAmount != null && { value: `${grant.totalAmount}` })
 })
 
 /** @import { schema, Grant, Payment } from '#~/api/common/grant_payments.js' */
