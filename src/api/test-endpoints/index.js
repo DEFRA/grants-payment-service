@@ -1,4 +1,5 @@
 import {
+  postTestQueueMessageController,
   postTestGrantPaymentController,
   getTestGrantPaymentController,
   getTestPaymentsBySbiController,
@@ -15,6 +16,11 @@ const testEndpoints = {
     name: 'testEndpoints',
     register: (server) => {
       server.route([
+        {
+          method: 'POST',
+          path: '/api/test/queue-message/{queueName?}',
+          ...postTestQueueMessageController
+        },
         {
           method: 'POST',
           path: '/api/test/grant-payments',
