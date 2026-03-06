@@ -46,7 +46,7 @@ describe('postTestQueueMessageController', () => {
   })
 
   const payload = {
-    type: 'gas-backend.agreement.create',
+    type: 'farming-grants-agreements-api.payment.create',
     data: {
       sbi: '123456789',
       frn: '9999999999',

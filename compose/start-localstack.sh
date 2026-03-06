@@ -5,7 +5,7 @@ echo "🚀 Initializing SNS + SQS in LocalStack..."
 
 # SQS Queues we listen to
 declare -A QUEUES=(
-  [gps__sqs__create_payment.fifo]="gps__sqs__create_payment.fifo"
+  [create_payment.fifo]="gps__sqs__create_payment.fifo"
  )
 
 # SNS Topics we publish to
