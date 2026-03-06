@@ -9,11 +9,11 @@ import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
  */
 export async function handleCreatePaymentEvent(messageId, payload, logger) {
   logger.info(
-    { messageId, eventType: 'create_payment', sbi: payload?.sbi },
-    'Received create_payment message'
+    { messageId, eventType: payload.type, sbi: payload.data?.sbi },
+    'Received create_payment event'
   )
 
-  const grantPayment = await createGrantPayment(payload)
+  const grantPayment = await createGrantPayment(payload.data)
 
   logger.info(
     `Managed to successfully create grantPayment entry ${JSON.stringify(grantPayment)}`
