@@ -44,3 +44,58 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  pact:
+    name: Run Pact Tests and Publish Pacts
+    if: github.event.repository.fork == false
+    needs: build
+    runs-on: self-hosted
+    env:
+      PACT_BROKER_BASE_URL: https://ffc-pact-broker.azure.defra.cloud
+
+    steps:
+      - name: Mask secrets
+        run: |
+          echo "::add-mask::$PACT_USER"
+          echo "::add-mask::$PACT_PASS"
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Fetch latest tags
+        run: git fetch --tags --force
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run contract tests
+        env:
+          PACT_PUBLISH_VERIFICATION: true
+        run: |
+          SERVICE_VERSION=$(git describe --tags --abbrev=0) \
+          PACT_BROKER_USERNAME="${PACT_BROKER_USERNAME:-$PACT_USER}" \
+          PACT_BROKER_PASSWORD="${PACT_BROKER_PASSWORD:-$PACT_PASS}" \
+          npm run test:contracts
+
+      # Uncomment when we have consumer pacts
+      # - name: Setup Pact CLI
+      #   run: |
+      #     curl -fsSL https://raw.githubusercontent.com/pact-foundation/pact-standalone/master/install.sh | PACT_CLI_VERSION=v2.5.9 bash
+      #     echo "PATH=${PATH}:${PWD}/pact/bin/" >> $GITHUB_ENV
+
+      # - name: Publish consumer pacts
+      #   shell: bash
+      #   run: |
+      #     PACT_BROKER_USERNAME="${PACT_BROKER_USERNAME:-$PACT_USER}" \
+      #     PACT_BROKER_PASSWORD="${PACT_BROKER_PASSWORD:-$PACT_PASS}" \
+      #     pact broker publish --merge \
+      #       --consumer-app-version "$(git describe --tags --abbrev=0)" \
+      #       src/contracts/consumer/pacts/generated/*/*.json

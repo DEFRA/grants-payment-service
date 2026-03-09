@@ -15,7 +15,7 @@ import { setupProxy } from '#~/common/helpers/proxy/setup-proxy.js'
 import { metrics } from '@defra/cdp-metrics'
 
 async function createServer(serverOptions = {}) {
-  const { mongoUrl, mongoDatabase } = serverOptions
+  const { mongoUrl, mongoDatabase, disableSQS = false } = serverOptions
 
   setupProxy()
   const server = Hapi.server({
@@ -65,7 +65,7 @@ async function createServer(serverOptions = {}) {
       }
     },
     cron,
-    sqs,
+    ...(disableSQS ? [] : [sqs]),
     router
   ])
 
