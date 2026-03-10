@@ -214,7 +214,6 @@ docker run -e PORT=3001 -p 3001:3001 grants-payment-service
 A local environment with:
 
 - Localstack for AWS services (S3, SQS)
-- Redis
 - MongoDB
 - This service.
 - A commented out frontend example.
