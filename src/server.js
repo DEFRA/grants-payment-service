@@ -1,4 +1,5 @@
 import Hapi from '@hapi/hapi'
+import CatboxMemory from '@hapi/catbox-memory'
 
 import { secureContext } from '@defra/hapi-secure-context'
 
@@ -41,7 +42,15 @@ async function createServer(serverOptions = {}) {
     },
     router: {
       stripTrailingSlash: true
-    }
+    },
+    cache: [
+      {
+        name: config.get('serviceName'),
+        provider: {
+          constructor: CatboxMemory.Engine
+        }
+      }
+    ]
   })
 
   // Hapi Plugins:

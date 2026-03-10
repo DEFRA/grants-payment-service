@@ -1,4 +1,5 @@
 import { initCache } from '#~/common/helpers/cache.js'
+import { config } from '#~/config/index.js'
 import { vi } from 'vitest'
 
 describe('initCache', () => {
@@ -22,6 +23,7 @@ describe('initCache', () => {
     initCache(mockServer, segment, mockGenerateFunc)
 
     expect(mockServer.cache).toHaveBeenCalledWith({
+      cache: config.get('serviceName'),
       segment: 'test-segment',
       generateTimeout: 2000,
       generateFunc: mockGenerateFunc
@@ -38,6 +40,7 @@ describe('initCache', () => {
     initCache(mockServer, segment, mockGenerateFunc, customOptions)
 
     expect(mockServer.cache).toHaveBeenCalledWith({
+      cache: config.get('serviceName'),
       segment: 'test-segment',
       generateTimeout: 2000,
       generateFunc: mockGenerateFunc,
