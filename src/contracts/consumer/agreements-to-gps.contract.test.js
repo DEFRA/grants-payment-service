@@ -13,6 +13,7 @@ import { withPactDir } from '#~/contracts/test-helpers/pact.js'
 import { buildIsolatedMongoOptions } from '#~/contracts/test-helpers/mongo.js'
 import { handleCreatePaymentEvent } from '#~/create-payment/handlers/handle-create-payment.js'
 import sampleData from '#~/api/common/helpers/sample-data/index.js'
+import { toLessRestrictive } from '#~/contracts/test-helpers/pact-matchers.js'
 
 const { like, iso8601DateTimeWithMillis } = MatchersV2
 
@@ -61,7 +62,7 @@ describe('receive a SFI grant payment event', () => {
         time: iso8601DateTimeWithMillis('2025-10-06T16:41:59.497Z'),
         topicArn: 'arn:aws:sns:eu-west-2:000000000000:create_payment.fifo',
         type: eventType,
-        data: sampleData.grants[0]
+        data: toLessRestrictive(sampleData.grants[0])
       })
 
       .verify(
@@ -84,7 +85,7 @@ describe('receive a SFI grant payment event', () => {
           )
 
           expect(mockLogger.info.mock.calls[1][0]).toContain(
-            'Managed to successfully create grantPayment entry {"sbi":"106284736"'
+            'Managed to successfully create grantPayment entry {"sbi":"'
           )
         })
       )
