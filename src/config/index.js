@@ -109,6 +109,12 @@ const config = convict({
     default: null,
     env: 'HTTP_PROXY'
   },
+  fetchTimeout: {
+    doc: 'Fetch timeout in milliseconds',
+    format: Number,
+    default: 30000,
+    env: 'FETCH_TIMEOUT'
+  },
   tracing: {
     header: {
       doc: 'CDP tracing header name',

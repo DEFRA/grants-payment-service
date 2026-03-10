@@ -27,7 +27,7 @@ export const getPaymentHubToken = () => {
  */
 export const getCachedToken = (server) => {
   if (!cache) {
-    cache = initCache(server, 'token', getPaymentHubToken, {
+    cache = initCache(server, 'paymentHubToken', getPaymentHubToken, {
       expiresIn: config.get('paymentHub.ttl')
     })
   }

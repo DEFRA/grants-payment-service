@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
 import { fetchGrantPaymentsBySbi } from './fetch-grant-payments-by-sbi.js'
-import GrantPaymentsModel from '#~/api/common/grant_payments.js'
+import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 
-vi.mock('#~/api/common/grant_payments.js')
+vi.mock('#~/api/common/models/grant_payments.js')
 
 describe('fetchGrantPaymentsBySbi', () => {
   it('returns payments by the provided sbi', async () => {

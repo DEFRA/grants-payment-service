@@ -201,7 +201,7 @@ describe('Payment Hub Helper', () => {
       expect(initCache).toHaveBeenCalledTimes(1)
       expect(initCache).toHaveBeenCalledWith(
         server,
-        'token',
+        'paymentHubToken',
         expect.any(Function),
         {
           expiresIn: '3600'

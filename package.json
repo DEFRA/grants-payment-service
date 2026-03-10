@@ -26,8 +26,11 @@
     "server:watch": "nodemon --inspect=0.0.0.0 --ext js,json --legacy-watch ./src",
     "setup:husky": "node -e \"try { (await import('husky')).default() } catch (e) { if (e.code !== 'ERR_MODULE_NOT_FOUND') throw e }\" --input-type module",
     "start": "NODE_ENV=production node --use-strict .",
-    "test": "TZ=UTC vitest run --coverage",
-    "test:watch": "TZ=UTC vitest"
+    "test": "TZ=UTC vitest run --coverage --exclude '**/contracts/**'",
+    "test:watch": "TZ=UTC vitest --exclude '**/contracts/**'",
+    "test:contracts": "TZ=UTC vitest run src/contracts",
+    "test:contracts:consumer": "TZ=UTC vitest run src/contracts/consumer",
+    "test:contracts:provider": "TZ=UTC vitest run src/contracts/provider"
   },
   "author": "Defra DDTS",
   "license": "OGL-UK-3.0",
@@ -63,6 +66,7 @@
     "@babel/core": "7.29.0",
     "@babel/preset-env": "7.29.0",
     "@commitlint/cli": "20.4.2",
+    "@pact-foundation/pact": "16.2.0",
     "@vitest/coverage-v8": "4.0.18",
     "autoprefixer": "10.4.24",
     "aws-sdk-client-mock": "4.1.0",

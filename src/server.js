@@ -1,4 +1,5 @@
 import Hapi from '@hapi/hapi'
+import CatboxMemory from '@hapi/catbox-memory'
 
 import { secureContext } from '@defra/hapi-secure-context'
 
@@ -15,7 +16,7 @@ import { setupProxy } from '#~/common/helpers/proxy/setup-proxy.js'
 import { metrics } from '@defra/cdp-metrics'
 
 async function createServer(serverOptions = {}) {
-  const { mongoUrl, mongoDatabase } = serverOptions
+  const { mongoUrl, mongoDatabase, disableSQS = false } = serverOptions
 
   setupProxy()
   const server = Hapi.server({
@@ -41,7 +42,15 @@ async function createServer(serverOptions = {}) {
     },
     router: {
       stripTrailingSlash: true
-    }
+    },
+    cache: [
+      {
+        name: config.get('serviceName'),
+        provider: {
+          constructor: CatboxMemory.Engine
+        }
+      }
+    ]
   })
 
   // Hapi Plugins:
@@ -65,7 +74,7 @@ async function createServer(serverOptions = {}) {
       }
     },
     cron,
-    sqs,
+    ...(disableSQS ? [] : [sqs]),
     router
   ])
 
