@@ -23,7 +23,6 @@ describe('cron job schedule sending a POST request to payment hub', () => {
   const provider = new Pact({
     consumer: 'grants-payment-service',
     provider: 'payment-hub',
-    logLevel: process.env.CI ? 'info' : 'debug',
     ...withPactDir(import.meta.url)
   })
 
