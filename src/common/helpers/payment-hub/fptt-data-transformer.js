@@ -82,5 +82,5 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
   ...(grant.totalAmount != null && { value: `${grant.totalAmount}` })
 })
 
-/** @import { schema, Grant, Payment } from '#~/api/common/grant_payments.js' */
+/** @import { schema, Grant, Payment } from '#~/api/common/models/grant_payments.js' */
 /** @import { PaymentHubRequest } from '#~/common/types/payment-hub.d.js' */

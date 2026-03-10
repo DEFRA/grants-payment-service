@@ -1,4 +1,4 @@
-import GrantPaymentsModel from '#~/api/common/grant_payments.js'
+import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 import { getLogger } from '#~/common/helpers/logging/logger.js'
 
 /**
