@@ -79,7 +79,7 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
   ...(payment.originalSettlementDate && {
     originalSettlementDate: formatPaymentDate(payment.originalSettlementDate)
   }),
-  ...(grant.totalAmount != null && { value: `${grant.totalAmount}` })
+  ...(grant.totalAmount != null && { value: `${-grant.totalAmount}` })
 })
 
 /** @import { schema, Grant, Payment } from '#~/api/common/models/grant_payments.js' */
