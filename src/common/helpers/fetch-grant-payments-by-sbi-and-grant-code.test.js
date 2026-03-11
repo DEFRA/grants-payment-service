@@ -17,7 +17,7 @@ describe('fetchGrantPaymentsBySbiAndGrantCode', () => {
 
     expect(GrantPaymentsModel.find).toHaveBeenCalledWith({
       sbi,
-      'grants.payments.fundCode': grantCode
+      'grants.fundCode': grantCode
     })
     expect(result).toBe(fakeDocs)
   })
