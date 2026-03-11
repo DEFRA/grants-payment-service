@@ -24,17 +24,17 @@ describe('handleCreatePaymentEvent', () => {
 
     createGrantPayment.mockResolvedValue(validPayload)
 
-    const wrappedPayload = { data: validPayload }
-    await handleCreatePaymentEvent('msg-1', wrappedPayload, logger)
+    // const wrappedPayload = {  data: validPayload }
+    await handleCreatePaymentEvent('msg-1', validPayload, logger)
 
-    expect(createGrantPayment).toHaveBeenCalledWith(validPayload)
+    expect(createGrantPayment).toHaveBeenCalledWith(sampleData.grants[0])
     expect(logger.info).toHaveBeenCalledWith(
       {
         messageId: 'msg-1',
-        eventType: 'create_payment',
-        sbi: validPayload.sbi
+        eventType: validPayload.type,
+        sbi: sampleData.grants[0].sbi
       },
-      `Received create_payment payload is  ${JSON.stringify(wrappedPayload, null, 2)}`
+      `Received create_payment payload is  ${JSON.stringify(validPayload, null, 2)}`
     )
     expect(logger.info).toHaveBeenCalledWith(
       `Managed to successfully create grantPayment entry ${JSON.stringify(validPayload)}`
