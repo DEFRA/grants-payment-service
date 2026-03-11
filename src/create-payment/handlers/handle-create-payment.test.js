@@ -9,7 +9,7 @@ vi.mock('#~/common/helpers/create-grant-payment.js', () => {
     createGrantPayment: vi.fn()
   }
 })
-const validEventPayload = {
+const validPayload = {
   id: '12-34-56-78-90',
   source: 'farming-grants-agreements-api',
   specVersion: '1.0',
@@ -22,19 +22,21 @@ describe('handleCreatePaymentEvent', () => {
   it('logs receipt of a create_payment message', async () => {
     const logger = { info: vi.fn() }
 
-    createGrantPayment.mockResolvedValue(validEventPayload)
+    createGrantPayment.mockResolvedValue(validPayload)
 
-    await handleCreatePaymentEvent('msg-1', validEventPayload, logger)
+    await handleCreatePaymentEvent('msg-1', validPayload, logger)
 
-    expect(createGrantPayment).toHaveBeenCalledWith(validEventPayload.data)
+    expect(createGrantPayment).toHaveBeenCalledWith(sampleData.grants[0])
     expect(logger.info).toHaveBeenCalledWith(
-      expect.objectContaining({
+      {
         messageId: 'msg-1',
-        eventType:
-          'cloud.defra.dev.farming-grants-agreements-api.payment.create',
-        sbi: '106284736'
-      }),
-      'Received create_payment event'
+        eventType: validPayload.type,
+        sbi: sampleData.grants[0].sbi
+      },
+      `Received create_payment payload is  ${JSON.stringify(validPayload, null, 2)}`
+    )
+    expect(logger.info).toHaveBeenCalledWith(
+      `Managed to successfully create grantPayment entry ${JSON.stringify(validPayload)}`
     )
   })
 })
