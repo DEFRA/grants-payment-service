@@ -24,7 +24,6 @@ describe('handleCreatePaymentEvent', () => {
 
     createGrantPayment.mockResolvedValue(validPayload)
 
-    // const wrappedPayload = {  data: validPayload }
     await handleCreatePaymentEvent('msg-1', validPayload, logger)
 
     expect(createGrantPayment).toHaveBeenCalledWith(sampleData.grants[0])
