@@ -28,6 +28,7 @@ export const resolvePactDirectory = (testFileUrl) => {
 }
 
 export const withPactDir = (testFileUrl, overrides = {}) => ({
+  logLevel: process.env.CI ? 'info' : 'debug',
   dir: resolvePactDirectory(testFileUrl),
   pactfileWriteMode: 'update',
   ...overrides

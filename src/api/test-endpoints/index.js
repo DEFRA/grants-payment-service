@@ -43,12 +43,12 @@ const testEndpoints = {
         },
         {
           method: 'POST',
-          path: '/test/process-payments/{date?}',
+          path: '/api/test/process-payments/{date?}',
           ...postTestProcessPaymentsController
         },
         {
           method: 'GET',
-          path: '/test/daily-payments/{date?}',
+          path: '/api/test/daily-payments/{date?}',
           ...getTestDailyPaymentsController
         }
       ])
