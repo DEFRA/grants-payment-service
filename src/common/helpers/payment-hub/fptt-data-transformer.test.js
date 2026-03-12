@@ -12,7 +12,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     marketingYear: '2026',
     paymentRequestNumber: 5,
     agreementNumber: 'AGR1',
-    totalAmount: '1000',
+    totalAmountPence: '123456',
     currency: 'GBP',
     originalInvoiceNumber: 'OINV',
     remittanceDescription: 'ignored',
@@ -25,7 +25,9 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       recoveryDate: '2026-06-06',
       originalSettlementDate: '2026-06-07',
       currency: 'EUR',
-      invoiceLines: [{ schemeCode: 'SC', description: 'D', amount: '12.34' }]
+      invoiceLines: [
+        { schemeCode: 'SC', description: 'D', amountPence: '1234' }
+      ]
     }
 
     const result = transformFpttPaymentDataToPaymentHubFormat(
@@ -48,7 +50,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       contractNumber: '333',
       currency: 'EUR',
       dueDate: '05/06/2026',
-      value: '1000',
+      value: '1234.56',
       remittanceDescription: 'Farm Payments Technical Test Payment',
       recoveryDate: '06/06/2026',
       originalInvoiceNumber: 'OINV',
@@ -78,7 +80,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     expect(result).not.toHaveProperty('recoveryDate')
     expect(result).not.toHaveProperty('originalInvoiceNumber')
     expect(result).not.toHaveProperty('originalSettlementDate')
-    expect(result).not.toHaveProperty('totalAmount')
+    expect(result).not.toHaveProperty('totalAmountPence')
   })
 
   it('includes AR fields when valid data is present', () => {
@@ -103,13 +105,13 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     expect(result.recoveryDate).toBe('01/07/2026')
     expect(result.originalInvoiceNumber).toBe('OINV')
     expect(result.originalSettlementDate).toBe('01/05/2026')
-    expect(result.value).toBe('1000')
+    expect(result.value).toBe('1234.56')
   })
 
   it('uses default accountCode/fundCode when not provided in invoice line', () => {
     const payment = {
       dueDate: '2026-06-05',
-      invoiceLines: [{ schemeCode: 'SC', description: 'D', amount: '5.00' }]
+      invoiceLines: [{ schemeCode: 'SC', description: 'D', amountPence: '500' }]
     }
     const result = transformFpttPaymentDataToPaymentHubFormat(
       baseIdentifiers,
@@ -154,7 +156,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     const { Decimal128 } = mongoose.Types
     const grant = {
       ...baseGrant,
-      totalAmount: Decimal128.fromString('2000.00')
+      totalAmountPence: Decimal128.fromString('234567')
     }
     const payment = {
       dueDate: '2026-06-05',
@@ -162,7 +164,12 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
         {
           schemeCode: 'SC',
           description: 'D',
-          amount: Decimal128.fromString('12.34')
+          amountPence: Decimal128.fromString('1234')
+        },
+        {
+          schemeCode: 'SC',
+          description: 'D',
+          amountPence: Decimal128.fromString('1000')
         }
       ]
     }
@@ -171,8 +178,9 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       grant,
       payment
     )
-    expect(out.value).toBe('2000.00')
+    expect(out.value).toBe('2345.67')
     expect(out.invoiceLines[0].value).toBe('12.34')
+    expect(out.invoiceLines[1].value).toBe('10.00')
   })
 })
 

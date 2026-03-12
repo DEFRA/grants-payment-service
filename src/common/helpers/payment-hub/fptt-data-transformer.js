@@ -3,6 +3,12 @@ import { formatPaymentDate } from '#~/common/helpers/format-payment-date.js'
 const DEBT_TYPE_MAX_LENGTH = 3
 const deliveryBody = 'RP00'
 
+const valueFormatter = new Intl.NumberFormat('en-GB', {
+  useGrouping: false,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+})
+
 export const validateDebtType = (debtType) => {
   if (debtType.length > DEBT_TYPE_MAX_LENGTH) {
     throw new Error(
@@ -30,7 +36,7 @@ const buildInvoiceLines = (grant, payment) =>
     fundCode: grant.fundCode || 'DRD10',
     agreementNumber: grant.agreementNumber,
     description: invoiceLine.description,
-    value: `${invoiceLine.amount}`,
+    value: valueFormatter.format(invoiceLine.amountPence / 100),
     deliveryBody,
     marketingYear: grant.marketingYear
   }))
@@ -79,7 +85,9 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
   ...(payment.originalSettlementDate && {
     originalSettlementDate: formatPaymentDate(payment.originalSettlementDate)
   }),
-  ...(grant.totalAmount != null && { value: `${grant.totalAmount}` })
+  ...(grant.totalAmountPence != null && {
+    value: valueFormatter.format(grant.totalAmountPence / 100)
+  })
 })
 
 /** @import { schema, Grant, Payment } from '#~/api/common/models/grant_payments.js' */
