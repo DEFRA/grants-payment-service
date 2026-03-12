@@ -6,12 +6,12 @@ const { Decimal128 } = mongoose.Types
 const InvoiceLine = new mongoose.Schema({
   schemeCode: { type: String, required: true },
   description: { type: String, required: true },
-  amount: { type: Decimal128, required: true }
+  amountPence: { type: Decimal128, required: true }
 })
 
 const Payment = new mongoose.Schema({
   dueDate: { type: String, required: true },
-  totalAmount: { type: Decimal128, required: true },
+  totalAmountPence: { type: Decimal128, required: true },
   invoiceLines: [{ type: InvoiceLine, required: true }],
   status: {
     type: String,
@@ -31,7 +31,7 @@ const Grant = new mongoose.Schema({
   recoveryDate: { type: String },
   originalSettlementDate: { type: String },
   remittanceDescription: { type: String },
-  totalAmount: { type: Decimal128, required: true },
+  totalAmountPence: { type: Decimal128, required: true },
   currency: { type: String, required: true },
   marketingYear: { type: String },
   accountCode: { type: String },

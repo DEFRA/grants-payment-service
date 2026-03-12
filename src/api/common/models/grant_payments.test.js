@@ -33,18 +33,18 @@ describe('grant_payments schema', () => {
           agreementNumber: 'FPTT264870631',
           accountCode: 'SOS710',
           fundCode: 'DRD10',
-          totalAmount: '702.85',
+          totalAmountPence: '70285',
           currency: 'GBP',
           marketingYear: '2026',
           payments: [
             {
               dueDate: '2026-06-05',
-              totalAmount: '12.63',
+              totalAmountPence: '1263',
               invoiceLines: [
                 {
                   schemeCode: 'CMOR1',
                   description: '2026-06-05: Parcel 8083',
-                  amount: '12.63'
+                  amountPence: '1263'
                 }
               ],
               status: 'pending'
@@ -73,18 +73,18 @@ describe('grant_payments schema', () => {
           agreementNumber: 'FPTT264870631',
           accountCode: 'SOS710',
           fundCode: 'DRD10',
-          totalAmount: '702.85',
+          totalAmountPence: '70285',
           currency: 'GBP',
           marketingYear: '2026',
           payments: [
             {
               dueDate: '2026-06-05',
-              totalAmount: 12.63,
+              totalAmountPence: 1263,
               invoiceLines: [
                 {
                   schemeCode: 'CMOR1',
                   description: '2026-06-05: Parcel 8083',
-                  amount: 12.63
+                  amountPence: 1263
                 }
               ],
               status: 'failed'
