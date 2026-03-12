@@ -98,4 +98,3 @@ jobs:
           PACT_BROKER_USERNAME="${PACT_BROKER_USERNAME:-$PACT_USER}" \
           PACT_BROKER_PASSWORD="${PACT_BROKER_PASSWORD:-$PACT_PASS}" \
           npm run test:contracts
-

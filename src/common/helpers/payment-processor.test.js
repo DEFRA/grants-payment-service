@@ -37,7 +37,7 @@ describe('processDailyPayments', () => {
             payments: [
               {
                 _id: 'p1',
-                amount: 10,
+                amountPence: 1000,
                 sourceSystem: 'FPTT',
                 dueDate: '2026-01-01',
                 recoveryDate: '2026-01-01',

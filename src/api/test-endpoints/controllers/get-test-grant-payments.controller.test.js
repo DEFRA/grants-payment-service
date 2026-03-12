@@ -31,8 +31,8 @@ describe('getTestGrantPaymentController', () => {
 
   test('returns 200 and all grant payments when fetch succeeds', async () => {
     const mockPayments = [
-      { id: '1', amount: 100 },
-      { id: '2', amount: 200 }
+      { id: '1', amountPence: 10000 },
+      { id: '2', amountPence: 20000 }
     ]
     fetchAllGrantPayments.mockResolvedValue(mockPayments)
 
