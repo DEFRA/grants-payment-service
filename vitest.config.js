@@ -9,7 +9,6 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     clearMocks: true,
-    fileParallelism: false,
     coverage: {
       provider: 'v8',
       reportsDirectory: './coverage',
