@@ -3,6 +3,7 @@ export default [
     sbi: '106284736',
     frn: '12544567',
     claimId: 'R00000004',
+    scheme: 'SFI',
     grants: [
       {
         sourceSystem: 'FPTT',
@@ -11,8 +12,6 @@ export default [
         invoiceNumber: 'R00000004-V001Q2',
         originalInvoiceNumber: '',
         agreementNumber: 'FPTT264870631',
-        accountCode: 'SOS710',
-        fundCode: 'DRD10',
         totalAmountPence: '70285',
         currency: 'GBP',
         marketingYear: '2026',
@@ -20,6 +19,7 @@ export default [
           {
             dueDate: '2026-06-05',
             totalAmountPence: '1263',
+            status: 'pending',
             invoiceLines: [
               {
                 schemeCode: 'CMOR1',
