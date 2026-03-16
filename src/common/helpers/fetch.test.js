@@ -102,7 +102,16 @@ describe('fetch helpers', () => {
       ).rejects.toThrow(fetchError)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Fetch failed {"url":"http://example.com","options":{"method":"GET"},"error":{}}'
+        `Fetch failed ${JSON.stringify({
+          url: mockUrl,
+          options: mockOptions,
+          error: {
+            message: fetchError.message,
+            name: fetchError.name,
+            code: fetchError.code,
+            stack: fetchError.stack
+          }
+        })}`
       )
     })
   })
