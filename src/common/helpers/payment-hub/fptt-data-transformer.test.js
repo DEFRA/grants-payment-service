@@ -50,7 +50,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       contractNumber: '333',
       currency: 'EUR',
       dueDate: '05/06/2026',
-      value: '1234.56',
+      value: '-1234.56',
       remittanceDescription: 'Farm Payments Technical Test Payment',
       recoveryDate: '06/06/2026',
       originalInvoiceNumber: 'OINV',
@@ -105,7 +105,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     expect(result.recoveryDate).toBe('01/07/2026')
     expect(result.originalInvoiceNumber).toBe('OINV')
     expect(result.originalSettlementDate).toBe('01/05/2026')
-    expect(result.value).toBe('1234.56')
+    expect(result.value).toBe('-1234.56')
   })
 
   it('uses default accountCode/fundCode when not provided in invoice line', () => {
@@ -178,7 +178,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       grant,
       payment
     )
-    expect(out.value).toBe('2345.67')
+    expect(out.value).toBe('-2345.67')
     expect(out.invoiceLines[0].value).toBe('12.34')
     expect(out.invoiceLines[1].value).toBe('10.00')
   })
