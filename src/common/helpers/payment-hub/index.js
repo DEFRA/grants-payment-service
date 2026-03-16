@@ -63,14 +63,18 @@ export const sendPaymentHubRequest = async (server, body) => {
   const accessToken = await getCachedToken(server).get('token')
 
   const url = new URL(`${config.get('paymentHub.uri')}/messages`)
-  const response = await proxyFetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: accessToken,
-      'Content-Type': 'application/json'
+  const response = await proxyFetch(
+    url,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: accessToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
     },
-    body: JSON.stringify(body)
-  })
+    logger
+  )
 
   if (!response.ok) {
     throw new Error(`Payment hub request failed: ${response.statusText}`)
