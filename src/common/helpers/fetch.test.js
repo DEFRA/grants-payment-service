@@ -16,6 +16,7 @@ vi.mock('#~/config/index.js', () => ({
 describe('fetch helpers', () => {
   const mockUrl = 'http://example.com'
   const mockOptions = { method: 'GET' }
+  const mockLogger = { error: vi.fn(), info: vi.fn(), warn: vi.fn() }
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -40,7 +41,7 @@ describe('fetch helpers', () => {
     })
 
     it('should call fetch with the correct arguments and signal', async () => {
-      await fetchWithTimeout(mockUrl, mockOptions)
+      await fetchWithTimeout(mockUrl, mockOptions, mockLogger)
 
       expect(fetch).toHaveBeenCalledWith(
         mockUrl,
@@ -65,7 +66,7 @@ describe('fetch helpers', () => {
         })
       })
 
-      const fetchPromise = fetchWithTimeout(mockUrl, mockOptions)
+      const fetchPromise = fetchWithTimeout(mockUrl, mockOptions, mockLogger)
 
       vi.advanceTimersByTime(6000)
 
@@ -81,7 +82,7 @@ describe('fetch helpers', () => {
     it('should clear the timeout on success', async () => {
       const abortSpy = vi.spyOn(AbortController.prototype, 'abort')
 
-      await fetchWithTimeout(mockUrl, mockOptions)
+      await fetchWithTimeout(mockUrl, mockOptions, mockLogger)
 
       // Advance time past the timeout
       vi.advanceTimersByTime(6000)
@@ -90,13 +91,32 @@ describe('fetch helpers', () => {
       // Abort should not have been called because the timer should have been cleared
       expect(abortSpy).not.toHaveBeenCalled()
     })
+
+    it('should log the error when fetch fails', async () => {
+      const fetchError = new Error('Network failure')
+
+      fetch.mockRejectedValueOnce(fetchError)
+
+      await expect(
+        fetchWithTimeout(mockUrl, mockOptions, mockLogger)
+      ).rejects.toThrow(fetchError)
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        {
+          url: mockUrl,
+          options: expect.objectContaining(mockOptions),
+          error: fetchError
+        },
+        'Fetch failed'
+      )
+    })
   })
 
   describe('proxyFetch', () => {
     it('should call fetchWithTimeout without proxy agent when no proxy is configured', async () => {
       config.get.mockReturnValue(null) // No proxy
 
-      await proxyFetch(mockUrl, mockOptions)
+      await proxyFetch(mockUrl, mockOptions, mockLogger)
 
       expect(fetch).toHaveBeenCalledWith(
         mockUrl,
@@ -118,7 +138,7 @@ describe('fetch helpers', () => {
         return null
       })
 
-      await proxyFetch(mockUrl, mockOptions)
+      await proxyFetch(mockUrl, mockOptions, mockLogger)
 
       expect(ProxyAgent).toHaveBeenCalledWith({
         uri: mockProxyUrl,
