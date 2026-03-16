@@ -8,21 +8,31 @@ import { config } from '#~/config/index.js'
  * @param {string} options.method - The HTTP method (GET, POST, etc.)
  * @param {object} options.headers - The request headers
  * @param {object} options.body - The request body
+ * @param {object} logger - The logger to use
  * @returns {Promise<Response>} The fetch response
  */
-export const fetchWithTimeout = async (url, options) => {
+export const fetchWithTimeout = async (url, options, logger) => {
   const controller = new AbortController()
   const timeoutId = setTimeout(
     () => controller.abort(new Error('Network timed out while fetching data')),
     config.get('fetchTimeout')
   )
 
+  const input = url instanceof URL ? url.toString() : url
   try {
-    const input = url instanceof URL ? url.toString() : url
     return await fetch(input, {
       ...options,
       signal: controller.signal
     })
+  } catch (error) {
+    logger.error(
+      `Fetch failed ${JSON.stringify({
+        url: input,
+        options,
+        error
+      })}`
+    )
+    throw error
   } finally {
     clearTimeout(timeoutId)
   }
@@ -35,21 +45,26 @@ export const fetchWithTimeout = async (url, options) => {
  * @param {string} options.method - The HTTP method (GET, POST, etc.)
  * @param {object} options.headers - The request headers
  * @param {object} options.body - The request body
+ * @param {object} logger - The logger to use
  * @returns {Promise<Response>} The fetch response
  */
-export const proxyFetch = async (url, options) => {
+export const proxyFetch = async (url, options, logger) => {
   const proxyUrlConfig = config.get('httpProxy') // bound to HTTP_PROXY
 
   if (!proxyUrlConfig) {
-    return fetchWithTimeout(url, options)
+    return fetchWithTimeout(url, options, logger)
   }
 
-  return fetchWithTimeout(url, {
-    ...options,
-    dispatcher: new ProxyAgent({
-      uri: proxyUrlConfig,
-      keepAliveTimeout: 10,
-      keepAliveMaxTimeout: 10
-    })
-  })
+  return fetchWithTimeout(
+    url,
+    {
+      ...options,
+      dispatcher: new ProxyAgent({
+        uri: proxyUrlConfig,
+        keepAliveTimeout: 10,
+        keepAliveMaxTimeout: 10
+      })
+    },
+    logger
+  )
 }
