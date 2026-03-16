@@ -98,7 +98,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
             }
           ],
           correlationId: '7cf9bd11-c791-42c9-bd28-fa0fec_id',
-          value: '702.85'
+          value: '-702.85'
         })
       })
       .willRespondWith(200, (builder) => {

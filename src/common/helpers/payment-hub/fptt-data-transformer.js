@@ -86,7 +86,7 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
     originalSettlementDate: formatPaymentDate(payment.originalSettlementDate)
   }),
   ...(grant.totalAmountPence != null && {
-    value: valueFormatter.format(grant.totalAmountPence / 100)
+    value: valueFormatter.format(-Math.abs(grant.totalAmountPence) / 100)
   })
 })
 
