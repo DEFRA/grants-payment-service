@@ -29,7 +29,19 @@ export const fetchWithTimeout = async (url, options, logger) => {
       `Fetch failed ${JSON.stringify({
         url: input,
         options,
-        error
+        error: {
+          message: error.message,
+          name: error.name,
+          code: error.code,
+          stack: error.stack,
+          cause: error.cause
+            ? {
+                message: error.cause.message,
+                code: error.cause.code,
+                stack: error.cause.stack
+              }
+            : undefined
+        }
       })}`
     )
     throw error
