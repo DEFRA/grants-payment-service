@@ -70,10 +70,6 @@ describe('cron job schedule sending a POST request to payment hub', () => {
           Authorization: MatchersV3.regex(
             /^SharedAccessSignature sr=http%3A%2F%2F127.0.0.1%3A\d+&sig=.*&se=.*&skn=test-key-name$/,
             'SharedAccessSignature sr=http%3A%2F%2F127.0.0.1%3A63002&sig=O64%2F7369ZY3Qh3kGCFiFkaYBaFvwJyFCnpdjQdaAZFY%3D&se=1780711740&skn=test-key-name'
-          ),
-          brokerproperties: MatchersV3.regex(
-            /\{"SessionId":".*"\}/,
-            '{"SessionId":"123"}'
           )
         })
         builder.jsonBody({

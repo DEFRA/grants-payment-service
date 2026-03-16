@@ -116,8 +116,7 @@ describe('Payment Hub Helper', () => {
           method: 'POST',
           headers: expect.objectContaining({
             Authorization: cachedToken,
-            'Content-Type': 'application/json',
-            BrokerProperties: expect.any(String)
+            'Content-Type': 'application/json'
           }),
           body: JSON.stringify(payload)
         })
