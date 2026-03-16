@@ -61,17 +61,13 @@ export const sendPaymentHubRequest = async (server, body) => {
   }
 
   const accessToken = await getCachedToken(server).get('token')
-  const brokerProperties = {
-    SessionId: '123'
-  }
 
   const url = new URL(`${config.get('paymentHub.uri')}/messages`)
   const response = await proxyFetch(url, {
     method: 'POST',
     headers: {
       Authorization: accessToken,
-      'Content-Type': 'application/json',
-      BrokerProperties: JSON.stringify(brokerProperties)
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify(body)
   })
