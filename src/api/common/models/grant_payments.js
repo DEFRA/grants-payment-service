@@ -9,7 +9,7 @@ const InvoiceLine = new mongoose.Schema({
   amountPence: { type: Decimal128, required: true },
   accountCode: { type: String },
   fundCode: { type: String },
-  deliveryBody: { type: String },
+  deliveryBody: { type: String }
 })
 
 const Payment = new mongoose.Schema({
