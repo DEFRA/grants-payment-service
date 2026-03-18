@@ -1,7 +1,7 @@
 import { formatPaymentDate } from '#~/common/helpers/format-payment-date.js'
 
 const DEBT_TYPE_MAX_LENGTH = 3
-const deliveryBody = 'RP00'
+// const deliveryBody = 'RP00'
 
 const valueFormatter = new Intl.NumberFormat('en-GB', {
   useGrouping: false,
@@ -32,12 +32,12 @@ export const validateRemittanceDescription = (remittanceDescription) => {
 const buildInvoiceLines = (grant, payment) =>
   payment.invoiceLines.map((invoiceLine) => ({
     schemeCode: invoiceLine.schemeCode,
-    accountCode: grant.accountCode || 'SOS710',
-    fundCode: grant.fundCode || 'DRD10',
+    accountCode: invoiceLine.accountCode || 'SOS710',
+    fundCode: invoiceLine.fundCode || 'DRD10',
     agreementNumber: grant.agreementNumber,
     description: invoiceLine.description,
     value: valueFormatter.format(invoiceLine.amountPence / 100),
-    deliveryBody,
+    deliveryBody: invoiceLine.deliveryBody,
     marketingYear: grant.marketingYear
   }))
 
@@ -54,12 +54,11 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
   payment
 ) => ({
   sourceSystem: 'FPTT', // Farm Payments Technical Test
-  ledger: 'AP',
-  deliveryBody,
+  ledger: grant.ledger,
   invoiceNumber: grant.invoiceNumber,
   frn: identifiers.frn,
   sbi: identifiers.sbi,
-  fesCode: 'FALS_FPTT',
+  fesCode: grant.fesCode,
   marketingYear: grant.marketingYear || new Date().getFullYear(),
   paymentRequestNumber: grant.paymentRequestNumber,
   agreementNumber: grant.agreementNumber,
