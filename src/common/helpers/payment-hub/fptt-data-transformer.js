@@ -1,7 +1,6 @@
 import { formatPaymentDate } from '#~/common/helpers/format-payment-date.js'
 
 const DEBT_TYPE_MAX_LENGTH = 3
-// const deliveryBody = 'RP00'
 
 const valueFormatter = new Intl.NumberFormat('en-GB', {
   useGrouping: false,

@@ -75,7 +75,6 @@ describe('cron job schedule sending a POST request to payment hub', () => {
         builder.jsonBody({
           sourceSystem: 'FPTT',
           ledger: 'AP',
-          deliveryBody: 'RP00',
           invoiceNumber: 'R00000004-V001Q2',
           fesCode: 'FALS_FPTT',
           marketingYear: '2026',
@@ -87,8 +86,8 @@ describe('cron job schedule sending a POST request to payment hub', () => {
           invoiceLines: [
             {
               schemeCode: 'CMOR1',
-              accountCode: 'SOS710',
-              fundCode: 'DRD10',
+              accountCode: 'AC001',
+              fundCode: 'FUND10',
               agreementNumber: 'FPTT264870631',
               description:
                 'Parcel 8083 - Assess moorland and produce a written record',
