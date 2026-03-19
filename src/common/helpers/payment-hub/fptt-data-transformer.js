@@ -31,8 +31,8 @@ export const validateRemittanceDescription = (remittanceDescription) => {
 const buildInvoiceLines = (grant, payment) =>
   payment.invoiceLines.map((invoiceLine) => ({
     schemeCode: invoiceLine.schemeCode,
-    accountCode: invoiceLine.accountCode || 'SOS710',
-    fundCode: invoiceLine.fundCode || 'DRD10',
+    accountCode: invoiceLine.accountCode,
+    fundCode: invoiceLine.fundCode,
     agreementNumber: grant.agreementNumber,
     description: invoiceLine.description,
     value: valueFormatter.format(invoiceLine.amountPence / 100),
@@ -54,11 +54,11 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
 ) => ({
   sourceSystem: 'FPTT', // Farm Payments Technical Test
   ledger: grant.ledger,
+  deliveryBody: grant.deliveryBody,
   invoiceNumber: grant.invoiceNumber,
   frn: identifiers.frn,
   sbi: identifiers.sbi,
   fesCode: grant.fesCode,
-  deliveryBody: grant.deliveryBody,
   marketingYear: grant.marketingYear || new Date().getFullYear(),
   paymentRequestNumber: grant.paymentRequestNumber,
   agreementNumber: grant.agreementNumber,

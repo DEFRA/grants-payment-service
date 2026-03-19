@@ -115,20 +115,6 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     expect(result.value).toBe('-1234.56')
   })
 
-  it('uses default accountCode/fundCode when not provided in invoice line', () => {
-    const payment = {
-      dueDate: '2026-06-05',
-      invoiceLines: [{ schemeCode: 'SC', description: 'D', amountPence: '500' }]
-    }
-    const result = transformFpttPaymentDataToPaymentHubFormat(
-      baseIdentifiers,
-      baseGrant,
-      payment
-    )
-    expect(result.invoiceLines[0].accountCode).toBe('SOS710')
-    expect(result.invoiceLines[0].fundCode).toBe('DRD10')
-  })
-
   it('defaults currency to GBP when missing', () => {
     const minimalPayment = { dueDate: '2026-12-01', invoiceLines: [] }
     const out = transformFpttPaymentDataToPaymentHubFormat(
