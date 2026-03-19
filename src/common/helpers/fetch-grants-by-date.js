@@ -15,6 +15,9 @@ export const fetchGrantPaymentsByDate = async (date, status) => {
     { $match: match },
     {
       $project: {
+        sbi: 1,
+        frn: 1,
+        claimId: 1,
         grants: {
           $map: {
             input: '$grants',
