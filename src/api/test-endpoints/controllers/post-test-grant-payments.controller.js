@@ -1,6 +1,7 @@
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
 import { fetchGrantPaymentsBySbi } from '#~/common/helpers/fetch-grant-payments-by-sbi.js'
+import { serializeError } from '#~/common/helpers/serialize-error.js'
 
 const postTestGrantPaymentController = {
   method: 'POST',
@@ -22,9 +23,8 @@ const postTestGrantPaymentController = {
       if (await overlappingDatesInGrantPayments(sbi, payload)) {
         return res
           .response({
-            error: 'Validation error',
-            message:
-              'For the given sbi overlapping grant payment already exists'
+            message: 'Validation error',
+            error: 'For the given sbi overlapping grant payment already exists'
           })
           .code(statusCodes.badRequest)
       }
@@ -43,15 +43,16 @@ const postTestGrantPaymentController = {
       if (err?.name === 'ValidationError' || err?.name === 'ValidatorError') {
         return res
           .response({
-            error: 'Validation error',
-            message: err.message
+            message: 'Validation error',
+            error: serializeError(err)
           })
           .code(statusCodes.badRequest)
       }
 
       return res
         .response({
-          error: 'Internal Server Error'
+          message: 'Internal Server Error',
+          error: serializeError(err)
         })
         .code(statusCodes.internalServerError)
     }
