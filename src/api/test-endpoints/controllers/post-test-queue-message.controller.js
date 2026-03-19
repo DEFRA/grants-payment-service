@@ -2,6 +2,7 @@ import Boom from '@hapi/boom'
 import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { config } from '#~/config/index.js'
+import { serializeError } from '#~/common/helpers/serialize-error.js'
 
 /**
  * Controller to post a test queue message
@@ -56,7 +57,7 @@ const postTestQueueMessageController = {
       return h
         .response({
           message: 'Failed to post test queue message',
-          error
+          error: serializeError(error)
         })
         .code(statusCodes.internalServerError)
     }

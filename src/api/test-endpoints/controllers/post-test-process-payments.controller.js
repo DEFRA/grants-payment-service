@@ -1,3 +1,4 @@
+import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { processDailyPayments } from '#~/common/helpers/payment-processor.js'
 
@@ -22,7 +23,7 @@ const postTestProcessPaymentsController = {
       return h
         .response({
           message: 'Failed to trigger test process payments',
-          error
+          error: serializeError(error)
         })
         .code(statusCodes.internalServerError)
     }

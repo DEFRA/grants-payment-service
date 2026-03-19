@@ -3,6 +3,7 @@ import { getTestDailyPaymentsController } from './get-test-daily-payments.contro
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
 import { getTodaysDate } from '#~/common/helpers/date.js'
+import { serializeError } from '#~/common/helpers/serialize-error.js'
 
 vi.mock('#~/common/helpers/fetch-grants-by-date.js', () => ({
   fetchGrantPaymentsByDate: vi.fn()
@@ -74,7 +75,8 @@ describe('getTestDailyPaymentsController', () => {
     )
     expect(result.statusCode).toBe(statusCodes.internalServerError)
     expect(result.source).toMatchObject({
-      message: 'Failed to get test daily payments'
+      message: 'Failed to get test daily payments',
+      error: serializeError(error)
     })
   })
 
