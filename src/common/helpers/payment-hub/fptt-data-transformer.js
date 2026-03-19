@@ -58,6 +58,7 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
   frn: identifiers.frn,
   sbi: identifiers.sbi,
   fesCode: grant.fesCode,
+  deliveryBody: grant.deliveryBody,
   marketingYear: grant.marketingYear || new Date().getFullYear(),
   paymentRequestNumber: grant.paymentRequestNumber,
   agreementNumber: grant.agreementNumber,

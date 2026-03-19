@@ -75,6 +75,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
         builder.jsonBody({
           sourceSystem: 'FPTT',
           ledger: 'AP',
+          deliveryBody: 'RP00',
           invoiceNumber: 'R00000004-V001Q2',
           fesCode: 'FALS_FPTT',
           marketingYear: '2026',

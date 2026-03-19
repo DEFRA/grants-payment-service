@@ -7,9 +7,9 @@ const InvoiceLine = new mongoose.Schema({
   schemeCode: { type: String, required: true },
   description: { type: String, required: true },
   amountPence: { type: Decimal128, required: true },
-  accountCode: { type: String },
-  fundCode: { type: String },
-  deliveryBody: { type: String }
+  accountCode: { type: String, required: true },
+  fundCode: { type: String, required: true },
+  deliveryBody: { type: String, required: true }
 })
 
 const Payment = new mongoose.Schema({
@@ -37,8 +37,9 @@ const Grant = new mongoose.Schema({
   totalAmountPence: { type: Decimal128, required: true },
   currency: { type: String, required: true },
   marketingYear: { type: String },
-  ledger: { type: String },
-  fesCode: { type: String },
+  ledger: { type: String, required: true },
+  fesCode: { type: String, required: true },
+  deliveryBody: { type: String, required: true },
   payments: [{ type: Payment, required: true }]
 })
 

@@ -9,6 +9,7 @@ export const prepareWithPaymentHubConfig = (grantPayment) => {
   const { deliveryBody, accountCode, fundCode, ...remainingSchemeConfig } =
     schemeConfig
   const grants = (grantPayment.grants || []).map((grant) => {
+    grant.deliveryBody = deliveryBody
     const payments = (grant.payments || []).map((payment) => {
       payment.status = 'pending'
       const invoiceLines = (payment.invoiceLines || []).map((invoiceLine) => ({
