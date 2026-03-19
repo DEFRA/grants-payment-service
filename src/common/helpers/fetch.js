@@ -18,33 +18,21 @@ export const fetchWithTimeout = async (url, options, logger) => {
     config.get('fetchTimeout')
   )
 
-  const input = url instanceof URL ? url.toString() : url
+  const urlStr = url instanceof URL ? url.toString() : url
   try {
-    return await fetch(input, {
+    return await fetch(urlStr, {
       ...options,
       signal: controller.signal
     })
-  } catch (error) {
+  } catch (err) {
     logger.error(
+      err,
       `Fetch failed ${JSON.stringify({
-        url: input,
-        options,
-        error: {
-          message: error.message,
-          name: error.name,
-          code: error.code,
-          stack: error.stack,
-          cause: error.cause
-            ? {
-                message: error.cause.message,
-                code: error.cause.code,
-                stack: error.cause.stack
-              }
-            : undefined
-        }
+        url: urlStr,
+        ...(config.get('featureFlags.testEndpoints') ? { options } : {})
       })}`
     )
-    throw error
+    throw err
   } finally {
     clearTimeout(timeoutId)
   }

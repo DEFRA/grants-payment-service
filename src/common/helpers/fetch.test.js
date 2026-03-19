@@ -102,15 +102,33 @@ describe('fetch helpers', () => {
       ).rejects.toThrow(fetchError)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
+        fetchError,
+        `Fetch failed ${JSON.stringify({
+          url: mockUrl
+        })}`
+      )
+    })
+
+    it('should log the error and options when fetch fails when test endpoints are enabled', async () => {
+      config.get.mockImplementation((key) => {
+        if (key === 'featureFlags.testEndpoints') return true
+        if (key === 'fetchTimeout') return 5000
+        return null
+      })
+
+      const fetchError = new Error('Network failure')
+
+      fetch.mockRejectedValueOnce(fetchError)
+
+      await expect(
+        fetchWithTimeout(mockUrl, mockOptions, mockLogger)
+      ).rejects.toThrow(fetchError)
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        fetchError,
         `Fetch failed ${JSON.stringify({
           url: mockUrl,
-          options: mockOptions,
-          error: {
-            message: fetchError.message,
-            name: fetchError.name,
-            code: fetchError.code,
-            stack: fetchError.stack
-          }
+          options: mockOptions
         })}`
       )
     })
