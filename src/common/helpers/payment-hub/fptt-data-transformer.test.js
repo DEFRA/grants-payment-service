@@ -16,7 +16,9 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     currency: 'GBP',
     originalInvoiceNumber: 'OINV',
     remittanceDescription: 'ignored',
-    correlationId: 'CORR'
+    correlationId: 'CORR',
+    ledger: 'AP',
+    fesCode: 'FALS_FPTT'
   }
 
   it('produces expected shape for a valid payment', () => {
@@ -26,7 +28,12 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       originalSettlementDate: '2026-06-07',
       currency: 'EUR',
       invoiceLines: [
-        { schemeCode: 'SC', description: 'D', amountPence: '1234' }
+        {
+          schemeCode: 'SC',
+          description: 'D',
+          amountPence: '1234',
+          deliveryBody: 'RP00'
+        }
       ]
     }
 
@@ -39,7 +46,6 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     expect(result).toMatchObject({
       sourceSystem: 'FPTT',
       ledger: 'AP',
-      deliveryBody: 'RP00',
       invoiceNumber: 'INV1',
       frn: '222',
       sbi: '111',
@@ -64,6 +70,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       description: 'D',
       value: '12.34',
       agreementNumber: 'AGR1',
+      deliveryBody: 'RP00',
       marketingYear: '2026'
     })
   })
@@ -106,20 +113,6 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     expect(result.originalInvoiceNumber).toBe('OINV')
     expect(result.originalSettlementDate).toBe('01/05/2026')
     expect(result.value).toBe('-1234.56')
-  })
-
-  it('uses default accountCode/fundCode when not provided in invoice line', () => {
-    const payment = {
-      dueDate: '2026-06-05',
-      invoiceLines: [{ schemeCode: 'SC', description: 'D', amountPence: '500' }]
-    }
-    const result = transformFpttPaymentDataToPaymentHubFormat(
-      baseIdentifiers,
-      baseGrant,
-      payment
-    )
-    expect(result.invoiceLines[0].accountCode).toBe('SOS710')
-    expect(result.invoiceLines[0].fundCode).toBe('DRD10')
   })
 
   it('defaults currency to GBP when missing', () => {
