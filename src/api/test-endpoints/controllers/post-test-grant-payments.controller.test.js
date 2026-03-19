@@ -78,7 +78,10 @@ describe('postTestGrantPaymentController', () => {
     )
 
     expect(result.statusCode).toBe(statusCodes.badRequest)
-    expect(result.source).toMatchObject({ error: 'Validation error' })
+    expect(result.source).toMatchObject({
+      message: 'Validation error',
+      error: expect.objectContaining({ name: 'ValidationError' })
+    })
   })
 
   test('returns 400 for validation error (ValidatorError)', async () => {
@@ -93,7 +96,10 @@ describe('postTestGrantPaymentController', () => {
     )
 
     expect(result.statusCode).toBe(statusCodes.badRequest)
-    expect(result.source).toMatchObject({ error: 'Validation error' })
+    expect(result.source).toMatchObject({
+      message: 'Validation error',
+      error: expect.objectContaining({ name: 'ValidatorError' })
+    })
   })
 
   test('returns 500 for unexpected error', async () => {
@@ -106,7 +112,10 @@ describe('postTestGrantPaymentController', () => {
     )
 
     expect(result.statusCode).toBe(statusCodes.internalServerError)
-    expect(result.source).toEqual({ error: 'Internal Server Error' })
+    expect(result.source).toEqual({
+      message: 'Internal Server Error',
+      error: expect.objectContaining({ message: 'db down' })
+    })
   })
 
   test('returns 500 when error is null/undefined', async () => {
@@ -119,7 +128,10 @@ describe('postTestGrantPaymentController', () => {
     )
 
     expect(result.statusCode).toBe(statusCodes.internalServerError)
-    expect(result.source).toEqual({ error: 'Internal Server Error' })
+    expect(result.source).toEqual({
+      message: 'Internal Server Error',
+      error: undefined
+    })
   })
 
   test('handles missing _id in created document (using id property)', async () => {
@@ -170,8 +182,8 @@ describe('postTestGrantPaymentController', () => {
 
     expect(result.statusCode).toBe(statusCodes.badRequest)
     expect(result.source).toEqual({
-      error: 'Validation error',
-      message: 'For the given sbi overlapping grant payment already exists'
+      message: 'Validation error',
+      error: 'For the given sbi overlapping grant payment already exists'
     })
   })
 
@@ -197,7 +209,7 @@ describe('postTestGrantPaymentController', () => {
     )
 
     expect(result.statusCode).toBe(statusCodes.badRequest)
-    expect(result.source.message).toBe(
+    expect(result.source.error).toBe(
       'For the given sbi overlapping grant payment already exists'
     )
   })
@@ -275,8 +287,8 @@ describe('postTestGrantPaymentController', () => {
     expect(fetchGrantPaymentsBySbi).toHaveBeenCalledWith('106284736')
     expect(result.statusCode).toBe(statusCodes.badRequest)
     expect(result.source).toEqual({
-      error: 'Validation error',
-      message: 'For the given sbi overlapping grant payment already exists'
+      message: 'Validation error',
+      error: 'For the given sbi overlapping grant payment already exists'
     })
     expect(createGrantPayment).not.toHaveBeenCalled()
   })

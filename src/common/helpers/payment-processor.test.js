@@ -213,7 +213,7 @@ describe('processDailyPayments', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       error,
-      `Failed to query grant payments for date ${fakeDate}`
+      `Failed to process grant payments for date ${fakeDate}`
     )
   })
 
@@ -326,7 +326,11 @@ describe('processDailyPayments', () => {
 
     const result = await processDailyPayments(server, fakeDate)
 
-    expect(result).toEqual(['ok1', null, 'ok3'])
+    expect(result).toEqual([
+      'ok1',
+      expect.objectContaining({ message: 'hub down' }),
+      'ok3'
+    ])
     // lock called for each payment
     expect(updatePaymentStatus).toHaveBeenCalledWith(
       '1',
