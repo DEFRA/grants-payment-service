@@ -31,8 +31,9 @@ describe('grant_payments schema', () => {
           invoiceNumber: 'R00000004-V001Q2',
           originalInvoiceNumber: 'R00000004-V001Q1',
           agreementNumber: 'FPTT264870631',
-          accountCode: 'SOS710',
-          fundCode: 'DRD10',
+          ledger: 'AP',
+          fesCode: 'FALS_FPTT',
+          deliveryBody: 'RP00',
           totalAmountPence: '70285',
           currency: 'GBP',
           marketingYear: '2026',
@@ -44,7 +45,10 @@ describe('grant_payments schema', () => {
                 {
                   schemeCode: 'CMOR1',
                   description: '2026-06-05: Parcel 8083',
-                  amountPence: '1263'
+                  amountPence: '1263',
+                  accountCode: 'SOS710',
+                  fundCode: 'DRD10',
+                  deliveryBody: 'RP00'
                 }
               ],
               status: 'pending'
@@ -71,8 +75,9 @@ describe('grant_payments schema', () => {
           invoiceNumber: 'R00000004-V001Q2',
           originalInvoiceNumber: 'R00000004-V001Q1',
           agreementNumber: 'FPTT264870631',
-          accountCode: 'SOS710',
-          fundCode: 'DRD10',
+          ledger: 'AP',
+          fesCode: 'FALS_FPTT',
+          deliveryBody: 'RP00',
           totalAmountPence: '70285',
           currency: 'GBP',
           marketingYear: '2026',
@@ -84,7 +89,10 @@ describe('grant_payments schema', () => {
                 {
                   schemeCode: 'CMOR1',
                   description: '2026-06-05: Parcel 8083',
-                  amountPence: 1263
+                  amountPence: 1263,
+                  accountCode: 'SOS710',
+                  fundCode: 'DRD10',
+                  deliveryBody: 'RP00'
                 }
               ],
               status: 'failed'

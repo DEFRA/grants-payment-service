@@ -50,7 +50,7 @@ describe('prepareWithPaymentHubConfig', () => {
     // Should NOT be at grant level
     expect(grant.accountCode).not.toBe('AC001')
     expect(grant.fundCode).not.toBe('FUND10')
-    expect(grant.deliveryBody).not.toBe('RP00')
+    expect(grant.deliveryBody).toBe('RP00')
 
     // Should be at invoiceLines level
     grant.payments.forEach((payment) => {

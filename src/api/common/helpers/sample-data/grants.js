@@ -13,6 +13,7 @@ export default [
         originalInvoiceNumber: '',
         agreementNumber: 'FPTT264870631',
         totalAmountPence: '70285',
+        deliveryBody: 'RP00',
         currency: 'GBP',
         marketingYear: '2026',
         payments: [
