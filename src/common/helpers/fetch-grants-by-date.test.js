@@ -21,6 +21,9 @@ describe('fetchGrantPaymentsByDate', () => {
       { $match: { 'grants.payments.dueDate': date } },
       expect.objectContaining({
         $project: expect.objectContaining({
+          sbi: 1,
+          frn: 1,
+          claimId: 1,
           grants: expect.any(Object)
         })
       })
