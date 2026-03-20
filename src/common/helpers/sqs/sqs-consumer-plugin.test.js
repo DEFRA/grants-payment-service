@@ -3,10 +3,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { SQSClient } from '@aws-sdk/client-sqs'
 import { Consumer } from 'sqs-consumer'
 
-import {
-  createSqsConsumerPlugin,
-  processMessage
-} from './sqs-consumer-plugin.js'
+import { createSqsConsumerPlugin } from './sqs-consumer-plugin.js'
 
 vi.mock('@aws-sdk/client-sqs')
 
@@ -130,6 +127,7 @@ describe('createSqsConsumerPlugin', () => {
 })
 
 describe('processMessage', () => {
+  const queueUrl = 'http://localhost:4566/queue'
   const logger = {
     info: vi.fn(),
     error: vi.fn()
@@ -140,31 +138,64 @@ describe('processMessage', () => {
     Body: JSON.stringify({ foo: 'bar' })
   }
 
+  let server
+  let mockConsumer
+  let mockSqsClient
+
   beforeEach(() => {
     vi.clearAllMocks()
+
+    server = {
+      logger,
+      events: {
+        on: vi.fn()
+      }
+    }
+
+    mockSqsClient = {
+      destroy: vi.fn()
+    }
+
+    SQSClient.mockImplementation(function () {
+      return mockSqsClient
+    })
+
+    mockConsumer = {
+      on: vi.fn(),
+      start: vi.fn(),
+      stop: vi.fn()
+    }
+
+    Consumer.create.mockReturnValue(mockConsumer)
   })
 
-  it('throws badData when message Body is missing', async () => {
-    const handler = vi.fn()
+  const getHandleMessage = async (handler) => {
+    const { plugin } = createSqsConsumerPlugin({
+      tag: 'test',
+      queueUrl,
+      handler
+    })
+    await plugin.register(server)
+    return Consumer.create.mock.calls[0][0].handleMessage
+  }
 
-    await expect(
-      processMessage(handler, { MessageId: '1' }, logger)
-    ).rejects.toMatchObject({
+  it('throws badData when message Body is missing', async () => {
+    const handleMessage = await getHandleMessage(vi.fn())
+
+    await expect(handleMessage({ MessageId: '1' })).rejects.toMatchObject({
       isBoom: true,
       message: 'SQS message missing Body'
     })
   })
 
   it('throws badData when message Body is invalid JSON', async () => {
-    const handler = vi.fn()
+    const handleMessage = await getHandleMessage(vi.fn())
     const message = {
       MessageId: '2',
       Body: '{ not: "json"'
     }
 
-    await expect(
-      processMessage(handler, message, logger)
-    ).rejects.toMatchObject({
+    await expect(handleMessage(message)).rejects.toMatchObject({
       isBoom: true,
       message: `Invalid message format: ${message.Body}`
     })
@@ -173,10 +204,9 @@ describe('processMessage', () => {
   it('wraps non-SyntaxError exceptions with Boom', async () => {
     const handlerError = new Error('handler failed')
     const handler = vi.fn().mockRejectedValue(handlerError)
+    const handleMessage = await getHandleMessage(handler)
 
-    await expect(
-      processMessage(handler, baseMessage, logger)
-    ).rejects.toMatchObject({
+    await expect(handleMessage(baseMessage)).rejects.toMatchObject({
       isBoom: true,
       message: handlerError.message
     })

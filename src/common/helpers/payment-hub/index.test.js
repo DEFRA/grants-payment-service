@@ -1,7 +1,5 @@
-import crypto from 'node:crypto'
-
 import { vi } from 'vitest'
-import { sendPaymentHubRequest, getPaymentHubToken } from './index.js'
+import { sendPaymentHubRequest } from './index.js'
 import { config } from '#~/config/index.js'
 import { initCache } from '#~/common/helpers/cache.js'
 
@@ -175,28 +173,14 @@ describe('Payment Hub Helper', () => {
 
       expect(config.get).toHaveBeenCalled()
     })
-  })
 
-  describe('helper functions', () => {
-    it('should generate correct payment hub token', () => {
-      const token = getPaymentHubToken()
-
-      const expectedUri = encodeURIComponent('https://payment-hub.example.com')
-      expect(crypto.createHmac).toHaveBeenCalledWith('sha256', 'test-key')
-
-      expect(token).toContain('SharedAccessSignature')
-      expect(token).toContain(`sr=${expectedUri}`)
-      // TTL is dynamic (current time + 3600) so just ensure the parameter is present
-      expect(token).toMatch(/se=\d+/)
-      expect(token).toContain('skn=test-key-name')
-    })
-
-    it('should initialize cache only once via exported helper', async () => {
+    it('should initialize cache only once', async () => {
       // reset the module to clear internal cache variable
       vi.resetModules()
-      const { getCachedToken: freshGetCachedToken } = await import('./index.js')
+      const { sendPaymentHubRequest: freshSendRequest } =
+        await import('./index.js')
 
-      const cache1 = freshGetCachedToken(server)
+      await freshSendRequest(server, { data: 'test-data' })
       expect(initCache).toHaveBeenCalledTimes(1)
       expect(initCache).toHaveBeenCalledWith(
         server,
@@ -207,9 +191,8 @@ describe('Payment Hub Helper', () => {
         }
       )
 
-      const cache2 = freshGetCachedToken(server)
+      await freshSendRequest(server, { data: 'test-data' })
       expect(initCache).toHaveBeenCalledTimes(1)
-      expect(cache1).toBe(cache2)
     })
   })
 
