@@ -11,7 +11,7 @@ import { config } from '#~/config/index.js'
  * @param {import('@aws-sdk/client-sqs').Message} message
  * @param {import('pino').Logger} logger
  */
-export const processMessage = async (handler, message, logger) => {
+const processMessage = async (handler, message, logger) => {
   if (!message?.Body) {
     throw Boom.badData('SQS message missing Body')
   }
