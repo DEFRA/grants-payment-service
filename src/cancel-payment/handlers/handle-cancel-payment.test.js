@@ -43,7 +43,7 @@ describe('handleCancelPaymentEvent', () => {
         eventType: validPayload.type,
         sbi: sbi
       },
-      `Received cancel_payment payload is  ${JSON.stringify(validPayload, null, 2)}`
+      `Received cancel_payment event with payload is  ${JSON.stringify(validPayload, null, 2)}`
     )
     expect(logger.info).toHaveBeenCalledWith(
       `Managed to successfully cancel grantPayment entry ${JSON.stringify([sampleData.grants[0]])}`
