@@ -3,6 +3,7 @@ import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
 import { updatePaymentStatus } from '#~/common/helpers/update-payment-status.js'
 import { transformFpttPaymentDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/fptt-data-transformer.js'
+import { serializeError } from '#~/common/helpers/serialize-error.js'
 
 export const processDailyPayments = async (server, date = getTodaysDate()) => {
   const { logger } = server
@@ -64,10 +65,10 @@ export const processDailyPayments = async (server, date = getTodaysDate()) => {
             const res = await sendPaymentHubRequest(server, paymentHubData)
             await updatePaymentStatus(docId, payment._id, 'submitted')
             return res
-          } catch (e) {
-            logger.error(e, `PaymentHub request failed for record ${docId}`)
+          } catch (err) {
+            logger.error(err, `PaymentHub request failed for record ${docId}`)
             await updatePaymentStatus(docId, payment._id, 'failed')
-            return null
+            return serializeError(err)
           }
         })
       })
@@ -76,7 +77,7 @@ export const processDailyPayments = async (server, date = getTodaysDate()) => {
     const results = await Promise.all(actions)
     return results
   } catch (err) {
-    logger.error(err, `Failed to query grant payments for date ${date}`)
+    logger.error(err, `Failed to process grant payments for date ${date}`)
     throw err
   }
 }

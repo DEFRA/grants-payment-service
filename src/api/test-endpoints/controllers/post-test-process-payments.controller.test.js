@@ -3,6 +3,7 @@ import Boom from '@hapi/boom'
 import { postTestProcessPaymentsController } from './post-test-process-payments.controller.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { processDailyPayments } from '#~/common/helpers/payment-processor.js'
+import { serializeError } from '#~/common/helpers/serialize-error.js'
 
 vi.mock('#~/common/helpers/payment-processor.js', () => ({
   processDailyPayments: vi.fn()
@@ -89,7 +90,8 @@ describe('postTestProcessPaymentsController', () => {
     )
     expect(response.statusCode).toBe(statusCodes.internalServerError)
     expect(response.source).toMatchObject({
-      message: 'Failed to trigger test process payments'
+      message: 'Failed to trigger test process payments',
+      error: serializeError(error)
     })
   })
 })
