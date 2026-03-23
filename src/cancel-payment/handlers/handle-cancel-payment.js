@@ -10,7 +10,7 @@ import { cancelGrantPayments } from '#~/common/helpers/cancel-grant-payment.js'
 export async function handleCancelPaymentEvent(messageId, payload, logger) {
   logger.info(
     { messageId, eventType: payload.type, sbi: payload?.data?.sbi },
-    `Received cancel_payment payload is  ${JSON.stringify(payload, null, 2)}`
+    `Received cancel_payment event with payload is  ${JSON.stringify(payload, null, 2)}`
   )
 
   const { sbi, frn } = payload.data
