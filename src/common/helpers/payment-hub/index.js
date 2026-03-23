@@ -2,6 +2,10 @@ import crypto from 'node:crypto'
 import { proxyFetch } from '#~/common/helpers/fetch.js'
 import { config } from '#~/config/index.js'
 import { initCache } from '#~/common/helpers/cache.js'
+import {
+  auditEvent,
+  AuditEvent
+} from '#~/common/helpers/payment-hub/audit-event.js'
 
 let cache = null
 
@@ -77,10 +81,12 @@ export const sendPaymentHubRequest = async (server, body) => {
   )
 
   if (!response.ok) {
+    auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, body, 'failure')
     throw new Error(`Payment hub request failed: ${response.statusText}`)
   }
 
   logger.info('The PaymentHub request sent successfully')
+  auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, body)
 
   return {
     status: 'success',
