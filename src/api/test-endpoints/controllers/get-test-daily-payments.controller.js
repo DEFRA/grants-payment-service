@@ -1,3 +1,4 @@
+import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { getTodaysDate } from '#~/common/helpers/date.js'
 import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
@@ -22,7 +23,7 @@ const getTestDailyPaymentsController = {
       return h
         .response({
           message: 'Failed to get test daily payments',
-          error
+          error: serializeError(error)
         })
         .code(statusCodes.internalServerError)
     }

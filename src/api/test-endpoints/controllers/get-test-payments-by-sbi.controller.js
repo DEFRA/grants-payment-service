@@ -1,4 +1,5 @@
 import { fetchGrantPaymentsBySbi } from '#~/common/helpers/fetch-grant-payments-by-sbi.js'
+import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 
 const getTestPaymentsBySbiController = {
@@ -21,7 +22,8 @@ const getTestPaymentsBySbiController = {
       req.log(['error'], err)
       return res
         .response({
-          error: 'Internal Server Error'
+          message: 'Internal Server Error',
+          error: serializeError(err)
         })
         .code(statusCodes.internalServerError)
     }

@@ -59,6 +59,9 @@ describe('getTestGrantPaymentController', () => {
 
     expect(req.log).toHaveBeenCalledWith(['error'], mockError)
     expect(result.statusCode).toBe(statusCodes.internalServerError)
-    expect(result.source).toEqual({ error: 'Internal Server Error' })
+    expect(result.source).toEqual({
+      message: 'Internal Server Error',
+      error: expect.objectContaining({ message: 'db down' })
+    })
   })
 })

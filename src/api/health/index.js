@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 
 import { config } from '#~/config/index.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
+import { serializeError } from '#~/common/helpers/serialize-error.js'
 
 const health = {
   method: 'GET',
@@ -15,7 +16,7 @@ const health = {
       return h
         .response({
           message: 'Unable to connect to backend MongoDB',
-          error: e.message,
+          error: serializeError(e),
           version: config.get('serviceVersion')
         })
         .code(statusCodes.serviceUnavailable)
