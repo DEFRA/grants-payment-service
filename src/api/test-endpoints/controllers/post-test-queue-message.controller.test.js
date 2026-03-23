@@ -43,6 +43,13 @@ describe('postTestQueueMessageController', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.stubGlobal('crypto', {
+      randomUUID: vi.fn(() => 'test-uuid')
+    })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   const payload = {
@@ -103,7 +110,8 @@ describe('postTestQueueMessageController', () => {
       expect.objectContaining({
         input: expect.objectContaining({
           QueueUrl: 'http://localhost:4566/000000000000/test-queue',
-          MessageBody: JSON.stringify(payload)
+          MessageBody: JSON.stringify(payload),
+          MessageDeduplicationId: 'test-uuid'
         })
       })
     )
@@ -125,7 +133,8 @@ describe('postTestQueueMessageController', () => {
       expect.objectContaining({
         input: expect.objectContaining({
           QueueUrl: 'http://localhost:4566/000000000000/custom-queue',
-          MessageBody: JSON.stringify(payload)
+          MessageBody: JSON.stringify(payload),
+          MessageDeduplicationId: 'test-uuid'
         })
       })
     )

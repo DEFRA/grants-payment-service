@@ -6,7 +6,7 @@ import { secureContext } from '@defra/hapi-secure-context'
 import { config } from '#~/config/index.js'
 import { router } from '#~/plugins/router.js'
 import { cron } from '#~/plugins/cron.js'
-import { sqs } from '#~/plugins/sqs.js'
+import { createPaymentSQSConsumerPlugin } from '#~/plugins/createPaymentSQSConsumerPlugin.js'
 import { requestLogger } from '#~/common/helpers/logging/request-logger.js'
 import { mongooseDb } from '#~/common/helpers/mongoose.js'
 import { failAction } from '#~/common/helpers/fail-action.js'
@@ -14,6 +14,7 @@ import { pulse } from '#~/common/helpers/pulse.js'
 import { requestTracing } from '#~/common/helpers/request-tracing.js'
 import { setupProxy } from '#~/common/helpers/proxy/setup-proxy.js'
 import { metrics } from '@defra/cdp-metrics'
+import { cancelPaymentSQSConsumerPlugin } from '#~/plugins/cancelPaymentSQSConsumerPlugin.js'
 
 async function createServer(serverOptions = {}) {
   const { mongoUrl, mongoDatabase, disableSQS = false } = serverOptions
@@ -74,7 +75,9 @@ async function createServer(serverOptions = {}) {
       }
     },
     cron,
-    ...(disableSQS ? [] : [sqs]),
+    ...(disableSQS
+      ? []
+      : [createPaymentSQSConsumerPlugin, cancelPaymentSQSConsumerPlugin]),
     router
   ])
 

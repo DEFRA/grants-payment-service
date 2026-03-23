@@ -186,6 +186,13 @@ const config = convict({
         'http://localhost:4566/000000000000/gps__sqs__create_payment.fifo',
       env: 'QUEUE_URL'
     },
+    cancelPaymentQueueUrl: {
+      doc: 'Inbound SQS queue URL (e.g. gps__sqs__cancel_payment)',
+      format: String,
+      default:
+        'http://localhost:4566/000000000000/gps__sqs__cancel_payment.fifo',
+      env: 'CANCEL_PAYMENT_QUEUE_URL'
+    },
     maxMessages: {
       doc: 'Max number of messages to receive from SQS per poll',
       format: 'nat',
