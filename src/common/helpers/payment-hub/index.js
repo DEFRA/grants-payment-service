@@ -9,7 +9,7 @@ let cache = null
  * Generate a payment hub token
  * @returns {string} The generated token
  */
-export const getPaymentHubToken = () => {
+const getPaymentHubToken = () => {
   const encoded = encodeURIComponent(config.get('paymentHub.uri'))
   const ttl = Math.round(Date.now() / 1000) + config.get('paymentHub.ttl')
   const signature = `${encoded}\n${ttl}`
@@ -25,7 +25,7 @@ export const getPaymentHubToken = () => {
  * @param { import('@hapi/hapi').Server } server
  * @returns { import('@hapi/catbox').Policy<any, any> }
  */
-export const getCachedToken = (server) => {
+const getCachedToken = (server) => {
   if (!cache) {
     cache = initCache(server, 'paymentHubToken', getPaymentHubToken, {
       expiresIn: config.get('paymentHub.ttl')

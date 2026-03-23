@@ -4,7 +4,7 @@ import { config } from '#~/config/index.js'
 
 const SUFFIX_SANITISER = /[^a-z0-9]+/gi
 
-export function resolveMongoUri() {
+function resolveMongoUri() {
   return (
     globalThis.__MONGO_URI__ ?? process.env.MONGO_URI ?? config.get('mongoUri')
   )
