@@ -1,7 +1,7 @@
 import { vi } from 'vitest'
 import { ProxyAgent } from 'undici'
 import { config } from '#~/config/index.js'
-import { fetchWithTimeout, proxyFetch } from '#~/common/helpers/fetch.js'
+import { proxyFetch } from '#~/common/helpers/fetch.js'
 
 vi.mock('undici', () => ({
   ProxyAgent: vi.fn()
@@ -41,7 +41,7 @@ describe('fetch helpers', () => {
     })
 
     it('should call fetch with the correct arguments and signal', async () => {
-      await fetchWithTimeout(mockUrl, mockOptions, mockLogger)
+      await proxyFetch(mockUrl, mockOptions, mockLogger)
 
       expect(fetch).toHaveBeenCalledWith(
         mockUrl,
@@ -66,7 +66,7 @@ describe('fetch helpers', () => {
         })
       })
 
-      const fetchPromise = fetchWithTimeout(mockUrl, mockOptions, mockLogger)
+      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
 
       vi.advanceTimersByTime(6000)
 
@@ -82,7 +82,7 @@ describe('fetch helpers', () => {
     it('should clear the timeout on success', async () => {
       const abortSpy = vi.spyOn(AbortController.prototype, 'abort')
 
-      await fetchWithTimeout(mockUrl, mockOptions, mockLogger)
+      await proxyFetch(mockUrl, mockOptions, mockLogger)
 
       // Advance time past the timeout
       vi.advanceTimersByTime(6000)
@@ -98,7 +98,7 @@ describe('fetch helpers', () => {
       fetch.mockRejectedValueOnce(fetchError)
 
       await expect(
-        fetchWithTimeout(mockUrl, mockOptions, mockLogger)
+        proxyFetch(mockUrl, mockOptions, mockLogger)
       ).rejects.toThrow(fetchError)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -121,7 +121,7 @@ describe('fetch helpers', () => {
       fetch.mockRejectedValueOnce(fetchError)
 
       await expect(
-        fetchWithTimeout(mockUrl, mockOptions, mockLogger)
+        proxyFetch(mockUrl, mockOptions, mockLogger)
       ).rejects.toThrow(fetchError)
 
       expect(mockLogger.error).toHaveBeenCalledWith(

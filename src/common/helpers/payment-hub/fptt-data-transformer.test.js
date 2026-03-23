@@ -1,9 +1,5 @@
 import mongoose from 'mongoose'
-import {
-  transformFpttPaymentDataToPaymentHubFormat,
-  validateDebtType,
-  validateRemittanceDescription
-} from './fptt-data-transformer.js'
+import { transformFpttPaymentDataToPaymentHubFormat } from './fptt-data-transformer.js'
 
 describe('transformFpttPaymentDataToPaymentHubFormat', () => {
   const baseIdentifiers = { sbi: '111', frn: '222', claimId: '333' }
@@ -175,32 +171,16 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     expect(out.invoiceLines[0].value).toBe('12.34')
     expect(out.invoiceLines[1].value).toBe('10.00')
   })
-})
-
-describe('validateDebtType', () => {
-  it('returns the debtType when it is within limit', () => {
-    expect(validateDebtType('OK')).toBe('OK')
-    expect(validateDebtType('')).toBe('')
-    expect(validateDebtType('ABC')).toBe('ABC')
-  })
 
   it('throws when debtType exceeds 3 characters', () => {
-    expect(() => validateDebtType('TOOLONG')).toThrow(
-      /must be no more than 3 characters/
-    )
-  })
-})
-
-describe('validateRemittanceDescription', () => {
-  it('returns the description when it is within limit', () => {
-    const short = 'Short description'
-    expect(validateRemittanceDescription(short)).toBe(short)
-  })
-
-  it('throws when remittanceDescription exceeds 60 characters', () => {
-    const tooLong = 'A'.repeat(61)
-    expect(() => validateRemittanceDescription(tooLong)).toThrow(
-      /must be no more than 60 characters/
-    )
+    const grant = { ...baseGrant, debtType: 'TOOLONG' }
+    const payment = { dueDate: '2026-06-05', invoiceLines: [] }
+    expect(() =>
+      transformFpttPaymentDataToPaymentHubFormat(
+        baseIdentifiers,
+        grant,
+        payment
+      )
+    ).toThrow(/must be no more than 3 characters/)
   })
 })

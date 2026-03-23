@@ -8,7 +8,7 @@ const valueFormatter = new Intl.NumberFormat('en-GB', {
   maximumFractionDigits: 2
 })
 
-export const validateDebtType = (debtType) => {
+const validateDebtType = (debtType) => {
   if (debtType.length > DEBT_TYPE_MAX_LENGTH) {
     throw new Error(
       `value of ${debtType} must be no more than ${DEBT_TYPE_MAX_LENGTH} characters`
@@ -19,7 +19,7 @@ export const validateDebtType = (debtType) => {
 
 const REMITTANCE_DESCRIPTION_MAX_LENGTH = 60
 
-export const validateRemittanceDescription = (remittanceDescription) => {
+const validateRemittanceDescription = (remittanceDescription) => {
   if (remittanceDescription.length > REMITTANCE_DESCRIPTION_MAX_LENGTH) {
     throw new Error(
       `value of ${remittanceDescription} must be no more than ${REMITTANCE_DESCRIPTION_MAX_LENGTH} characters`

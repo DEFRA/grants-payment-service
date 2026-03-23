@@ -11,7 +11,7 @@ import { config } from '#~/config/index.js'
  * @param {object} logger - The logger to use
  * @returns {Promise<Response>} The fetch response
  */
-export const fetchWithTimeout = async (url, options, logger) => {
+const fetchWithTimeout = async (url, options, logger) => {
   const controller = new AbortController()
   const timeoutId = setTimeout(
     () => controller.abort(new Error('Network timed out while fetching data')),
