@@ -13,11 +13,17 @@ const postTestQueueMessageController = {
     try {
       const queueMessage = request.payload
 
+      request.logger.info(
+        `****** Received request with data: ${JSON.stringify(queueMessage)}`
+      )
+
       if (!queueMessage) {
         throw Boom.internal('Queue message data is required')
       }
 
       const baseQueueUrl = config.get('sqs.queueUrl').split('/')
+
+      request.logger.info(`****** The baseQueueUrl is: ${baseQueueUrl}`)
       const defaultQueueName = baseQueueUrl.pop()
       const { queueName = defaultQueueName } = request.params
       const queueUrl = `${baseQueueUrl.join('/')}/${queueName}`
