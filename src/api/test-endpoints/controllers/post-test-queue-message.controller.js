@@ -48,7 +48,8 @@ const postTestQueueMessageController = {
       const command = new SendMessageCommand({
         QueueUrl: queueUrl,
         MessageBody: JSON.stringify(queueMessage),
-        MessageGroupId: config.get('serviceName')
+        MessageGroupId: config.get('serviceName'),
+        MessageDeduplicationId: crypto.randomUUID()
       })
 
       const result = await sqsClient.send(command)
