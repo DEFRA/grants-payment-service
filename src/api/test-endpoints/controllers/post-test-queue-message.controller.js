@@ -17,6 +17,13 @@ const postTestQueueMessageController = {
         `****** Received request with data: ${JSON.stringify(queueMessage)}`
       )
 
+      request.logger.info(
+        `****** request.params: ${JSON.stringify(request.params)}`
+      )
+      request.logger.info(
+        `****** request.query: ${JSON.stringify(request.query)}`
+      )
+
       if (!queueMessage) {
         throw Boom.internal('Queue message data is required')
       }
@@ -25,7 +32,8 @@ const postTestQueueMessageController = {
 
       request.logger.info(`****** The baseQueueUrl is: ${baseQueueUrl}`)
       const defaultQueueName = baseQueueUrl.pop()
-      const { queueName = defaultQueueName } = request.params
+      // const { queueName = defaultQueueName } = request.params
+      const { queueName = defaultQueueName } = request.params || {}
       const queueUrl = `${baseQueueUrl.join('/')}/${queueName}`
 
       request.logger.info(
