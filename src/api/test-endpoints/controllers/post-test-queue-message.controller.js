@@ -18,8 +18,9 @@ const postTestQueueMessageController = {
       }
 
       const baseQueueUrl = config.get('sqs.queueUrl').split('/')
+
       const defaultQueueName = baseQueueUrl.pop()
-      const { queueName = defaultQueueName } = request.params
+      const { queueName = defaultQueueName } = request.params || {}
       const queueUrl = `${baseQueueUrl.join('/')}/${queueName}`
 
       request.logger.info(
@@ -34,7 +35,8 @@ const postTestQueueMessageController = {
       const command = new SendMessageCommand({
         QueueUrl: queueUrl,
         MessageBody: JSON.stringify(queueMessage),
-        MessageGroupId: config.get('serviceName')
+        MessageGroupId: config.get('serviceName'),
+        MessageDeduplicationId: crypto.randomUUID()
       })
 
       const result = await sqsClient.send(command)
