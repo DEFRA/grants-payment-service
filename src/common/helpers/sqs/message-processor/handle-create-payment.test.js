@@ -54,4 +54,19 @@ describe('handleCreatePaymentEvent', () => {
       `Managed to successfully create grantPayment entry ${JSON.stringify(validPayload)}`
     )
   })
+
+  it('logs an error if createGrantPayment fails', async () => {
+    const logger = { info: vi.fn(), error: vi.fn() }
+    const error = new Error('Create failed')
+
+    prepareWithPaymentHubConfig.mockReturnValue(sampleData.grants[0])
+    createGrantPayment.mockRejectedValue(error)
+
+    await handleCreatePaymentEvent('msg-1', validPayload, logger)
+
+    expect(logger.error).toHaveBeenCalledWith(
+      error,
+      'Error creating grant payment'
+    )
+  })
 })

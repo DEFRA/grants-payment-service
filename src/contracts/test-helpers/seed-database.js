@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 import models from '#~/api/common/models/index.js'
 import sampleData from '#~/api/common/helpers/sample-data/index.js'
-import { handleCreatePaymentEvent } from '#~/create-payment/handlers/handle-create-payment.js'
+import { handleCreatePaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-create-payment.js'
 
 async function publishSampleGrantEvents(tableData, logger) {
   for (const row of tableData) {

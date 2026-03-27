@@ -14,8 +14,8 @@ import { requestTracing } from '#~/common/helpers/request-tracing.js'
 import { setupProxy } from '#~/common/helpers/proxy/setup-proxy.js'
 import { metrics } from '@defra/cdp-metrics'
 import { createSqsConsumerPlugin } from '#~/common/helpers/sqs/sqs-consumer-plugin.js'
-import { handleCreatePaymentEvent } from '#~/create-payment/handlers/handle-create-payment.js'
-import { handleCancelPaymentEvent } from '#~/cancel-payment/handlers/handle-cancel-payment.js'
+import { handleCreatePaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-create-payment.js'
+import { handleCancelPaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-cancel-payment.js'
 
 async function createServer(serverOptions = {}) {
   const { mongoUrl, mongoDatabase, disableSQS = false } = serverOptions
