@@ -4,6 +4,7 @@ import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
 import { updatePaymentStatus } from '#~/common/helpers/update-payment-status.js'
 import { transformFpttPaymentDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/fptt-data-transformer.js'
 import { serializeError } from '#~/common/helpers/serialize-error.js'
+import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js'
 
 export const processDailyPayments = async (server, date = getTodaysDate()) => {
   const { logger } = server
@@ -66,7 +67,10 @@ export const processDailyPayments = async (server, date = getTodaysDate()) => {
             await updatePaymentStatus(docId, payment._id, 'submitted')
             return res
           } catch (err) {
-            logger.error(err, `PaymentHub request failed for record ${docId}`)
+            logger.error(
+              err,
+              `${grafanaLogMessages.error.sendPaymentHubRequest} for record ${docId}`
+            )
             await updatePaymentStatus(docId, payment._id, 'failed')
             return serializeError(err)
           }

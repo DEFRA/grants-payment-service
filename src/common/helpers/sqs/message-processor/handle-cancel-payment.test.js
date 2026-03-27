@@ -46,6 +46,7 @@ describe('handleCancelPaymentEvent', () => {
       `Received cancel_payment event with payload ${JSON.stringify(validPayload, null, 2)}`
     )
     expect(logger.info).toHaveBeenCalledWith(
+      { messageId: 'msg-1', sbi },
       `Managed to successfully cancel grantPayment entry ${JSON.stringify([sampleData.grants[0]])}`
     )
   })
@@ -60,7 +61,10 @@ describe('handleCancelPaymentEvent', () => {
 
     expect(cancelGrantPayments).toHaveBeenCalledWith(sbi, frn)
     expect(logger.error).toHaveBeenCalledWith(
-      `No grantPayment entry found to cancel for sbi ${sbi} and frn ${frn}`
+      expect.objectContaining({
+        message: `No grantPayment entry found to cancel for sbi ${sbi} and frn ${frn}`
+      }),
+      'Error cancelling grant payment'
     )
   })
 })

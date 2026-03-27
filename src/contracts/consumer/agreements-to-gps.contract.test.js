@@ -13,8 +13,8 @@ import { withPactDir } from '#~/contracts/test-helpers/pact.js'
 import { buildIsolatedMongoOptions } from '#~/contracts/test-helpers/mongo.js'
 import sampleData from '#~/api/common/helpers/sample-data/index.js'
 import { toLessRestrictive } from '#~/contracts/test-helpers/pact-matchers.js'
-import { handleCreatePaymentEvent } from '#~/create-payment/handlers/handle-create-payment.js'
-import { handleCancelPaymentEvent } from '#~/cancel-payment/handlers/handle-cancel-payment.js'
+import { handleCreatePaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-create-payment.js'
+import { handleCancelPaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-cancel-payment.js'
 
 const { like, iso8601DateTimeWithMillis } = MatchersV2
 
@@ -130,7 +130,7 @@ describe('receive a SFI grant payment event', () => {
             `Received cancel_payment event with payload ${JSON.stringify(payload, null, 2)}`
           )
 
-          expect(mockLogger.info.mock.calls[1][0]).toContain(
+          expect(mockLogger.info.mock.calls[1][1]).toContain(
             'Managed to successfully cancel grantPayment entry'
           )
         })
