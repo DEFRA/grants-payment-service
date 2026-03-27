@@ -1,4 +1,5 @@
 import { formatPaymentDate } from '#~/common/helpers/format-payment-date.js'
+import { getActionCodeByName } from '#~/common/helpers/config-mapper/index.js'
 
 const DEBT_TYPE_MAX_LENGTH = 3
 
@@ -30,7 +31,7 @@ const validateRemittanceDescription = (remittanceDescription) => {
 
 const buildInvoiceLines = (grant, payment) =>
   payment.invoiceLines.map((invoiceLine) => ({
-    schemeCode: invoiceLine.schemeCode,
+    schemeCode: getActionCodeByName(invoiceLine.schemeCode),
     accountCode: invoiceLine.accountCode,
     fundCode: invoiceLine.fundCode,
     agreementNumber: grant.agreementNumber,

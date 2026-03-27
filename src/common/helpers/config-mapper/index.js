@@ -1,3 +1,24 @@
+const actions = {
+  items: [
+    {
+      name: 'CMOR1',
+      code: '84011'
+    },
+    {
+      name: 'UPL1',
+      code: '84021'
+    },
+    {
+      name: 'UPL2',
+      code: '84023'
+    },
+    {
+      name: 'UPL3',
+      code: '84025'
+    }
+  ]
+}
+
 const schemeConfigMapper = {
   SFI: {
     accountCode: 'AC001',
@@ -17,4 +38,9 @@ const schemeConfigMapper = {
 
 export const getPaymentHubConfig = (schemeCode) => {
   return schemeConfigMapper[schemeCode]
+}
+
+export const getActionCodeByName = (name) => {
+  const action = actions.items.find((item) => item.name === name)
+  return action?.code
 }
