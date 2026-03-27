@@ -43,10 +43,24 @@ describe('handleCancelPaymentEvent', () => {
         eventType: validPayload.type,
         sbi
       },
-      `Received cancel_payment event with payload is  ${JSON.stringify(validPayload, null, 2)}`
+      `Received cancel_payment event with payload ${JSON.stringify(validPayload, null, 2)}`
     )
     expect(logger.info).toHaveBeenCalledWith(
       `Managed to successfully cancel grantPayment entry ${JSON.stringify([sampleData.grants[0]])}`
+    )
+  })
+
+  it('logs an error if no grantPayment entry is found to cancel', async () => {
+    const logger = { info: vi.fn(), error: vi.fn() }
+    const { sbi, frn } = sampleData.grants[0]
+
+    cancelGrantPayments.mockResolvedValue([])
+
+    await handleCancelPaymentEvent('msg-1', validPayload, logger)
+
+    expect(cancelGrantPayments).toHaveBeenCalledWith(sbi, frn)
+    expect(logger.error).toHaveBeenCalledWith(
+      `No grantPayment entry found to cancel for sbi ${sbi} and frn ${frn}`
     )
   })
 })
