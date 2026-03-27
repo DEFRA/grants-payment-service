@@ -89,7 +89,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
           remittanceDescription: 'Farm Payments Technical Test Payment',
           invoiceLines: [
             {
-              schemeCode: 'CMOR1',
+              schemeCode: '84011',
               accountCode: 'AC001',
               fundCode: 'FUND10',
               agreementNumber: 'FPTT264870631',

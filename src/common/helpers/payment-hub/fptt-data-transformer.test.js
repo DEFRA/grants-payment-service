@@ -1,5 +1,12 @@
 import mongoose from 'mongoose'
+import { vi } from 'vitest'
 import { transformFpttPaymentDataToPaymentHubFormat } from './fptt-data-transformer.js'
+
+vi.mock('#~/common/helpers/logging/logger.js', () => ({
+  getLogger: vi.fn().mockReturnValue({
+    error: vi.fn()
+  })
+}))
 
 describe('transformFpttPaymentDataToPaymentHubFormat', () => {
   const baseIdentifiers = { sbi: '111', frn: '222', claimId: '333' }
@@ -25,7 +32,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       currency: 'EUR',
       invoiceLines: [
         {
-          schemeCode: 'SC',
+          schemeCode: 'CMOR1',
           description: 'D',
           amountPence: '1234',
           deliveryBody: 'RP00'
@@ -62,7 +69,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
 
     expect(result.invoiceLines).toHaveLength(1)
     expect(result.invoiceLines[0]).toMatchObject({
-      schemeCode: 'SC',
+      schemeCode: '84011',
       description: 'D',
       value: '12.34',
       agreementNumber: 'AGR1',
