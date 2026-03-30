@@ -14,6 +14,8 @@ describe('#healthController', () => {
     mongooseModule = await import('mongoose')
 
     config.set('serviceVersion', 'versionMock')
+    config.set('featureFlags.testEndpoints', true)
+    config.set('featureFlags.isPaymentHubEnabled', false)
 
     // import createServer after mongoose is mocked so controllers picks up the mock
     const { createServer } = await import('../../server.js')
@@ -40,7 +42,11 @@ describe('#healthController', () => {
         url: '/health'
       })
 
-      expect(result).toEqual({ message: 'success', version: 'versionMock' })
+      expect(result).toEqual({
+        message: 'success',
+        version: 'versionMock',
+        featureFlags: { testEndpoints: true, isPaymentHubEnabled: false }
+      })
       expect(statusCode).toBe(statusCodes.ok)
     })
   })
@@ -92,8 +98,25 @@ describe('#healthController', () => {
       config.set('serviceVersion', null)
       mongooseModule.__mockPing.mockResolvedValueOnce({ ok: 1 })
       const response = await server.inject({ method: 'GET', url: '/health' })
-      expect(response.result).toEqual({ message: 'success', version: 'dev' })
+      expect(response.result).toEqual({
+        message: 'success',
+        version: 'dev',
+        featureFlags: { testEndpoints: true, isPaymentHubEnabled: false }
+      })
       expect(response.statusCode).toBe(statusCodes.ok)
+    })
+
+    test('Should return the updated feature flags', async () => {
+      config.set('featureFlags.isPaymentHubEnabled', true)
+
+      mongooseModule.__mockPing.mockResolvedValueOnce({ ok: 1 })
+      const { result, statusCode } = await server.inject({
+        method: 'GET',
+        url: '/health'
+      })
+
+      expect(result.featureFlags.isPaymentHubEnabled).toBe(true)
+      expect(statusCode).toBe(statusCodes.ok)
     })
   })
 })
