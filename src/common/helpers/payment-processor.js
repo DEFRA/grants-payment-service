@@ -1,4 +1,4 @@
-import { getTodaysDate } from '#~/common/helpers/date.js'
+import { getTodaysDate, now } from '#~/common/helpers/date.js'
 import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
 import { updatePaymentStatus } from '#~/common/helpers/update-payment-status.js'
@@ -8,7 +8,7 @@ import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js'
 
 export const processDailyPayments = async (server, date = getTodaysDate()) => {
   const { logger } = server
-  logger.info(`Processing daily payments for date: ${date}`)
+  logger.info(`${now()}: Processing daily payments for date: ${date}`)
 
   try {
     // fetch documents where any grant has a matching dueDate

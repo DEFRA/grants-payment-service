@@ -22,12 +22,21 @@ describe('processDailyPayments', () => {
   }
   const server = { logger }
 
+  const fakeDate = '2026-02-20'
+  const fakeTime = '01:23:45.678'
+  const fakeTimestamp = `${fakeDate}T${fakeTime}Z`
+
   beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(fakeTimestamp))
     vi.resetAllMocks()
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('uses provided date, locks each payment and proxies to PaymentHub, returning results', async () => {
-    const fakeDate = '2026-02-20'
     const fakeDocs = [
       {
         _id: '1',
@@ -80,7 +89,7 @@ describe('processDailyPayments', () => {
 
     expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(fakeDate, 'pending')
     expect(logger.info).toHaveBeenCalledWith(
-      `Processing daily payments for date: ${fakeDate}`
+      `${fakeTimestamp}: Processing daily payments for date: ${fakeDate}`
     )
     expect(logger.info).toHaveBeenCalledWith(
       `Found ${fakeDocs.length} payment record(s) matching due date ${fakeDate}`
