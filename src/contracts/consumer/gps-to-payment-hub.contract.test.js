@@ -90,8 +90,8 @@ describe('cron job schedule sending a POST request to payment hub', () => {
           invoiceLines: [
             {
               schemeCode: '84011',
-              accountCode: 'AC001',
-              fundCode: 'FUND10',
+              accountCode: 'DRD10',
+              fundCode: 'SOS710',
               agreementNumber: 'FPTT264870631',
               description:
                 'Parcel 8083 - Assess moorland and produce a written record',
