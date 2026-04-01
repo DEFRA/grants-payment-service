@@ -34,7 +34,7 @@ describe('cron plugin', () => {
       'Registering cron plugin'
     )
     expect(cronJob.schedule).toHaveBeenCalledWith(
-      '10 2 * * *',
+      '10 0 * * *',
       expect.any(Function)
     )
   })
