@@ -21,8 +21,8 @@ const actions = {
 
 const schemeConfigMapper = {
   SFI: {
-    accountCode: 'AC001',
-    fundCode: 'FUND10',
+    accountCode: 'DRD10',
+    fundCode: 'SOS710',
     ledger: 'AP',
     deliveryBody: 'RP00',
     fesCode: 'FALS_FPTT'
