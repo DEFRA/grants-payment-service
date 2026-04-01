@@ -19,7 +19,7 @@ convict.addFormats(convictFormatWithValidator)
 const isProduction = process.env.NODE_ENV === 'production'
 const isTest = process.env.NODE_ENV === 'test'
 
-const LOCALSTACK_ENDPOINT = 'http://localhost:4566'
+const FLOCI_ENDPOINT = 'http://localhost:4566'
 
 const config = convict({
   serviceVersion: {
@@ -176,7 +176,7 @@ const config = convict({
     endpoint: {
       doc: 'AWS SQS endpoint (local/dev only; in CDP this is typically not required)',
       format: String,
-      default: LOCALSTACK_ENDPOINT,
+      default: FLOCI_ENDPOINT,
       env: 'SQS_ENDPOINT'
     },
     queueUrl: {
