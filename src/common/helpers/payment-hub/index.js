@@ -85,7 +85,9 @@ export const sendPaymentHubRequest = async (server, body) => {
     throw new Error(`Payment hub request failed: ${response.statusText}`)
   }
 
-  logger.info('The PaymentHub request sent successfully')
+  logger.info(
+    `The PaymentHub request sent successfully: ${JSON.stringify(body, null, 2)}`
+  )
   auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, body)
 
   return {
