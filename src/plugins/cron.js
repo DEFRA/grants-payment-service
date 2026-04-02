@@ -7,8 +7,8 @@ const cron = {
     register: (server) => {
       server.logger.info('Registering cron plugin')
 
-      // Run Payment Service tasks at 02:10 to avoid missing runs when winter/summer timezone changes
-      cronJob.schedule('10 2 * * *', () => processDailyPayments(server))
+      // Run Payment Service tasks at 00:10 to avoid missing runs when winter/summer timezone changes
+      cronJob.schedule('10 0 * * *', () => processDailyPayments(server))
     }
   }
 }
