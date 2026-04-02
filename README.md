@@ -213,7 +213,7 @@ docker run -e PORT=3001 -p 3001:3001 grants-payment-service
 
 A local environment with:
 
-- Localstack for AWS services (S3, SQS)
+- Floci for AWS services (S3, SQS)
 - MongoDB
 - This service.
 - A commented out frontend example.

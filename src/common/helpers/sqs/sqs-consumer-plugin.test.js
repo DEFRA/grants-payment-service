@@ -211,4 +211,111 @@ describe('processMessage', () => {
       message: handlerError.message
     })
   })
+
+  it('should process SNS-wrapped messages correctly', async () => {
+    const cloudEvent = {
+      type: 'cloud.defra.test.fg-gas-backend.agreement.create',
+      data: { id: '123', status: 'approved' }
+    }
+
+    const snsMessage = {
+      Type: 'Notification',
+      MessageId: 'sns-message-id',
+      TopicArn: 'arn:aws:sns:us-east-1:123456789012:test-topic',
+      Message: JSON.stringify(cloudEvent),
+      Timestamp: '2023-01-01T00:00:00.000Z',
+      SignatureVersion: '1',
+      Signature: 'fake-signature',
+      SigningCertURL:
+        'https://sns.us-east-1.amazonaws.com/SimpleNotificationService.pem',
+      UnsubscribeURL: 'https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe'
+    }
+
+    const sqsMessage = {
+      Body: JSON.stringify(snsMessage),
+      MessageId: 'sqs-message-id'
+    }
+
+    const mockCallback = vi.fn()
+    const handleMessage = await getHandleMessage(mockCallback)
+
+    await handleMessage(sqsMessage)
+
+    expect(mockCallback).toHaveBeenCalledWith(
+      'sqs-message-id',
+      cloudEvent,
+      logger
+    )
+  })
+
+  it('should process raw messages correctly', async () => {
+    const cloudEvent = {
+      type: 'cloud.defra.test.fg-gas-backend.agreement.create',
+      data: { id: '123', status: 'approved' }
+    }
+
+    const sqsMessage = {
+      Body: JSON.stringify(cloudEvent),
+      MessageId: 'sqs-message-id'
+    }
+
+    const mockCallback = vi.fn()
+    const handleMessage = await getHandleMessage(mockCallback)
+
+    await handleMessage(sqsMessage)
+
+    expect(mockCallback).toHaveBeenCalledWith(
+      'sqs-message-id',
+      cloudEvent,
+      logger
+    )
+  })
+
+  it('should handle malformed SNS Message field', async () => {
+    const snsMessage = {
+      Type: 'Notification',
+      MessageId: 'sns-message-id',
+      TopicArn: 'arn:aws:sns:us-east-1:123456789012:test-topic',
+      Message: 'invalid-json',
+      Timestamp: '2023-01-01T00:00:00.000Z'
+    }
+
+    const sqsMessage = {
+      Body: JSON.stringify(snsMessage),
+      MessageId: 'sqs-message-id'
+    }
+
+    const mockCallback = vi.fn()
+    const handleMessage = await getHandleMessage(mockCallback)
+
+    await expect(handleMessage(sqsMessage)).rejects.toMatchObject({
+      isBoom: true,
+      message: `Invalid message format: ${sqsMessage.Body}`
+    })
+  })
+
+  it('should handle SNS message without Message field', async () => {
+    const snsMessage = {
+      Type: 'Notification',
+      MessageId: 'sns-message-id',
+      TopicArn: 'arn:aws:sns:us-east-1:123456789012:test-topic',
+      Timestamp: '2023-01-01T00:00:00.000Z'
+    }
+
+    const sqsMessage = {
+      Body: JSON.stringify(snsMessage),
+      MessageId: 'sqs-message-id'
+    }
+
+    const mockCallback = vi.fn()
+    const handleMessage = await getHandleMessage(mockCallback)
+
+    await handleMessage(sqsMessage)
+
+    expect(mockCallback).toHaveBeenCalledWith(
+      'sqs-message-id',
+      snsMessage,
+      logger
+    )
+  })
 })

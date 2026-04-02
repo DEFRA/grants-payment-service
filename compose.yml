@@ -1,27 +1,36 @@
 services:
-  grants-payment-localstack:
-    image: localstack/localstack:3.0.2
+  grants-payment-floci:
+    image: hectorvent/floci:1.1.0
     ports:
-      - '4569:4566' # LocalStack Gateway
+      - '4569:4566' # Floci Gateway
       - '4570-4619:4510-4559' # external services port range
     env_file:
       - 'compose/aws.env'
     environment:
       DEBUG: ${DEBUG:-1}
-      LS_LOG: WARN # Localstack DEBUG Level
+      LS_LOG: WARN # Floci DEBUG Level
       SERVICES: s3,sqs,sns,firehose
-      LOCALSTACK_HOST: grants-payment-localstack
+      FLOCI_HOST: grants-payment-floci
       MONITOR_SQS: ${MONITOR_SQS:-true}
-    volumes:
-      - '${TMPDIR:-/tmp}/localstack:/var/lib/localstack'
-      - ./compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack.sh
-      - ./compose/monitor-sqs.sh:/etc/localstack/init/ready.d/monitor-sqs.sh
-      - ./compose/view-localstack.sh:/opt/code/localstack/bin/view-localstack.sh
     healthcheck:
-      test: ['CMD', 'curl', 'localhost:4566']
+      test: ['CMD', 'curl', '--fail', 'http://127.0.0.1:4566']
       interval: 5s
       start_period: 5s
       retries: 3
+    networks:
+      - cdp-tenant
+
+  floci-init:
+    image: amazon/aws-cli
+    entrypoint: /bin/sh
+    command: /setup/start-floci.sh
+    depends_on:
+      grants-payment-floci:
+        condition: service_healthy
+    env_file:
+      - 'compose/aws.env'
+    volumes:
+      - ./compose/start-floci.sh:/setup/start-floci.sh
     networks:
       - cdp-tenant
 
@@ -42,11 +51,13 @@ services:
     ports:
       - '3557:3557'
     links:
-      - 'grants-payment-localstack:grants-payment-localstack'
+      - 'grants-payment-floci:grants-payment-floci'
       - 'mongodb:mongodb'
     depends_on:
-      grants-payment-localstack:
+      grants-payment-floci:
         condition: service_healthy
+      floci-init:
+        condition: service_completed_successfully
       mongodb:
         condition: service_started
     env_file:
@@ -54,7 +65,7 @@ services:
     environment:
       PORT: 3557
       NODE_ENV: development
-      LOCALSTACK_ENDPOINT: http://grants-payment-localstack:4566
+      FLOCI_ENDPOINT: http://grants-payment-floci:4566
       MONGO_URI: mongodb://mongodb:27017/
     networks:
       - cdp-tenant

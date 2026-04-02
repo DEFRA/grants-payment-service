@@ -17,7 +17,14 @@ const processMessage = async (handler, message, logger) => {
   }
 
   try {
-    const payload = JSON.parse(message.Body)
+    const messageBody = JSON.parse(message.Body)
+
+    // Handle both SNS-wrapped messages and raw messages (AWS production)
+    let payload = messageBody
+    if (messageBody.Type === 'Notification' && messageBody.Message) {
+      payload = JSON.parse(messageBody.Message)
+    }
+
     await handler(message.MessageId ?? 'unknown-message-id', payload, logger)
   } catch (error) {
     if (error?.name === 'SyntaxError') {
