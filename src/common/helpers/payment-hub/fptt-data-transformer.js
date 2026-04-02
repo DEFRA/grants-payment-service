@@ -2,6 +2,9 @@ import { formatPaymentDate } from '#~/common/helpers/format-payment-date.js'
 import { getActionCodeByName } from '#~/common/helpers/config-mapper/index.js'
 
 const DEBT_TYPE_MAX_LENGTH = 3
+const MONTHS_PER_YEAR = 12
+const QUARTER_MONTHS = 3
+const QUARTERS_PER_YEAR = 4
 
 const valueFormatter = new Intl.NumberFormat('en-GB', {
   useGrouping: false,
@@ -59,19 +62,22 @@ const updateQuarter = (
   const thisDate = new Date(thisPaymentDueDate)
 
   if (Number.isNaN(firstDate.valueOf()) || Number.isNaN(thisDate.valueOf())) {
-    throw new Error('Invalid payment due date')
+    throw new TypeError('Invalid payment due date')
   }
 
   const monthsSinceFirstPayment =
-    (thisDate.getFullYear() - firstDate.getFullYear()) * 12 +
-    (thisDate.getMonth() - firstDate.getMonth())
+    (thisDate.getUTCFullYear() - firstDate.getUTCFullYear()) * MONTHS_PER_YEAR +
+    (thisDate.getUTCMonth() - firstDate.getUTCMonth())
 
   if (monthsSinceFirstPayment < 0) {
     throw new Error('thisPaymentDueDate cannot be before firstPaymentDueDate')
   }
 
-  const quarterOffset = Math.floor(monthsSinceFirstPayment / 3)
-  const quarter = (((quarterOffset % 4) + 4) % 4) + 1
+  const quarterOffset = Math.floor(monthsSinceFirstPayment / QUARTER_MONTHS)
+  const quarter =
+    (((quarterOffset % QUARTERS_PER_YEAR) + QUARTERS_PER_YEAR) %
+      QUARTERS_PER_YEAR) +
+    1
 
   return `${invoiceWithoutQuarter}Q${quarter}`
 }

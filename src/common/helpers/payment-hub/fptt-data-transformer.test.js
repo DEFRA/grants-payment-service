@@ -258,4 +258,55 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       )
     ).toThrow(/must be no more than 3 characters/)
   })
+
+  it('throws when invoice dates are invalid for quarter calculation', () => {
+    const grant = {
+      ...baseGrant,
+      invoiceNumber: 'INV1QX',
+      payments: [{ dueDate: 'invalid-date' }]
+    }
+    const payment = { dueDate: 'also-invalid', invoiceLines: [] }
+
+    expect(() =>
+      transformFpttPaymentDataToPaymentHubFormat(
+        baseIdentifiers,
+        grant,
+        payment
+      )
+    ).toThrow(TypeError)
+  })
+
+  it('throws when thisPaymentDueDate is before firstPaymentDueDate', () => {
+    const grant = {
+      ...baseGrant,
+      invoiceNumber: 'INV2',
+      payments: [{ dueDate: '2026-06-01' }]
+    }
+    const payment = { dueDate: '2026-03-01', invoiceLines: [] }
+
+    expect(() =>
+      transformFpttPaymentDataToPaymentHubFormat(
+        baseIdentifiers,
+        grant,
+        payment
+      )
+    ).toThrow(/cannot be before firstPaymentDueDate/)
+  })
+
+  it('uses payment due date as firstPaymentDueDate when no scheduled payments are set', () => {
+    const grant = {
+      ...baseGrant,
+      invoiceNumber: 'INV3',
+      payments: []
+    }
+    const payment = { dueDate: '2026-07-01', invoiceLines: [] }
+
+    const result = transformFpttPaymentDataToPaymentHubFormat(
+      baseIdentifiers,
+      grant,
+      payment
+    )
+
+    expect(result.invoiceNumber).toBe('INV3Q1')
+  })
 })
