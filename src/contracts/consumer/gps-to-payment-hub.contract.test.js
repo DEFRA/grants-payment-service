@@ -76,7 +76,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
           sourceSystem: 'FPTT',
           ledger: 'AP',
           deliveryBody: 'RP00',
-          invoiceNumber: 'R00000004-V001Q2',
+          invoiceNumber: 'R00000004-V001Q1',
           frn: '12544567',
           sbi: '106284736',
           fesCode: 'FALS_FPTT',
@@ -112,7 +112,8 @@ describe('cron job schedule sending a POST request to payment hub', () => {
         config.set('paymentHub.key', 'test-key')
         config.set('paymentHub.keyName', 'test-key-name')
 
-        expect(new Date().toISOString()).toContain('2026-06-05T02:09')
+        const expectedTime = new Date(2026, 5, 5, 2, 9).toISOString()
+        expect(new Date().toISOString()).toBe(expectedTime)
 
         await processDailyPayments(server)
       })
