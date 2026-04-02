@@ -49,7 +49,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     expect(result).toMatchObject({
       sourceSystem: 'FPTT',
       ledger: 'AP',
-      invoiceNumber: 'INV1',
+      invoiceNumber: 'INV1Q1',
       frn: '222',
       sbi: '111',
       fesCode: 'FALS_FPTT',
@@ -76,6 +76,74 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       deliveryBody: 'RP00',
       marketingYear: '2026'
     })
+  })
+
+  it('applies quarter numbers relative to first payment date in the schedule', () => {
+    const firstPayment = {
+      dueDate: '2025-08-01',
+      invoiceLines: []
+    }
+
+    const secondPayment = {
+      dueDate: '2025-11-01',
+      invoiceLines: []
+    }
+
+    const thirdPayment = {
+      dueDate: '2026-02-01',
+      invoiceLines: []
+    }
+
+    const fourthPayment = {
+      dueDate: '2026-05-01',
+      invoiceLines: []
+    }
+
+    const fifthPayment = {
+      dueDate: '2026-08-01',
+      invoiceLines: []
+    }
+
+    const grant = {
+      ...baseGrant,
+      invoiceNumber: 'INV1QX',
+      payments: [firstPayment]
+    }
+
+    const firstResult = transformFpttPaymentDataToPaymentHubFormat(
+      baseIdentifiers,
+      grant,
+      firstPayment
+    )
+    expect(firstResult.invoiceNumber).toBe('INV1Q1')
+
+    const secondResult = transformFpttPaymentDataToPaymentHubFormat(
+      baseIdentifiers,
+      { ...grant, payments: [firstPayment] },
+      secondPayment
+    )
+    expect(secondResult.invoiceNumber).toBe('INV1Q2')
+
+    const thirdResult = transformFpttPaymentDataToPaymentHubFormat(
+      baseIdentifiers,
+      { ...grant, payments: [firstPayment] },
+      thirdPayment
+    )
+    expect(thirdResult.invoiceNumber).toBe('INV1Q3')
+
+    const fourthResult = transformFpttPaymentDataToPaymentHubFormat(
+      baseIdentifiers,
+      { ...grant, payments: [firstPayment] },
+      fourthPayment
+    )
+    expect(fourthResult.invoiceNumber).toBe('INV1Q4')
+
+    const fifthResult = transformFpttPaymentDataToPaymentHubFormat(
+      baseIdentifiers,
+      { ...grant, payments: [firstPayment] },
+      fifthPayment
+    )
+    expect(fifthResult.invoiceNumber).toBe('INV1Q1')
   })
 
   it('omits AR fields entirely when no AR data is present', () => {

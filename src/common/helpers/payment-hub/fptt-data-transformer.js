@@ -42,6 +42,41 @@ const buildInvoiceLines = (grant, payment) =>
   }))
 
 /**
+ * Calculates the quarter suffix for an invoice number based on the first payment due date and the current payment due date
+ * @param {string} invoiceNumber
+ * @param {string} firstPaymentDueDate
+ * @param {string} thisPaymentDueDate
+ * @returns string
+ */
+const updateQuarter = (
+  invoiceNumber,
+  firstPaymentDueDate,
+  thisPaymentDueDate
+) => {
+  const invoiceWithoutQuarter = invoiceNumber.replace(/Q[1-4X]$/i, '')
+
+  const firstDate = new Date(firstPaymentDueDate || thisPaymentDueDate)
+  const thisDate = new Date(thisPaymentDueDate)
+
+  if (Number.isNaN(firstDate.valueOf()) || Number.isNaN(thisDate.valueOf())) {
+    throw new Error('Invalid payment due date')
+  }
+
+  const monthsSinceFirstPayment =
+    (thisDate.getFullYear() - firstDate.getFullYear()) * 12 +
+    (thisDate.getMonth() - firstDate.getMonth())
+
+  if (monthsSinceFirstPayment < 0) {
+    throw new Error('thisPaymentDueDate cannot be before firstPaymentDueDate')
+  }
+
+  const quarterOffset = Math.floor(monthsSinceFirstPayment / 3)
+  const quarter = (((quarterOffset % 4) + 4) % 4) + 1
+
+  return `${invoiceWithoutQuarter}Q${quarter}`
+}
+
+/**
  * Transforms SFI payment data into the format required by Payment Hub
  * @param {schema} identifiers
  * @param {Grant} grant
@@ -56,7 +91,11 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
   sourceSystem: 'FPTT', // Farm Payments Technical Test
   ledger: grant.ledger,
   deliveryBody: grant.deliveryBody,
-  invoiceNumber: grant.invoiceNumber,
+  invoiceNumber: updateQuarter(
+    grant.invoiceNumber,
+    grant?.payments?.[0]?.dueDate,
+    payment.dueDate
+  ),
   frn: identifiers.frn,
   sbi: identifiers.sbi,
   fesCode: grant.fesCode,
