@@ -11,6 +11,7 @@ const PAYMENT_REQ_START = 1000000
 const AMOUNT_MIN = 10000
 const AMOUNT_MAX = 1000000
 const MAX_ERRORS_IN_RESPONSE = 100
+const AGREEMENT_NUMBER_PADDING = 9
 
 /**
  * Generate a random amount in pence
@@ -39,7 +40,7 @@ const createGrantPaymentPayload = (index, batchNum = 0) => {
     paymentRequestNumber: PAYMENT_REQ_START + index,
     correlationId: `correlation-${timestamp}-${index}`,
     invoiceNumber: `INV-${timestamp}-${index}`,
-    agreementNumber: `SFI${String(index).padStart(9, '0')}`,
+    agreementNumber: `SFI${String(index).padStart(AGREEMENT_NUMBER_PADDING, '0')}`,
     totalAmountPence: totalAmount,
     currency: 'GBP',
     marketingYear: '2024',
