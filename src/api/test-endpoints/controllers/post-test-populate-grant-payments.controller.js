@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
 import { serializeError } from '#~/common/helpers/serialize-error.js'
@@ -17,7 +18,7 @@ const AGREEMENT_NUMBER_PADDING = 9
  * Generate a random amount in pence
  */
 const getRandomAmount = (min, max) => {
-  return Math.floor(Math.random() * (max - min + 1) + min)
+  return crypto.randomInt(min, max + 1)
 }
 
 /**
