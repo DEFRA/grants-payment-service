@@ -114,7 +114,7 @@ const postTestPopulateGrantPaymentController = {
   },
   handler: async (req, res) => {
     try {
-      const { targetCount = 100, batchSize = 10 } = req.payload || {}
+      const { targetCount = 100, batchSize = 100 } = req.payload || {}
       const logger = req.logger
 
       logger.info(
@@ -151,6 +151,9 @@ const postTestPopulateGrantPaymentController = {
         if (errors.length > 0) {
           allErrors.push(...errors)
         }
+
+        // Give the event loop a chance to process other things and avoid blocking
+        await new Promise((resolve) => setTimeout(resolve, 0))
       }
 
       logger.info(
