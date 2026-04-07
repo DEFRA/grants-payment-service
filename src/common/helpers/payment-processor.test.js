@@ -34,6 +34,7 @@ describe('processDailyPayments', () => {
         grants: [
           {
             sourceSystem: 'FPTT',
+            invoiceNumber: 'INV1',
             payments: [
               {
                 _id: 'p1',
@@ -53,6 +54,7 @@ describe('processDailyPayments', () => {
         grants: [
           {
             sourceSystem: 'FPTT',
+            invoiceNumber: 'INV1',
             payments: [
               {
                 _id: 'p2',
@@ -125,6 +127,7 @@ describe('processDailyPayments', () => {
         grants: [
           {
             sourceSystem: 'FPTT',
+            invoiceNumber: 'INV1',
             payments: [
               {
                 _id: 'x',
@@ -143,6 +146,7 @@ describe('processDailyPayments', () => {
         grants: [
           {
             sourceSystem: 'FPTT',
+            invoiceNumber: 'INV1',
             payments: [
               {
                 _id: 'y',
@@ -263,6 +267,7 @@ describe('processDailyPayments', () => {
         grants: [
           {
             sourceSystem: 'FPTT',
+            invoiceNumber: 'INV1',
             payments: [
               {
                 _id: 'a',
@@ -281,6 +286,7 @@ describe('processDailyPayments', () => {
         grants: [
           {
             sourceSystem: 'FPTT',
+            invoiceNumber: 'INV1',
             payments: [
               {
                 _id: 'b',
@@ -299,6 +305,7 @@ describe('processDailyPayments', () => {
         grants: [
           {
             sourceSystem: 'FPTT',
+            invoiceNumber: 'INV1',
             payments: [
               {
                 _id: 'c',
