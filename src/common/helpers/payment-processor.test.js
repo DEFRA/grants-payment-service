@@ -4,6 +4,7 @@ import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
 import { updatePaymentStatus } from '#~/common/helpers/update-payment-status.js'
 import { getTodaysDate } from './date.js'
+import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 
 vi.mock('#~/common/helpers/fetch-grants-by-date.js', () => ({
   fetchGrantPaymentsByDate: vi.fn()
@@ -13,6 +14,11 @@ vi.mock('#~/common/helpers/payment-hub/index.js', () => ({
 }))
 vi.mock('#~/common/helpers/update-payment-status.js', () => ({
   updatePaymentStatus: vi.fn()
+}))
+vi.mock('#~/api/common/models/grant_payments.js', () => ({
+  default: {
+    findOne: vi.fn()
+  }
 }))
 
 describe('processDailyPayments', () => {
@@ -33,6 +39,7 @@ describe('processDailyPayments', () => {
         _id: '1',
         grants: [
           {
+            _id: 'g1',
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
             payments: [
@@ -53,6 +60,7 @@ describe('processDailyPayments', () => {
         _id: '2',
         grants: [
           {
+            _id: 'g2',
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
             payments: [
@@ -70,6 +78,9 @@ describe('processDailyPayments', () => {
       }
     ]
     fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+    GrantPaymentsModel.findOne
+      .mockResolvedValueOnce({ grants: [fakeDocs[0].grants[0]] })
+      .mockResolvedValueOnce({ grants: [fakeDocs[1].grants[0]] })
     const responses = ['a', 'b']
     sendPaymentHubRequest
       .mockResolvedValueOnce(responses[0])
@@ -126,6 +137,7 @@ describe('processDailyPayments', () => {
         _id: '1',
         grants: [
           {
+            _id: 'g1',
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
             payments: [
@@ -145,6 +157,7 @@ describe('processDailyPayments', () => {
         _id: '2',
         grants: [
           {
+            _id: 'g2',
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
             payments: [
@@ -162,6 +175,9 @@ describe('processDailyPayments', () => {
       }
     ]
     fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+    GrantPaymentsModel.findOne
+      .mockResolvedValueOnce({ grants: [fakeDocs[0].grants[0]] })
+      .mockResolvedValueOnce({ grants: [fakeDocs[1].grants[0]] })
 
     // first lock succeeds, second returns {n:0} meaning already handled
     updatePaymentStatus
@@ -200,6 +216,9 @@ describe('processDailyPayments', () => {
       { _id: 'no-payments', grants: [{ invoiceNumber: 'INV1' }] }
     ]
     fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+    GrantPaymentsModel.findOne.mockResolvedValue({
+      grants: [{ invoiceNumber: 'INV1' }]
+    })
 
     const result = await processDailyPayments(server, fakeDate)
 
@@ -228,6 +247,7 @@ describe('processDailyPayments', () => {
         _id: '1',
         grants: [
           {
+            _id: 'g1',
             sourceSystem: 'UNKNOWN',
             payments: [
               {
@@ -244,6 +264,9 @@ describe('processDailyPayments', () => {
       }
     ]
     fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+    GrantPaymentsModel.findOne.mockResolvedValue({
+      grants: [fakeDocs[0].grants[0]]
+    })
     updatePaymentStatus.mockResolvedValue({ n: 1 })
 
     const result = await processDailyPayments(server, fakeDate)
@@ -266,6 +289,7 @@ describe('processDailyPayments', () => {
         _id: '1',
         grants: [
           {
+            _id: 'g1',
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
             payments: [
@@ -285,6 +309,7 @@ describe('processDailyPayments', () => {
         _id: '2',
         grants: [
           {
+            _id: 'g2',
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
             payments: [
@@ -304,6 +329,7 @@ describe('processDailyPayments', () => {
         _id: '3',
         grants: [
           {
+            _id: 'g3',
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
             payments: [
@@ -321,6 +347,10 @@ describe('processDailyPayments', () => {
       }
     ]
     fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+    GrantPaymentsModel.findOne
+      .mockResolvedValueOnce({ grants: [fakeDocs[0].grants[0]] })
+      .mockResolvedValueOnce({ grants: [fakeDocs[1].grants[0]] })
+      .mockResolvedValueOnce({ grants: [fakeDocs[2].grants[0]] })
 
     // first and third succeed, second fails
     sendPaymentHubRequest
