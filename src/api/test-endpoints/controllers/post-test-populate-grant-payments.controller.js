@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import Joi from 'joi'
+import { statusCodes } from '#~/common/constants/status-codes.js'
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 
@@ -197,10 +198,11 @@ const postTestPopulateGrantPaymentController = {
         batchSize: calculatedBatchSize,
         dueDate
       })
-      .code(202)
+      .code(statusCodes.accepted)
   }
 }
 
+/* eslint-disable import-x/no-unused-modules */
 export { postTestPopulateGrantPaymentController }
 
 /**

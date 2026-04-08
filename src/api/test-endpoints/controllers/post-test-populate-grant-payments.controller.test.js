@@ -1,5 +1,6 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { setImmediate } from 'node:timers/promises'
+import { statusCodes } from '#~/common/constants/status-codes.js'
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 import { postTestPopulateGrantPaymentController } from './post-test-populate-grant-payments.controller.js'
@@ -58,7 +59,7 @@ describe('postTestPopulateGrantPaymentController', () => {
 
     const result = await postTestPopulateGrantPaymentController.handler(req, h)
 
-    expect(result.statusCode).toBe(202)
+    expect(result.statusCode).toBe(statusCodes.accepted)
     expect(result.source.message).toBe('Grant payment population started')
     expect(result.source.targetCount).toBe(100)
     expect(result.source.batchSize).toBe(10) // 100/10
@@ -96,7 +97,7 @@ describe('postTestPopulateGrantPaymentController', () => {
 
     const result = await postTestPopulateGrantPaymentController.handler(req, h)
 
-    expect(result.statusCode).toBe(202)
+    expect(result.statusCode).toBe(statusCodes.accepted)
     expect(result.source.dueDate).toBe('2025-12-25')
 
     // Wait for setImmediate to complete
@@ -126,7 +127,7 @@ describe('postTestPopulateGrantPaymentController', () => {
 
     const result = await postTestPopulateGrantPaymentController.handler(req, h)
 
-    expect(result.statusCode).toBe(202)
+    expect(result.statusCode).toBe(statusCodes.accepted)
 
     // Wait for setImmediate to complete
     await setImmediate()
@@ -146,7 +147,7 @@ describe('postTestPopulateGrantPaymentController', () => {
 
     const result = await postTestPopulateGrantPaymentController.handler(req, h)
 
-    expect(result.statusCode).toBe(202)
+    expect(result.statusCode).toBe(statusCodes.accepted)
 
     // Wait for setImmediate to complete
     await setImmediate()
@@ -173,7 +174,7 @@ describe('postTestPopulateGrantPaymentController', () => {
       h
     )
 
-    expect(result.statusCode).toBe(202)
+    expect(result.statusCode).toBe(statusCodes.accepted)
 
     // Wait for setImmediate to complete
     await setImmediate()
