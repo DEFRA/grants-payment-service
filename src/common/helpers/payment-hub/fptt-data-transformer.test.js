@@ -70,7 +70,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     expect(result.invoiceLines).toHaveLength(1)
     expect(result.invoiceLines[0]).toMatchObject({
       schemeCode: '84011',
-      description: 'D',
+      description: 'G00 - Gross Value of Claim',
       value: '12.34',
       agreementNumber: 'AGR1',
       deliveryBody: 'RP00',
