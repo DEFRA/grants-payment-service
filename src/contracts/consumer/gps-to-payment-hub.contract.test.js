@@ -82,7 +82,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
           fesCode: 'FALS_FPTT',
           marketingYear: '2026',
           paymentRequestNumber: 1,
-          agreementNumber: 'FPTT264870631',
+          agreementNumber: '264870631',
           contractNumber: 'R00000004',
           currency: 'GBP',
           dueDate: '05/06/2026',
@@ -92,7 +92,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
               schemeCode: '84011',
               accountCode: 'SOS710',
               fundCode: 'DRD10',
-              agreementNumber: 'FPTT264870631',
+              agreementNumber: '264870631',
               description: 'G00 - Gross Value of Claim',
               value: '12.63',
               deliveryBody: 'RP00',
@@ -100,7 +100,8 @@ describe('cron job schedule sending a POST request to payment hub', () => {
             }
           ],
           correlationId: '7cf9bd11-c791-42c9-bd28-fa0fec_id',
-          value: '-702.85'
+          value: '-12.63',
+          annualValue: '702.85'
         })
       })
       .willRespondWith(200, (builder) => {

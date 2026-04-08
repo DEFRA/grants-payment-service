@@ -42,6 +42,7 @@ describe('processDailyPayments', () => {
             _id: 'g1',
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
+            agreementNumber: 'AGR1',
             payments: [
               {
                 _id: 'p1',
@@ -63,6 +64,7 @@ describe('processDailyPayments', () => {
             _id: 'g2',
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
+            agreementNumber: 'AGR1',
             payments: [
               {
                 _id: 'p2',
@@ -140,6 +142,7 @@ describe('processDailyPayments', () => {
             _id: 'g1',
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
+            agreementNumber: 'AGR1',
             payments: [
               {
                 _id: 'x',
@@ -160,6 +163,7 @@ describe('processDailyPayments', () => {
             _id: 'g2',
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
+            agreementNumber: 'AGR1',
             payments: [
               {
                 _id: 'y',
@@ -213,11 +217,14 @@ describe('processDailyPayments', () => {
       // document with no grants (undefined)
       { _id: 'no-grants' },
       // document with a grant that has no payments (undefined)
-      { _id: 'no-payments', grants: [{ invoiceNumber: 'INV1' }] }
+      {
+        _id: 'no-payments',
+        grants: [{ invoiceNumber: 'INV1', agreementNumber: 'AGR1' }]
+      }
     ]
     fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
     GrantPaymentsModel.findOne.mockResolvedValue({
-      grants: [{ invoiceNumber: 'INV1' }]
+      grants: [{ invoiceNumber: 'INV1', agreementNumber: 'AGR1' }]
     })
 
     const result = await processDailyPayments(server, fakeDate)
@@ -249,6 +256,7 @@ describe('processDailyPayments', () => {
           {
             _id: 'g1',
             sourceSystem: 'UNKNOWN',
+            agreementNumber: 'AGR1',
             payments: [
               {
                 _id: 'p1',
@@ -292,6 +300,7 @@ describe('processDailyPayments', () => {
             _id: 'g1',
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
+            agreementNumber: 'AGR1',
             payments: [
               {
                 _id: 'a',
@@ -312,6 +321,7 @@ describe('processDailyPayments', () => {
             _id: 'g2',
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
+            agreementNumber: 'AGR1',
             payments: [
               {
                 _id: 'b',
@@ -332,6 +342,7 @@ describe('processDailyPayments', () => {
             _id: 'g3',
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
+            agreementNumber: 'AGR1',
             payments: [
               {
                 _id: 'c',
