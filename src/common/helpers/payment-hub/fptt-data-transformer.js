@@ -38,7 +38,7 @@ const buildInvoiceLines = (grant, payment) =>
     accountCode: invoiceLine.accountCode,
     fundCode: invoiceLine.fundCode,
     agreementNumber: grant.agreementNumber,
-    description: invoiceLine.description,
+    description: 'G00 - Gross Value of Claim',
     value: valueFormatter.format(invoiceLine.amountPence / 100),
     deliveryBody: invoiceLine.deliveryBody,
     marketingYear: grant.marketingYear
