@@ -15,7 +15,7 @@ const getTestGrantPaymentsBySbiAndGrantCodeController = {
   handler: async (req, res) => {
     try {
       const { sbi, grantCode } = req.params
-      const page = parseInt(req.query?.page) || 1
+      const page = Number.parseInt(req.query?.page) || 1
       const payments = await fetchGrantPaymentsBySbiAndGrantCode(
         sbi,
         grantCode,
