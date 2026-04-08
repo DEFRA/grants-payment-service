@@ -6,6 +6,8 @@ const MONTHS_PER_YEAR = 12
 const QUARTER_MONTHS = 3
 const QUARTERS_PER_YEAR = 4
 
+const asNumbersOnly = (value) => value.replaceAll(/\D/g, '')
+
 const valueFormatter = new Intl.NumberFormat('en-GB', {
   useGrouping: false,
   minimumFractionDigits: 2,
@@ -37,9 +39,9 @@ const buildInvoiceLines = (grant, payment) =>
     schemeCode: getActionCodeByName(invoiceLine.schemeCode),
     accountCode: invoiceLine.accountCode,
     fundCode: invoiceLine.fundCode,
-    agreementNumber: grant.agreementNumber,
+    agreementNumber: asNumbersOnly(grant.agreementNumber),
     description: 'G00 - Gross Value of Claim',
-    value: valueFormatter.format(invoiceLine.amountPence / 100),
+    value: valueFormatter.format(Number(invoiceLine.amountPence) / 100),
     deliveryBody: invoiceLine.deliveryBody,
     marketingYear: grant.marketingYear
   }))
@@ -107,7 +109,7 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
   fesCode: grant.fesCode,
   marketingYear: grant.marketingYear || new Date().getFullYear(),
   paymentRequestNumber: grant.paymentRequestNumber,
-  agreementNumber: grant.agreementNumber,
+  agreementNumber: asNumbersOnly(grant.agreementNumber),
   contractNumber: identifiers.claimId,
   currency: payment.currency || 'GBP',
   dueDate: formatPaymentDate(payment.dueDate),
@@ -130,8 +132,16 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
   ...(payment.originalSettlementDate && {
     originalSettlementDate: formatPaymentDate(payment.originalSettlementDate)
   }),
+  value: valueFormatter.format(
+    -Math.abs(
+      payment.invoiceLines.reduce(
+        (acc, line) => acc + Number(line.amountPence),
+        0
+      )
+    ) / 100
+  ),
   ...(grant.totalAmountPence != null && {
-    value: valueFormatter.format(-Math.abs(grant.totalAmountPence) / 100)
+    annualValue: valueFormatter.format(Number(grant.totalAmountPence) / 100)
   })
 })
 
