@@ -6,6 +6,8 @@ const MONTHS_PER_YEAR = 12
 const QUARTER_MONTHS = 3
 const QUARTERS_PER_YEAR = 4
 
+const asNumbersOnly = (value) => value.replace(/\D/g, '')
+
 const valueFormatter = new Intl.NumberFormat('en-GB', {
   useGrouping: false,
   minimumFractionDigits: 2,
@@ -37,9 +39,9 @@ const buildInvoiceLines = (grant, payment) =>
     schemeCode: getActionCodeByName(invoiceLine.schemeCode),
     accountCode: invoiceLine.accountCode,
     fundCode: invoiceLine.fundCode,
-    agreementNumber: grant.agreementNumber,
+    agreementNumber: asNumbersOnly(grant.agreementNumber),
     description: 'G00 - Gross Value of Claim',
-    value: valueFormatter.format(invoiceLine.amountPence / 100),
+    value: valueFormatter.format(Number(invoiceLine.amountPence) / 100),
     deliveryBody: invoiceLine.deliveryBody,
     marketingYear: grant.marketingYear
   }))
@@ -93,47 +95,56 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
   identifiers,
   grant,
   payment
-) => ({
-  sourceSystem: 'FPTT', // Farm Payments Technical Test
-  ledger: grant.ledger,
-  deliveryBody: grant.deliveryBody,
-  invoiceNumber: updateQuarter(
-    grant.invoiceNumber,
-    grant?.payments?.[0]?.dueDate,
-    payment.dueDate
-  ),
-  frn: identifiers.frn,
-  sbi: identifiers.sbi,
-  fesCode: grant.fesCode,
-  marketingYear: grant.marketingYear || new Date().getFullYear(),
-  paymentRequestNumber: grant.paymentRequestNumber,
-  agreementNumber: grant.agreementNumber,
-  contractNumber: identifiers.claimId,
-  currency: payment.currency || 'GBP',
-  dueDate: formatPaymentDate(payment.dueDate),
-  remittanceDescription: validateRemittanceDescription(
-    'Farm Payments Technical Test Payment'
-  ),
-  invoiceLines: buildInvoiceLines(grant, payment),
+) => {
+  const invoiceLines = buildInvoiceLines(grant, payment)
+  const instalmentAmountPence = payment.invoiceLines.reduce(
+    (acc, line) => acc + Number(line.amountPence),
+    0
+  )
 
-  // Not listed in Service Bus Payment Requests - FPTT.xlsx
-  correlationId: grant.correlationId,
+  return {
+    sourceSystem: 'FPTT', // Farm Payments Technical Test
+    ledger: grant.ledger,
+    deliveryBody: grant.deliveryBody,
+    invoiceNumber: updateQuarter(
+      grant.invoiceNumber,
+      grant?.payments?.[0]?.dueDate,
+      payment.dueDate
+    ),
+    frn: identifiers.frn,
+    sbi: identifiers.sbi,
+    fesCode: grant.fesCode,
+    marketingYear: grant.marketingYear || new Date().getFullYear(),
+    paymentRequestNumber: grant.paymentRequestNumber,
+    agreementNumber: asNumbersOnly(grant.agreementNumber),
+    contractNumber: identifiers.claimId,
+    currency: payment.currency || 'GBP',
+    dueDate: formatPaymentDate(payment.dueDate),
+    remittanceDescription: validateRemittanceDescription(
+      'Farm Payments Technical Test Payment'
+    ),
+    invoiceLines,
 
-  // AR fields — only included when valid data is present
-  ...(grant.debtType && { debtType: validateDebtType(grant.debtType) }),
-  ...(payment.recoveryDate && {
-    recoveryDate: formatPaymentDate(payment.recoveryDate)
-  }),
-  ...(grant.originalInvoiceNumber && {
-    originalInvoiceNumber: grant.originalInvoiceNumber
-  }),
-  ...(payment.originalSettlementDate && {
-    originalSettlementDate: formatPaymentDate(payment.originalSettlementDate)
-  }),
-  ...(grant.totalAmountPence != null && {
-    value: valueFormatter.format(-Math.abs(grant.totalAmountPence) / 100)
-  })
-})
+    // Not listed in Service Bus Payment Requests - FPTT.xlsx
+    correlationId: grant.correlationId,
+
+    // AR fields — only included when valid data is present
+    ...(grant.debtType && { debtType: validateDebtType(grant.debtType) }),
+    ...(payment.recoveryDate && {
+      recoveryDate: formatPaymentDate(payment.recoveryDate)
+    }),
+    ...(grant.originalInvoiceNumber && {
+      originalInvoiceNumber: grant.originalInvoiceNumber
+    }),
+    ...(payment.originalSettlementDate && {
+      originalSettlementDate: formatPaymentDate(payment.originalSettlementDate)
+    }),
+    value: valueFormatter.format(-Math.abs(instalmentAmountPence) / 100),
+    ...(grant.totalAmountPence != null && {
+      annualValue: valueFormatter.format(Number(grant.totalAmountPence) / 100)
+    })
+  }
+}
 
 /** @import { schema, Grant, Payment } from '#~/api/common/models/grant_payments.js' */
 /** @import { PaymentHubRequest } from '#~/common/types/payment-hub.d.js' */

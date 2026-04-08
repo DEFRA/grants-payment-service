@@ -55,11 +55,11 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       fesCode: 'FALS_FPTT',
       marketingYear: '2026',
       paymentRequestNumber: 5,
-      agreementNumber: 'AGR1',
+      agreementNumber: '1',
       contractNumber: '333',
       currency: 'EUR',
       dueDate: '05/06/2026',
-      value: '-1234.56',
+      value: '-12.34',
       remittanceDescription: 'Farm Payments Technical Test Payment',
       recoveryDate: '06/06/2026',
       originalInvoiceNumber: 'OINV',
@@ -72,7 +72,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       schemeCode: '84011',
       description: 'G00 - Gross Value of Claim',
       value: '12.34',
-      agreementNumber: 'AGR1',
+      agreementNumber: '1',
       deliveryBody: 'RP00',
       marketingYear: '2026'
     })
@@ -170,7 +170,14 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       dueDate: '2026-06-05',
       recoveryDate: '2026-07-01',
       originalSettlementDate: '2026-05-01',
-      invoiceLines: []
+      invoiceLines: [
+        {
+          schemeCode: 'CMOR1',
+          description: 'D',
+          amountPence: '123456',
+          deliveryBody: 'RP00'
+        }
+      ]
     }
 
     const result = transformFpttPaymentDataToPaymentHubFormat(
@@ -242,7 +249,8 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       grant,
       payment
     )
-    expect(out.value).toBe('-2345.67')
+    expect(out.value).toBe('-22.34')
+    expect(out.annualValue).toBe('2345.67')
     expect(out.invoiceLines[0].value).toBe('12.34')
     expect(out.invoiceLines[1].value).toBe('10.00')
   })
