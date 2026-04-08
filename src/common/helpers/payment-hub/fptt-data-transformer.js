@@ -6,7 +6,7 @@ const MONTHS_PER_YEAR = 12
 const QUARTER_MONTHS = 3
 const QUARTERS_PER_YEAR = 4
 
-const asNumbersOnly = (value) => value.replace(/\D/g, '')
+const asNumbersOnly = (value) => value.replaceAll(/\D/g, '')
 
 const valueFormatter = new Intl.NumberFormat('en-GB', {
   useGrouping: false,
