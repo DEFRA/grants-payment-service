@@ -95,56 +95,55 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
   identifiers,
   grant,
   payment
-) => {
-  const invoiceLines = buildInvoiceLines(grant, payment)
-  const instalmentAmountPence = payment.invoiceLines.reduce(
-    (acc, line) => acc + Number(line.amountPence),
-    0
-  )
+) => ({
+  sourceSystem: 'FPTT', // Farm Payments Technical Test
+  ledger: grant.ledger,
+  deliveryBody: grant.deliveryBody,
+  invoiceNumber: updateQuarter(
+    grant.invoiceNumber,
+    grant?.payments?.[0]?.dueDate,
+    payment.dueDate
+  ),
+  frn: identifiers.frn,
+  sbi: identifiers.sbi,
+  fesCode: grant.fesCode,
+  marketingYear: grant.marketingYear || new Date().getFullYear(),
+  paymentRequestNumber: grant.paymentRequestNumber,
+  agreementNumber: asNumbersOnly(grant.agreementNumber),
+  contractNumber: identifiers.claimId,
+  currency: payment.currency || 'GBP',
+  dueDate: formatPaymentDate(payment.dueDate),
+  remittanceDescription: validateRemittanceDescription(
+    'Farm Payments Technical Test Payment'
+  ),
+  invoiceLines: buildInvoiceLines(grant, payment),
 
-  return {
-    sourceSystem: 'FPTT', // Farm Payments Technical Test
-    ledger: grant.ledger,
-    deliveryBody: grant.deliveryBody,
-    invoiceNumber: updateQuarter(
-      grant.invoiceNumber,
-      grant?.payments?.[0]?.dueDate,
-      payment.dueDate
-    ),
-    frn: identifiers.frn,
-    sbi: identifiers.sbi,
-    fesCode: grant.fesCode,
-    marketingYear: grant.marketingYear || new Date().getFullYear(),
-    paymentRequestNumber: grant.paymentRequestNumber,
-    agreementNumber: asNumbersOnly(grant.agreementNumber),
-    contractNumber: identifiers.claimId,
-    currency: payment.currency || 'GBP',
-    dueDate: formatPaymentDate(payment.dueDate),
-    remittanceDescription: validateRemittanceDescription(
-      'Farm Payments Technical Test Payment'
-    ),
-    invoiceLines,
+  // Not listed in Service Bus Payment Requests - FPTT.xlsx
+  correlationId: grant.correlationId,
 
-    // Not listed in Service Bus Payment Requests - FPTT.xlsx
-    correlationId: grant.correlationId,
-
-    // AR fields — only included when valid data is present
-    ...(grant.debtType && { debtType: validateDebtType(grant.debtType) }),
-    ...(payment.recoveryDate && {
-      recoveryDate: formatPaymentDate(payment.recoveryDate)
-    }),
-    ...(grant.originalInvoiceNumber && {
-      originalInvoiceNumber: grant.originalInvoiceNumber
-    }),
-    ...(payment.originalSettlementDate && {
-      originalSettlementDate: formatPaymentDate(payment.originalSettlementDate)
-    }),
-    value: valueFormatter.format(-Math.abs(instalmentAmountPence) / 100),
-    ...(grant.totalAmountPence != null && {
-      annualValue: valueFormatter.format(Number(grant.totalAmountPence) / 100)
-    })
-  }
-}
+  // AR fields — only included when valid data is present
+  ...(grant.debtType && { debtType: validateDebtType(grant.debtType) }),
+  ...(payment.recoveryDate && {
+    recoveryDate: formatPaymentDate(payment.recoveryDate)
+  }),
+  ...(grant.originalInvoiceNumber && {
+    originalInvoiceNumber: grant.originalInvoiceNumber
+  }),
+  ...(payment.originalSettlementDate && {
+    originalSettlementDate: formatPaymentDate(payment.originalSettlementDate)
+  }),
+  value: valueFormatter.format(
+    -Math.abs(
+      payment.invoiceLines.reduce(
+        (acc, line) => acc + Number(line.amountPence),
+        0
+      )
+    ) / 100
+  ),
+  ...(grant.totalAmountPence != null && {
+    annualValue: valueFormatter.format(Number(grant.totalAmountPence) / 100)
+  })
+})
 
 /** @import { schema, Grant, Payment } from '#~/api/common/models/grant_payments.js' */
 /** @import { PaymentHubRequest } from '#~/common/types/payment-hub.d.js' */
