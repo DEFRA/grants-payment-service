@@ -161,4 +161,16 @@ describe('postTestGrantPaymentController', () => {
 
     expect(result.statusCode).toBe(statusCodes.created)
   })
+
+  test('handles _id as an object with toString method', async () => {
+    const mockId = { toString: () => 'string-id' }
+    prepareWithPaymentHubConfig.mockReturnValue(validPayload)
+    createGrantPayment.mockResolvedValue({ _id: mockId })
+
+    const h = makeH()
+    const result = await postTestGrantPaymentController.handler(mockReq, h)
+
+    expect(result.statusCode).toBe(statusCodes.created)
+    expect(result.source.id).toBe('string-id')
+  })
 })

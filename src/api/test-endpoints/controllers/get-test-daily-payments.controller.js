@@ -11,7 +11,8 @@ const getTestDailyPaymentsController = {
   handler: async (request, h) => {
     try {
       const { date = getTodaysDate() } = request.params
-      const docs = await fetchGrantPaymentsByDate(date)
+      const page = parseInt(request.query?.page) || 1
+      const docs = await fetchGrantPaymentsByDate(date, null, page)
 
       return h.response({ date, docs }).code(statusCodes.ok)
     } catch (error) {

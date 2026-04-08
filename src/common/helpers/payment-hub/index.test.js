@@ -191,6 +191,14 @@ describe('Payment Hub Helper', () => {
         }
       )
 
+      const generator = initCache.mock.calls[0][2]
+      const token = generator()
+
+      expect(token).toContain('SharedAccessSignature sr=')
+      expect(token).toContain('&sig=')
+      expect(token).toContain('&se=')
+      expect(token).toContain('&skn=test-key-name')
+
       await freshSendRequest(server, { data: 'test-data' })
       expect(initCache).toHaveBeenCalledTimes(1)
     })

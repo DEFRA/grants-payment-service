@@ -41,7 +41,7 @@ describe('getTestPaymentsBySbiController', () => {
     const h = makeH()
     const result = await getTestPaymentsBySbiController.handler(req, h)
 
-    expect(fetchGrantPaymentsBySbi).toHaveBeenCalledWith(sbi)
+    expect(fetchGrantPaymentsBySbi).toHaveBeenCalledWith(sbi, 1)
     expect(result.statusCode).toBe(statusCodes.ok)
     expect(result.source).toEqual(mockPayments)
   })

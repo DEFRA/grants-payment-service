@@ -19,6 +19,7 @@ describe('fetchGrantPaymentsByDate', () => {
 
     expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
       { $match: { 'grants.payments.dueDate': date } },
+      { $sort: { createdAt: -1 } },
       expect.objectContaining({
         $project: expect.objectContaining({
           sbi: 1,
@@ -31,9 +32,10 @@ describe('fetchGrantPaymentsByDate', () => {
 
     // inspect the filter condition from the captured pipeline
     const calledPipeline = GrantPaymentsModel.aggregate.mock.calls[0][0]
+    const projectStage = calledPipeline.find((s) => s.$project)
     const cond =
-      calledPipeline[1].$project.grants.$map.in.$mergeObjects[1].payments
-        .$filter.cond
+      projectStage.$project.grants.$map.in.$mergeObjects[1].payments.$filter
+        .cond
     expect(cond).toEqual({ $and: [{ $eq: ['$$p.dueDate', date] }] })
 
     expect(result).toBe(fakeDocs)
@@ -49,16 +51,32 @@ describe('fetchGrantPaymentsByDate', () => {
           'grants.payments.status': 'pending'
         }
       },
+      { $sort: { createdAt: -1 } },
       expect.any(Object)
     ])
 
     const calledPipeline = GrantPaymentsModel.aggregate.mock.calls[0][0]
+    const projectStage = calledPipeline.find((s) => s.$project)
     const cond =
-      calledPipeline[1].$project.grants.$map.in.$mergeObjects[1].payments
-        .$filter.cond
+      projectStage.$project.grants.$map.in.$mergeObjects[1].payments.$filter
+        .cond
     expect(cond).toEqual({
       $and: [{ $eq: ['$$p.dueDate', date] }, { $eq: ['$$p.status', 'pending'] }]
     })
+
+    expect(result).toBe(fakeDocs)
+  })
+
+  it('applies pagination when page is provided', async () => {
+    const result = await fetchGrantPaymentsByDate(date, null, 2)
+
+    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
+      { $match: { 'grants.payments.dueDate': date } },
+      { $sort: { createdAt: -1 } },
+      { $skip: 10 },
+      { $limit: 10 },
+      expect.any(Object)
+    ])
 
     expect(result).toBe(fakeDocs)
   })

@@ -19,47 +19,48 @@ const testEndpoints = {
       server.route([
         {
           method: 'POST',
-          path: '/api/test/queue-message/{queueName?}',
+          path: '/queue-message/{queueName?}',
           ...postTestQueueMessageController
         },
         {
           method: 'POST',
-          path: '/api/test/grant-payments',
+          path: '/grant-payments',
           ...postTestGrantPaymentController
         },
         {
           method: 'GET',
-          path: '/api/test/grant-payments',
+          path: '/grant-payments',
           ...getTestGrantPaymentController
         },
         {
           method: 'GET',
-          path: '/api/test/grant-payments/{sbi}',
+          path: '/grant-payments/{sbi}',
           ...getTestPaymentsBySbiController
         },
         {
           method: 'GET',
-          path: '/api/test/grant-payments/{sbi}/{grantCode}',
+          path: '/grant-payments/{sbi}/{grantCode}',
           ...getTestGrantPaymentsBySbiAndGrantCodeController
         },
         {
           method: 'POST',
-          path: '/api/test/process-payments/{date?}',
+          path: '/process-payments/{date?}',
           ...postTestProcessPaymentsController
         },
         {
           method: 'GET',
-          path: '/api/test/daily-payments/{date?}',
+          path: '/daily-payments/{date?}',
           ...getTestDailyPaymentsController
         },
         {
           method: 'POST',
-          path: '/api/test/populate-grant-payments',
+          path: '/populate-grant-payments',
           ...postTestPopulateGrantPaymentController
         }
       ])
     }
-  }
+  },
+  routes: { prefix: '/api/test' }
 }
 
 export { testEndpoints }

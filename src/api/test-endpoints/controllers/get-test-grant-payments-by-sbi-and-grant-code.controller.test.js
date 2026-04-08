@@ -48,7 +48,8 @@ describe('getTestGrantPaymentsBySbiAndGrantCodeController', () => {
 
     expect(fetchGrantPaymentsBySbiAndGrantCode).toHaveBeenCalledWith(
       sbi,
-      grantCode
+      grantCode,
+      1
     )
     expect(result.statusCode).toBe(statusCodes.ok)
     expect(result.source).toEqual(mockPayments)

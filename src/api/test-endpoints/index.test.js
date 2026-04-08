@@ -13,7 +13,7 @@ describe('routes/test-endpoints plugin', () => {
     const [[routes]] = server.route.mock.calls
 
     const paths = routes.map((r) => r.path)
-    expect(paths).toContain('/api/test/process-payments/{date?}')
-    expect(paths).toContain('/api/test/daily-payments/{date?}')
+    expect(paths).toContain('/process-payments/{date?}')
+    expect(paths).toContain('/daily-payments/{date?}')
   })
 })

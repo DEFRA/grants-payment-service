@@ -38,7 +38,7 @@ describe('getTestDailyPaymentsController', () => {
       h
     )
 
-    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(fakeDate)
+    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(fakeDate, null, 1)
     expect(result.statusCode).toBe(statusCodes.ok)
     expect(result.source).toEqual({ date: fakeDate, docs: fakeDocs })
   })
@@ -54,7 +54,7 @@ describe('getTestDailyPaymentsController', () => {
       h
     )
 
-    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(today)
+    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(today, null, 1)
     expect(result.source).toEqual({ date: today, docs: fakeDocs })
   })
 
