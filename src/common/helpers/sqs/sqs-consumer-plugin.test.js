@@ -124,6 +124,67 @@ describe('createSqsConsumerPlugin', () => {
     expect(mockConsumer.stop).toHaveBeenCalled()
     expect(mockSqsClient.destroy).toHaveBeenCalled()
   })
+
+  it('logs errors from consumer', async () => {
+    const handler = vi.fn()
+    const { plugin } = createSqsConsumerPlugin({
+      tag: 'test-tag',
+      queueUrl,
+      handler
+    })
+    await plugin.register(server)
+
+    const errorHandler = mockConsumer.on.mock.calls.find(
+      (call) => call[0] === 'error'
+    )[1]
+    const error = new Error('sqs connection failed')
+    errorHandler(error)
+
+    expect(server.logger.error).toHaveBeenCalledWith(
+      error,
+      'SQS consumer (test-tag) error: sqs connection failed'
+    )
+  })
+
+  it('logs processing errors from consumer', async () => {
+    const handler = vi.fn()
+    const { plugin } = createSqsConsumerPlugin({
+      tag: 'test-tag',
+      queueUrl,
+      handler
+    })
+    await plugin.register(server)
+
+    const processingErrorHandler = mockConsumer.on.mock.calls.find(
+      (call) => call[0] === 'processing_error'
+    )[1]
+    const error = new Error('failed to process message')
+    processingErrorHandler(error)
+
+    expect(server.logger.error).toHaveBeenCalledWith(
+      error,
+      'SQS consumer (test-tag) processing error: failed to process message'
+    )
+  })
+
+  it('uses fallback message id when MessageId is missing', async () => {
+    const handler = vi.fn()
+    const { plugin } = createSqsConsumerPlugin({
+      tag: 'test',
+      queueUrl,
+      handler
+    })
+    await plugin.register(server)
+    const handleMessage = Consumer.create.mock.calls[0][0].handleMessage
+
+    await handleMessage({ Body: JSON.stringify({ foo: 'bar' }) })
+
+    expect(handler).toHaveBeenCalledWith(
+      'unknown-message-id',
+      expect.any(Object),
+      expect.any(Object)
+    )
+  })
 })
 
 describe('processMessage', () => {

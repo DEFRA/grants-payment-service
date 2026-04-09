@@ -208,4 +208,11 @@ describe('postTestPopulateGrantPaymentController', () => {
       expect(call[0].grants[0].payments[0].dueDate).toBe(customDate)
     })
   })
+
+  test('Joi schema defaults dueDate', () => {
+    const schema =
+      postTestPopulateGrantPaymentController.options.validate.payload
+    const { value } = schema.validate({ targetCount: 1 })
+    expect(value.dueDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
 })

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { fetchAllGrantPayments } from './fetch-all-grant-payments.js'
+import { fetchGrantPaymentsBySbiAndFundCode } from './fetch-grant-payments-by-sbi-and-fund-code.js'
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 
 vi.mock('#~/api/common/models/grant_payments.js')
@@ -9,18 +9,23 @@ vi.mock('#~/config/index.js', () => ({
   }
 }))
 
-describe('fetchAllGrantPayments', () => {
-  it('queries all grant payments and returns lean docs', async () => {
-    const fakeDocs = [{ _id: 'a' }, { _id: 'b' }]
+describe('fetchGrantPaymentsBySbiAndFundCode', () => {
+  it('queries the model using the provided sbi and fundCode and returns docs', async () => {
+    const sbi = '123456789'
+    const fundCode = 'DRD10'
+    const fakeDocs = [{ _id: 'a', sbi }]
     GrantPaymentsModel.find.mockReturnValue({
       sort: vi.fn().mockReturnThis(),
       lean: vi.fn().mockResolvedValue(fakeDocs)
     })
     GrantPaymentsModel.countDocuments.mockResolvedValue(2)
 
-    const result = await fetchAllGrantPayments()
+    const result = await fetchGrantPaymentsBySbiAndFundCode(sbi, fundCode)
 
-    expect(GrantPaymentsModel.find).toHaveBeenCalledWith({})
+    expect(GrantPaymentsModel.find).toHaveBeenCalledWith({
+      sbi,
+      'grants.payments.invoiceLines.fundCode': fundCode
+    })
     expect(result).toEqual({
       docs: fakeDocs,
       pagination: { page: 1, total: 1 }
@@ -28,7 +33,9 @@ describe('fetchAllGrantPayments', () => {
   })
 
   it('applies pagination when page is provided', async () => {
-    const fakeDocs = [{ _id: 'a' }]
+    const sbi = '123456789'
+    const fundCode = 'DRD10'
+    const fakeDocs = [{ _id: 'a', sbi }]
     const skipMock = vi.fn().mockReturnThis()
     const limitMock = vi.fn().mockReturnThis()
 
@@ -38,15 +45,15 @@ describe('fetchAllGrantPayments', () => {
       limit: limitMock,
       lean: vi.fn().mockResolvedValue(fakeDocs)
     })
-    GrantPaymentsModel.countDocuments.mockResolvedValue(15)
+    GrantPaymentsModel.countDocuments.mockResolvedValue(25)
 
-    const result = await fetchAllGrantPayments(2)
+    const result = await fetchGrantPaymentsBySbiAndFundCode(sbi, fundCode, 3)
 
-    expect(skipMock).toHaveBeenCalledWith(10)
+    expect(skipMock).toHaveBeenCalledWith(20)
     expect(limitMock).toHaveBeenCalledWith(10)
     expect(result).toEqual({
       docs: fakeDocs,
-      pagination: { page: 2, total: 2 }
+      pagination: { page: 3, total: 3 }
     })
   })
 })

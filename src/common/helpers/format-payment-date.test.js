@@ -17,4 +17,8 @@ describe('formatPaymentDate', () => {
       'Payment date must be in YYYY-MM-DD format'
     )
   })
+
+  it('returns empty string when input is undefined', () => {
+    expect(formatPaymentDate(undefined)).toBe('')
+  })
 })

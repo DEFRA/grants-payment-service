@@ -14,9 +14,10 @@ const getTestGrantPaymentController = {
   },
   handler: async (req, res) => {
     try {
-      const grantPayments = await fetchAllGrantPayments()
+      const page = Number.parseInt(req.query?.page) || 1
+      const { docs, pagination } = await fetchAllGrantPayments(page)
 
-      return res.response(grantPayments).code(statusCodes.ok)
+      return res.response({ docs, pagination }).code(statusCodes.ok)
     } catch (err) {
       req.log(['error'], err)
       return res
