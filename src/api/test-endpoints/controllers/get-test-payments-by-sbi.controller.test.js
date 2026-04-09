@@ -35,7 +35,11 @@ describe('getTestPaymentsBySbiController', () => {
       { id: '1', sbi },
       { id: '2', sbi }
     ]
-    fetchGrantPaymentsBySbi.mockResolvedValue(mockPayments)
+    const pagination = { page: 1, total: 1 }
+    fetchGrantPaymentsBySbi.mockResolvedValue({
+      docs: mockPayments,
+      pagination
+    })
 
     const req = { params: { sbi } }
     const h = makeH()
@@ -43,18 +47,19 @@ describe('getTestPaymentsBySbiController', () => {
 
     expect(fetchGrantPaymentsBySbi).toHaveBeenCalledWith(sbi, 1)
     expect(result.statusCode).toBe(statusCodes.ok)
-    expect(result.source).toEqual(mockPayments)
+    expect(result.source).toEqual({ sbi, docs: mockPayments, pagination })
   })
 
   test('returns 200 and empty array when no payments found for sbi', async () => {
-    fetchGrantPaymentsBySbi.mockResolvedValue([])
+    const pagination = { page: 1, total: 0 }
+    fetchGrantPaymentsBySbi.mockResolvedValue({ docs: [], pagination })
 
     const req = { params: { sbi: '999999999' } }
     const h = makeH()
     const result = await getTestPaymentsBySbiController.handler(req, h)
 
     expect(result.statusCode).toBe(statusCodes.ok)
-    expect(result.source).toEqual([])
+    expect(result.source).toEqual({ sbi: '999999999', docs: [], pagination })
   })
 
   test('returns 500 for unexpected error', async () => {

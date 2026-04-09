@@ -3,6 +3,11 @@ import { fetchGrantPaymentsByDate } from './fetch-grants-by-date.js'
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 
 vi.mock('#~/api/common/models/grant_payments.js')
+vi.mock('#~/config/index.js', () => ({
+  config: {
+    get: vi.fn().mockReturnValue(10)
+  }
+}))
 
 describe('fetchGrantPaymentsByDate', () => {
   let date, fakeDocs
@@ -10,8 +15,9 @@ describe('fetchGrantPaymentsByDate', () => {
   beforeEach(() => {
     date = '2026-02-20'
     fakeDocs = [{ _id: 'a' }]
-    // mock aggregate behaviour
+    // mock behaviour
     GrantPaymentsModel.aggregate.mockResolvedValue(fakeDocs)
+    GrantPaymentsModel.countDocuments.mockResolvedValue(1)
   })
 
   it('builds a simple pipeline when only date is provided', async () => {
@@ -38,7 +44,10 @@ describe('fetchGrantPaymentsByDate', () => {
         .cond
     expect(cond).toEqual({ $and: [{ $eq: ['$$p.dueDate', date] }] })
 
-    expect(result).toBe(fakeDocs)
+    expect(result).toEqual({
+      docs: fakeDocs,
+      pagination: { page: 1, total: 1 }
+    })
   })
 
   it('includes status in the pipeline when provided', async () => {
@@ -64,7 +73,10 @@ describe('fetchGrantPaymentsByDate', () => {
       $and: [{ $eq: ['$$p.dueDate', date] }, { $eq: ['$$p.status', 'pending'] }]
     })
 
-    expect(result).toBe(fakeDocs)
+    expect(result).toEqual({
+      docs: fakeDocs,
+      pagination: { page: 1, total: 1 }
+    })
   })
 
   it('applies pagination when page is provided', async () => {
@@ -78,6 +90,9 @@ describe('fetchGrantPaymentsByDate', () => {
       expect.any(Object)
     ])
 
-    expect(result).toBe(fakeDocs)
+    expect(result).toEqual({
+      docs: fakeDocs,
+      pagination: { page: 2, total: 1 }
+    })
   })
 })

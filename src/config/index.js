@@ -164,6 +164,12 @@ const config = convict({
       env: 'ENABLE_PAYMENT_HUB'
     }
   },
+  paginationLimit: {
+    doc: 'Max number of items per page for paginated queries',
+    format: 'nat',
+    default: 10,
+    env: 'PAGE_LIMIT'
+  },
   aws: {
     region: {
       doc: 'AWS region',

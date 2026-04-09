@@ -12,9 +12,13 @@ const getTestDailyPaymentsController = {
     try {
       const { date = getTodaysDate() } = request.params
       const page = Number.parseInt(request.query?.page) || 1
-      const docs = await fetchGrantPaymentsByDate(date, null, page)
+      const { docs, pagination } = await fetchGrantPaymentsByDate(
+        date,
+        null,
+        page
+      )
 
-      return h.response({ date, docs }).code(statusCodes.ok)
+      return h.response({ date, docs, pagination }).code(statusCodes.ok)
     } catch (error) {
       if (error.isBoom) {
         return error

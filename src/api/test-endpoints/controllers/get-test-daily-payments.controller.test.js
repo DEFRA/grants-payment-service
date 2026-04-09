@@ -30,7 +30,8 @@ describe('getTestDailyPaymentsController', () => {
   it('returns docs for provided date', async () => {
     const fakeDate = '2026-02-20'
     const fakeDocs = [{ _id: '1' }]
-    fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+    const pagination = { page: 1, total: 1 }
+    fetchGrantPaymentsByDate.mockResolvedValue({ docs: fakeDocs, pagination })
 
     const h = makeH()
     const result = await getTestDailyPaymentsController.handler(
@@ -40,13 +41,18 @@ describe('getTestDailyPaymentsController', () => {
 
     expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(fakeDate, null, 1)
     expect(result.statusCode).toBe(statusCodes.ok)
-    expect(result.source).toEqual({ date: fakeDate, docs: fakeDocs })
+    expect(result.source).toEqual({
+      date: fakeDate,
+      docs: fakeDocs,
+      pagination
+    })
   })
 
   it('defaults to today when no date supplied', async () => {
     const today = getTodaysDate()
     const fakeDocs = []
-    fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+    const pagination = { page: 1, total: 1 }
+    fetchGrantPaymentsByDate.mockResolvedValue({ docs: fakeDocs, pagination })
 
     const h = makeH()
     const result = await getTestDailyPaymentsController.handler(
@@ -55,7 +61,7 @@ describe('getTestDailyPaymentsController', () => {
     )
 
     expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(today, null, 1)
-    expect(result.source).toEqual({ date: today, docs: fakeDocs })
+    expect(result.source).toEqual({ date: today, docs: fakeDocs, pagination })
   })
 
   it('handles non-boom errors and returns 500', async () => {

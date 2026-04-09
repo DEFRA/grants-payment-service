@@ -1,4 +1,6 @@
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
+import { config } from '#~/config/index.js'
+import { wrapWithPagination } from './pagination.js'
 
 export const fetchGrantPaymentsByDate = async (date, status, page) => {
   const match = {
@@ -13,8 +15,8 @@ export const fetchGrantPaymentsByDate = async (date, status, page) => {
 
   const pipeline = [{ $match: match }, { $sort: { createdAt: -1 } }]
 
+  const limit = config.get('paginationLimit')
   if (page) {
-    const limit = 10
     const skip = (page - 1) * limit
     pipeline.push({ $skip: skip }, { $limit: limit })
   }
@@ -47,5 +49,10 @@ export const fetchGrantPaymentsByDate = async (date, status, page) => {
     }
   })
 
-  return GrantPaymentsModel.aggregate(pipeline)
+  const [docs, totalDocs] = await Promise.all([
+    GrantPaymentsModel.aggregate(pipeline),
+    GrantPaymentsModel.countDocuments(match)
+  ])
+
+  return wrapWithPagination(docs, totalDocs, page, limit)
 }

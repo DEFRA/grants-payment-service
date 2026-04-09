@@ -1,11 +1,21 @@
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
+import { config } from '#~/config/index.js'
+import { wrapWithPagination } from './pagination.js'
 
 export const fetchGrantPaymentsBySbi = async (sbi, page) => {
-  let query = GrantPaymentsModel.find({ sbi }).sort({ createdAt: -1 })
+  const match = { sbi }
+  const limit = config.get('paginationLimit')
+  const query = GrantPaymentsModel.find(match).sort({ createdAt: -1 })
+
   if (page) {
-    const limit = 10
     const skip = (page - 1) * limit
-    query = query.skip(skip).limit(limit)
+    query.skip(skip).limit(limit)
   }
-  return query.lean()
+
+  const [docs, totalDocs] = await Promise.all([
+    query.lean(),
+    GrantPaymentsModel.countDocuments(match)
+  ])
+
+  return wrapWithPagination(docs, totalDocs, page, limit)
 }

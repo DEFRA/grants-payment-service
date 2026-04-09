@@ -79,7 +79,10 @@ describe('processDailyPayments', () => {
         ]
       }
     ]
-    fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+    fetchGrantPaymentsByDate.mockResolvedValue({
+      docs: fakeDocs,
+      pagination: { page: 1, total: 1 }
+    })
     GrantPaymentsModel.findOne
       .mockResolvedValueOnce({ grants: [fakeDocs[0].grants[0]] })
       .mockResolvedValueOnce({ grants: [fakeDocs[1].grants[0]] })
@@ -178,7 +181,10 @@ describe('processDailyPayments', () => {
         ]
       }
     ]
-    fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+    fetchGrantPaymentsByDate.mockResolvedValue({
+      docs: fakeDocs,
+      pagination: { page: 1, total: 1 }
+    })
     GrantPaymentsModel.findOne
       .mockResolvedValueOnce({ grants: [fakeDocs[0].grants[0]] })
       .mockResolvedValueOnce({ grants: [fakeDocs[1].grants[0]] })
@@ -203,7 +209,10 @@ describe('processDailyPayments', () => {
   it('defaults to today if no date supplied', async () => {
     const today = getTodaysDate()
     const fakeDocs = []
-    fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+    fetchGrantPaymentsByDate.mockResolvedValue({
+      docs: fakeDocs,
+      pagination: { page: 1, total: 1 }
+    })
 
     const result = await processDailyPayments(server)
 
@@ -222,7 +231,10 @@ describe('processDailyPayments', () => {
         grants: [{ invoiceNumber: 'INV1', agreementNumber: 'AGR1' }]
       }
     ]
-    fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+    fetchGrantPaymentsByDate.mockResolvedValue({
+      docs: fakeDocs,
+      pagination: { page: 1, total: 1 }
+    })
     GrantPaymentsModel.findOne.mockResolvedValue({
       grants: [{ invoiceNumber: 'INV1', agreementNumber: 'AGR1' }]
     })
@@ -271,7 +283,10 @@ describe('processDailyPayments', () => {
         ]
       }
     ]
-    fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+    fetchGrantPaymentsByDate.mockResolvedValue({
+      docs: fakeDocs,
+      pagination: { page: 1, total: 1 }
+    })
     GrantPaymentsModel.findOne.mockResolvedValue({
       grants: [fakeDocs[0].grants[0]]
     })
@@ -357,7 +372,10 @@ describe('processDailyPayments', () => {
         ]
       }
     ]
-    fetchGrantPaymentsByDate.mockResolvedValue(fakeDocs)
+    fetchGrantPaymentsByDate.mockResolvedValue({
+      docs: fakeDocs,
+      pagination: { page: 1, total: 1 }
+    })
     GrantPaymentsModel.findOne
       .mockResolvedValueOnce({ grants: [fakeDocs[0].grants[0]] })
       .mockResolvedValueOnce({ grants: [fakeDocs[1].grants[0]] })
