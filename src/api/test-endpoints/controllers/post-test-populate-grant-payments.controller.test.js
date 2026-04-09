@@ -185,14 +185,14 @@ describe('postTestPopulateGrantPaymentController', () => {
     )
   })
 
-  test('should use provided dueDate for all records', async () => {
+  test('should use provided dueDate for all records and format it as YYYY-MM-DD', async () => {
     createGrantPayment.mockResolvedValue({ _id: 'mock-id' })
     GrantPaymentsModel.countDocuments.mockResolvedValue(0)
 
     const { h } = makeH()
     const customDate = '2024-05-01'
     const req = {
-      payload: { targetCount: 4, dueDate: customDate },
+      payload: { targetCount: 4, dueDate: customDate + 'T00:00:00.000Z' }, // Simulate Joi conversion
       logger: mockLogger
     }
 
@@ -203,7 +203,7 @@ describe('postTestPopulateGrantPaymentController', () => {
 
     expect(createGrantPayment).toHaveBeenCalledTimes(4)
 
-    // All records should have the same dueDate
+    // All records should have the same dueDate, formatted as YYYY-MM-DD
     createGrantPayment.mock.calls.forEach((call) => {
       expect(call[0].grants[0].payments[0].dueDate).toBe(customDate)
     })
