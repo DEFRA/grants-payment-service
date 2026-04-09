@@ -112,7 +112,8 @@ describe('postTestPopulateGrantPaymentController', () => {
   test('should handle partial failures during population', async () => {
     // Fail some calls
     createGrantPayment.mockImplementation((payload) => {
-      if (payload.claimId.includes('-2') || payload.claimId.includes('-5')) {
+      // In new format, claimId is R00000002, R00000005 etc
+      if (payload.claimId.endsWith('02') || payload.claimId.endsWith('05')) {
         return Promise.reject(new Error('Mock creation error'))
       }
       return Promise.resolve({ _id: 'mock-id' })
@@ -205,7 +206,28 @@ describe('postTestPopulateGrantPaymentController', () => {
 
     // All records should have the same dueDate, formatted as YYYY-MM-DD
     createGrantPayment.mock.calls.forEach((call) => {
-      expect(call[0].grants[0].payments[0].dueDate).toBe(customDate)
+      const payload = call[0]
+      expect(payload.grants[0].payments[0].dueDate).toBe(customDate)
+      expect(payload.grants[0].sourceSystem).toBe('FPTT')
+      expect(payload.grants[0].marketingYear).toBe('2026')
+      expect(payload.grants[0].ledger).toBe('AP')
+      expect(payload.grants[0].fesCode).toBe('FALS_FPTT')
+      expect(typeof payload.grants[0].totalAmountPence).toBe('string')
+      expect(typeof payload.grants[0].payments[0].totalAmountPence).toBe(
+        'string'
+      )
+      expect(payload.grants[0].payments[0].invoiceLines[0].schemeCode).toBe(
+        'CMOR1'
+      )
+      expect(
+        typeof payload.grants[0].payments[0].invoiceLines[0].amountPence
+      ).toBe('string')
+      expect(payload.grants[0].payments[0].invoiceLines[0].accountCode).toBe(
+        'SOS710'
+      )
+      expect(payload.grants[0].payments[0].invoiceLines[0].fundCode).toBe(
+        'DRD10'
+      )
     })
   })
 
