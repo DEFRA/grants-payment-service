@@ -34,7 +34,8 @@ describe('getTestGrantPaymentController', () => {
       { id: '1', amountPence: 10000 },
       { id: '2', amountPence: 20000 }
     ]
-    fetchAllGrantPayments.mockResolvedValue(mockPayments)
+    const pagination = { page: 1, total: 1 }
+    fetchAllGrantPayments.mockResolvedValue({ docs: mockPayments, pagination })
 
     const req = {
       log: vi.fn()
@@ -44,7 +45,7 @@ describe('getTestGrantPaymentController', () => {
 
     expect(fetchAllGrantPayments).toHaveBeenCalled()
     expect(result.statusCode).toBe(statusCodes.ok)
-    expect(result.source).toEqual(mockPayments)
+    expect(result.source).toEqual({ docs: mockPayments, pagination })
   })
 
   test('returns 500 for unexpected error', async () => {

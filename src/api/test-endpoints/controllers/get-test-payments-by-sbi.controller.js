@@ -15,9 +15,10 @@ const getTestPaymentsBySbiController = {
   handler: async (req, res) => {
     try {
       const { sbi } = req.params
-      const payments = await fetchGrantPaymentsBySbi(sbi)
+      const page = Number.parseInt(req.query?.page) || 1
+      const { docs, pagination } = await fetchGrantPaymentsBySbi(sbi, page)
 
-      return res.response(payments).code(statusCodes.ok)
+      return res.response({ sbi, docs, pagination }).code(statusCodes.ok)
     } catch (err) {
       req.log(['error'], err)
       return res

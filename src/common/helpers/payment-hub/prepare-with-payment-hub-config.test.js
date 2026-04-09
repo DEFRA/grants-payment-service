@@ -86,4 +86,39 @@ describe('prepareWithPaymentHubConfig', () => {
 
     expect(result.grants).toEqual([])
   })
+
+  it('should handle missing payments and invoiceLines in grants', () => {
+    const grantPayment = {
+      scheme: 'SFI',
+      grants: [
+        {
+          sourceSystem: 'TEST'
+          // no payments
+        }
+      ]
+    }
+
+    const result = prepareWithPaymentHubConfig(grantPayment)
+    expect(result.grants[0].payments).toEqual([])
+  })
+
+  it('should handle missing invoiceLines in payments', () => {
+    const grantPayment = {
+      scheme: 'SFI',
+      grants: [
+        {
+          sourceSystem: 'TEST',
+          payments: [
+            {
+              dueDate: '2026-01-01'
+              // no invoiceLines
+            }
+          ]
+        }
+      ]
+    }
+
+    const result = prepareWithPaymentHubConfig(grantPayment)
+    expect(result.grants[0].payments[0].invoiceLines).toEqual([])
+  })
 })

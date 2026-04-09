@@ -166,4 +166,14 @@ describe('postTestQueueMessageController', () => {
 
     expect(res).toBe(boomError)
   })
+
+  test('handles missing params object', async () => {
+    sendMock.mockResolvedValueOnce({})
+    const res = await postTestQueueMessageController.handler(
+      { payload, logger, params: undefined },
+      h
+    )
+    expect(res.statusCode).toBe(statusCodes.ok)
+    expect(res.payload.message).toBe('Test queue message posted')
+  })
 })

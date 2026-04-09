@@ -100,7 +100,7 @@ export const processDailyPayments = async (server, date = getTodaysDate()) => {
   logger.info(`Processing daily payments for date: ${date}`)
 
   try {
-    const docs = await fetchGrantPaymentsByDate(date, 'pending')
+    const { docs } = await fetchGrantPaymentsByDate(date, 'pending')
     logger.info(
       `Found ${docs.length} payment record(s) matching due date ${date}`
     )

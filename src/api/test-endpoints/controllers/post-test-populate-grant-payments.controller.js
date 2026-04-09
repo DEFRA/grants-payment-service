@@ -202,7 +202,6 @@ const postTestPopulateGrantPaymentController = {
   }
 }
 
-/* eslint-disable import-x/no-unused-modules */
 export { postTestPopulateGrantPaymentController }
 
 /**

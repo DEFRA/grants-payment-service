@@ -4,8 +4,6 @@ import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { prepareWithPaymentHubConfig } from '#~/common/helpers/payment-hub/prepare-with-payment-hub-config.js'
 
 const postTestGrantPaymentController = {
-  method: 'POST',
-  path: '/api/test/grant-payments',
   options: {
     description: 'Populate grant payment with sample data for testing',
     tags: ['api', 'test'],
