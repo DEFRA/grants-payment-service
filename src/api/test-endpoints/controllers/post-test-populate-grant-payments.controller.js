@@ -28,29 +28,38 @@ const createGrantPaymentPayload = (index, dueDate) => {
   const timestamp = Date.now()
   const sbi = SBI_MIN + (index % SBI_MOD)
   const frn = FRN_MIN + (index % FRN_MOD)
-  const claimId = `CLAIM-${timestamp}-${index}`
-  const scheme = index % 2 === 0 ? 'SFI' : 'WMP'
+  const claimId = `R${String(index + 1).padStart(8, '0')}`
+  const scheme = 'SFI'
 
   const totalAmount = getRandomAmount(AMOUNT_MIN, AMOUNT_MAX)
+  const quarterAmount = Math.floor(totalAmount / 4)
 
   const grant = {
-    sourceSystem: 'SFI',
+    sourceSystem: 'FPTT',
     paymentRequestNumber: PAYMENT_REQ_START + index,
     correlationId: `correlation-${timestamp}-${index}`,
-    invoiceNumber: `INV-${timestamp}-${index}`,
-    agreementNumber: `SFI${String(index).padStart(AGREEMENT_NUMBER_PADDING, '0')}`,
-    totalAmountPence: totalAmount,
+    invoiceNumber: `${claimId}-V${String(index + 1).padStart(3, '0')}QX`,
+    originalInvoiceNumber: '',
+    agreementNumber: `FPTT${String(index).padStart(AGREEMENT_NUMBER_PADDING, '0')}`,
+    totalAmountPence: String(totalAmount),
     currency: 'GBP',
-    marketingYear: '2024',
+    marketingYear: '2026',
+    ledger: 'AP',
+    fesCode: 'FALS_FPTT',
+    deliveryBody: 'RP00',
     payments: [
       {
         dueDate,
-        totalAmountPence: totalAmount,
+        totalAmountPence: String(quarterAmount),
+        status: 'pending',
         invoiceLines: [
           {
-            schemeCode: scheme,
-            description: `Payment for ${scheme} claim`,
-            amountPence: totalAmount
+            schemeCode: 'CMOR1',
+            description: `${dueDate}: Parcel: 1059: Assess moorland and produce a written record`,
+            amountPence: String(quarterAmount),
+            accountCode: 'SOS710',
+            fundCode: 'DRD10',
+            deliveryBody: 'RP00'
           }
         ]
       }
