@@ -98,6 +98,48 @@ const processBatch = async (startIndex, batchSize, dueDate, logger) => {
   return { successCount, errorCount: errors.length, errors }
 }
 
+async function populateDataInBatches(
+  targetCount,
+  calculatedBatchSize,
+  logger,
+  dueDate
+) {
+  let totalCreated = 0
+  let totalErrors = 0
+  const allErrors = []
+
+  const totalBatches = Math.ceil(targetCount / calculatedBatchSize)
+
+  for (let batchNum = 0; batchNum < totalBatches; batchNum++) {
+    const startIndex = batchNum * calculatedBatchSize
+    const currentBatchSize = Math.min(
+      calculatedBatchSize,
+      targetCount - startIndex
+    )
+
+    logger.info(
+      `Processing batch ${batchNum + 1}/${totalBatches} (startIndex: ${startIndex}, batchSize: ${currentBatchSize})`
+    )
+
+    const { successCount, errorCount, errors } = await processBatch(
+      startIndex,
+      currentBatchSize,
+      dueDate,
+      logger
+    )
+    totalCreated += successCount
+    totalErrors += errorCount
+    if (errors.length > 0) {
+      allErrors.push(...errors)
+    }
+  }
+
+  logger.info(
+    `Population complete: ${totalCreated} created, ${totalErrors} errors`
+  )
+  return { totalCreated, totalErrors, allErrors }
+}
+
 /**
  * Controller to populate the database with grant payments for performance testing
  * @satisfies {Partial<ServerRoute>}
@@ -118,7 +160,12 @@ const postTestPopulateGrantPaymentController = {
     }
   },
   handler: async (req, res) => {
-    const { targetCount, dueDate } = req.payload
+    let { targetCount, dueDate } = req.payload
+
+    // Ensure dueDate is only the date part YYYY-MM-DD
+    if (dueDate?.includes('T')) {
+      dueDate = dueDate.split('T')[0]
+    }
 
     // Calculate batchSize based on targetCount
     // For small targetCount (< 100), use smaller batch size (e.g., 10)
@@ -141,39 +188,13 @@ const postTestPopulateGrantPaymentController = {
           `Existing grant payments in database before creation: ${existingCount}`
         )
 
-        let totalCreated = 0
-        let totalErrors = 0
-        const allErrors = []
-
-        const totalBatches = Math.ceil(targetCount / calculatedBatchSize)
-
-        for (let batchNum = 0; batchNum < totalBatches; batchNum++) {
-          const startIndex = batchNum * calculatedBatchSize
-          const currentBatchSize = Math.min(
+        const { totalCreated, totalErrors, allErrors } =
+          await populateDataInBatches(
+            targetCount,
             calculatedBatchSize,
-            targetCount - startIndex
+            logger,
+            dueDate
           )
-
-          logger.info(
-            `Processing batch ${batchNum + 1}/${totalBatches} (startIndex: ${startIndex}, batchSize: ${currentBatchSize})`
-          )
-
-          const { successCount, errorCount, errors } = await processBatch(
-            startIndex,
-            currentBatchSize,
-            dueDate,
-            logger
-          )
-          totalCreated += successCount
-          totalErrors += errorCount
-          if (errors.length > 0) {
-            allErrors.push(...errors)
-          }
-        }
-
-        logger.info(
-          `Population complete: ${totalCreated} created, ${totalErrors} errors`
-        )
 
         const finalCount = await GrantPaymentsModel.countDocuments()
         logger.info(
