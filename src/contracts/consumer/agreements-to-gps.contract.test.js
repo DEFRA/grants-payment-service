@@ -93,7 +93,8 @@ describe('receive a SFI grant payment event', () => {
       )
   })
 
-  it('cancels an existing payment schedule', () => {
+  // Currently skipped as there are no services that send cancel payment SNS events yet
+  it.skip('cancels an existing payment schedule', () => {
     const eventType =
       'cloud.defra.dev.farming-grants-agreements-api.payment.cancel'
 
