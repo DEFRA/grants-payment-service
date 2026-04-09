@@ -13,6 +13,7 @@ const AMOUNT_MIN = 10000
 const AMOUNT_MAX = 1000000
 const MAX_ERRORS_IN_RESPONSE = 100
 const AGREEMENT_NUMBER_PADDING = 9
+const INVOICE_NUMBER_PADDING = 3
 
 /**
  * Generate a random amount in pence
@@ -38,7 +39,7 @@ const createGrantPaymentPayload = (index, dueDate) => {
     sourceSystem: 'FPTT',
     paymentRequestNumber: PAYMENT_REQ_START + index,
     correlationId: `correlation-${timestamp}-${index}`,
-    invoiceNumber: `${claimId}-V${String(index + 1).padStart(3, '0')}QX`,
+    invoiceNumber: `${claimId}-V${String(index + 1).padStart(INVOICE_NUMBER_PADDING, '0')}QX`,
     originalInvoiceNumber: '',
     agreementNumber: `FPTT${String(index).padStart(AGREEMENT_NUMBER_PADDING, '0')}`,
     totalAmountPence: String(totalAmount),
