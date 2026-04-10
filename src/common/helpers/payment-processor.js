@@ -1,3 +1,4 @@
+import { performance } from 'node:perf_hooks'
 import { getTodaysDate } from '#~/common/helpers/date.js'
 import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
@@ -97,18 +98,24 @@ const processPayments = async (server, docs) => {
 
 export const processDailyPayments = async (server, date = getTodaysDate()) => {
   const { logger } = server
-  logger.info(`Processing daily payments for date: ${date}`)
+  logger.info(`Processing payments for date: ${date}`)
 
   try {
+    const fetchStart = performance.now()
     const { docs } = await fetchGrantPaymentsByDate(date, 'pending')
+    const fetchDuration = (performance.now() - fetchStart).toFixed(2)
     logger.info(
-      `Found ${docs.length} payment record(s) matching due date ${date}`
+      `Found ${docs.length} payment record(s) matching due date ${date} in ${fetchDuration}ms`
     )
 
     const results = await processPayments(server, docs)
+    const processDuration = (performance.now() - fetchStart).toFixed(2)
+    logger.info(
+      `Processed ${results.length} payment(s) for date: ${date} in ${processDuration}ms`
+    )
     return results
   } catch (err) {
-    logger.error(err, `Failed to process grant payments for date ${date}`)
+    logger.error(err, `Failed to process payments for date ${date}`)
     throw err
   }
 }

@@ -53,4 +53,26 @@ const schema = new mongoose.Schema(
   { collection, timestamps: true }
 )
 
+// Single-field indexes
+schema.index({ _id: 1 })
+schema.index({ sbi: 1 })
+schema.index({ frn: 1 })
+schema.index({ 'grants.payments.dueDate': 1 })
+schema.index({ 'grants.payments.status': 1 })
+schema.index({ 'grants.payments.invoiceLines.fundCode': 1 })
+
+// Compound indexes — ordered to match filter + sort patterns used in queries
+// fetchGrantPaymentsBySbi: filter on sbi, sort by createdAt
+schema.index({ sbi: 1, createdAt: -1 })
+// fetchGrantPaymentsBySbiAndFundCode: filter on sbi + fundCode (fundCode alone is never queried)
+schema.index({ sbi: 1, 'grants.payments.invoiceLines.fundCode': 1 })
+// cancelGrantPayments: filter on { sbi, frn }
+schema.index({ sbi: 1, frn: 1 })
+// fetchGrantPaymentsByDate (daily cron): filter on dueDate + status, sort by createdAt
+schema.index({
+  'grants.payments.dueDate': 1,
+  'grants.payments.status': 1,
+  createdAt: -1
+})
+
 export default mongoose.model(collection, schema)
