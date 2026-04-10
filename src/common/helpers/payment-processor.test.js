@@ -98,10 +98,17 @@ describe('processDailyPayments', () => {
 
     expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(fakeDate, 'pending')
     expect(logger.info).toHaveBeenCalledWith(
-      `Processing daily payments for date: ${fakeDate}`
+      `Processing payments for date: ${fakeDate}`
     )
     expect(logger.info).toHaveBeenCalledWith(
-      `Found ${fakeDocs.length} payment record(s) matching due date ${fakeDate}`
+      expect.stringContaining(
+        `Found ${fakeDocs.length} payment record(s) matching due date ${fakeDate}`
+      )
+    )
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining(
+        `Processed ${fakeDocs.length} payment(s) for date: ${fakeDate}`
+      )
     )
 
     // each payment should be locked (pending->locked) then submitted
@@ -255,7 +262,7 @@ describe('processDailyPayments', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       error,
-      `Failed to process grant payments for date ${fakeDate}`
+      `Failed to process payments for date ${fakeDate}`
     )
   })
 
