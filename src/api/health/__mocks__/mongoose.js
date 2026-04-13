@@ -83,8 +83,7 @@ class MockSchema {
 
 // Provide Schema.Types so code that accesses mongoose.Schema.Types.ObjectId works
 MockSchema.Types = {
-  ObjectId: vi.fn(),
-  Mixed: class MockMixed {}
+  ObjectId: vi.fn()
 }
 
 // Provide a basic Decimal128 mock for schema type usage

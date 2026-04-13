@@ -24,7 +24,7 @@ export const loggerOptions = {
     remove: true
   },
   level: logConfig.level || 'info',
-  ...(formatters[logConfig.format] || {}),
+  ...formatters[logConfig.format],
   nesting: true,
   mixin() {
     const mixinValues = {}
