@@ -9,7 +9,7 @@ function formatPaymentDate(paymentDate) {
   }
 
   if (typeof paymentDate !== 'string') {
-    throw new Error('Payment date must be a string')
+    throw new TypeError('Payment date must be a string')
   }
 
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(paymentDate)
