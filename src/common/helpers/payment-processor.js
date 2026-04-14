@@ -62,11 +62,11 @@ const processSinglePayment = async (
   }
 }
 
-const processPayments = async (server, farms) => {
+const processPayments = async (server, accounts) => {
   const { logger } = server
 
-  const paymentActions = (farms || []).flatMap((farm) => {
-    const { _id: docId, sbi, frn, claimId, grants } = farm
+  const paymentActions = (accounts || []).flatMap((account) => {
+    const { _id: docId, sbi, frn, claimId, grants } = account
     const identifiers = { sbi, frn, claimId }
 
     return (grants || []).map(async (grantWithPendingPayments) => {
@@ -102,13 +102,13 @@ export const processDailyPayments = async (server, date = getTodaysDate()) => {
 
   try {
     const fetchStart = performance.now()
-    const { docs: farms } = await fetchGrantPaymentsByDate(date, 'pending')
+    const { docs: accounts } = await fetchGrantPaymentsByDate(date, 'pending')
     const fetchDuration = (performance.now() - fetchStart).toFixed(2)
     logger.info(
-      `Found ${farms.length} payment record(s) matching due date ${date} in ${fetchDuration}ms`
+      `Found ${accounts.length} payment record(s) matching due date ${date} in ${fetchDuration}ms`
     )
 
-    const results = await processPayments(server, farms)
+    const results = await processPayments(server, accounts)
     const processDuration = (performance.now() - fetchStart).toFixed(2)
     logger.info(
       `Processed ${results.length} payment(s) for date: ${date} in ${processDuration}ms`
