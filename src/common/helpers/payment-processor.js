@@ -62,13 +62,14 @@ const processSinglePayment = async (
   }
 }
 
-const processPayments = async (server, docs) => {
+const processPayments = async (server, farms) => {
   const { logger } = server
-  const actions = (docs || []).flatMap((doc) => {
-    const { _id: docId, sbi, frn, claimId, grants } = doc
+
+  const paymentActions = (farms || []).flatMap((farm) => {
+    const { _id: docId, sbi, frn, claimId, grants } = farm
+    const identifiers = { sbi, frn, claimId }
 
     return (grants || []).map(async (grantWithPendingPayments) => {
-      const { payments } = grantWithPendingPayments
       const grant = (
         await GrantPaymentsModel.findOne(
           { _id: docId, 'grants._id': grantWithPendingPayments._id },
@@ -76,9 +77,8 @@ const processPayments = async (server, docs) => {
         )
       ).grants[0]
 
-      const identifiers = { sbi, frn, claimId }
       return Promise.all(
-        (payments || []).map((payment) =>
+        (grantWithPendingPayments.payments || []).map((payment) =>
           processSinglePayment(
             server,
             docId,
@@ -92,7 +92,7 @@ const processPayments = async (server, docs) => {
     })
   })
 
-  const results = await Promise.all(actions)
+  const results = await Promise.all(paymentActions)
   return results.flat()
 }
 
@@ -102,13 +102,13 @@ export const processDailyPayments = async (server, date = getTodaysDate()) => {
 
   try {
     const fetchStart = performance.now()
-    const { docs } = await fetchGrantPaymentsByDate(date, 'pending')
+    const { docs: farms } = await fetchGrantPaymentsByDate(date, 'pending')
     const fetchDuration = (performance.now() - fetchStart).toFixed(2)
     logger.info(
-      `Found ${docs.length} payment record(s) matching due date ${date} in ${fetchDuration}ms`
+      `Found ${farms.length} payment record(s) matching due date ${date} in ${fetchDuration}ms`
     )
 
-    const results = await processPayments(server, docs)
+    const results = await processPayments(server, farms)
     const processDuration = (performance.now() - fetchStart).toFixed(2)
     logger.info(
       `Processed ${results.length} payment(s) for date: ${date} in ${processDuration}ms`

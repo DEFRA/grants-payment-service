@@ -123,6 +123,12 @@ const config = convict({
       env: 'TRACING_HEADER'
     }
   },
+  cronDailyPaymentSchedule: {
+    doc: 'Cron time/schedule for daily payment processing',
+    format: String,
+    default: '10 0 * * *',
+    env: 'CRON_DAILY_PAYMENT_SCHEDULE'
+  },
   paymentHub: {
     uri: {
       doc: 'URI for payment hub service bus',
