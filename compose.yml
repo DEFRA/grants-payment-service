@@ -36,6 +36,7 @@ services:
 
   mongodb:
     image: mongo:6.0.13
+    command: ['mongod', '--replSet', 'rs0', '--bind_ip_all']
     networks:
       - cdp-tenant
     ports:
@@ -43,6 +44,23 @@ services:
     volumes:
       - mongodb-data:/data
     restart: always
+    healthcheck:
+      test:
+        ['CMD', 'mongosh', '--quiet', '--eval', 'db.runCommand({ ping: 1 }).ok']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongodb-init:
+    image: mongo:6.0.13
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    command: >
+      mongosh "mongodb://mongodb:27017" --eval 'try { rs.status(); print("Replica set already initialized"); } catch (e) { if (e.message.includes("no replset config")) { rs.initiate({_id: "rs0", members: [{ _id: 0, host: "localhost:27017" }]}); print("Replica set initialized"); } else { throw e; } }'
+    networks:
+      - cdp-tenant
+    restart: 'no'
 
   grants-payment-service:
     build:
@@ -60,6 +78,8 @@ services:
         condition: service_completed_successfully
       mongodb:
         condition: service_started
+      mongodb-init:
+        condition: service_completed_successfully
     env_file:
       - 'compose/aws.env'
     environment:

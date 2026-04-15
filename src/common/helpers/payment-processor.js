@@ -2,7 +2,10 @@ import { performance } from 'node:perf_hooks'
 import { getTodaysDate } from '#~/common/helpers/date.js'
 import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
-import { updatePaymentStatus } from '#~/common/helpers/update-payment-status.js'
+import {
+  updatePaymentStatus,
+  markAllStaleLockedPaymentsAsFailed
+} from '#~/common/helpers/update-payment-status.js'
 import { transformFpttPaymentDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/fptt-data-transformer.js'
 import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js'
@@ -22,11 +25,7 @@ const processSinglePayment = async (
     'locked',
     'pending'
   )
-  const wasLocked =
-    lockResult &&
-    (lockResult.nModified === 1 ||
-      lockResult.modifiedCount === 1 ||
-      lockResult.n === 1)
+  const wasLocked = !!lockResult
 
   if (!wasLocked) {
     logger.info(`Skipping payment ${payment._id} (already locked or processed)`)
@@ -116,6 +115,26 @@ export const processDailyPayments = async (server, date = getTodaysDate()) => {
     return results
   } catch (err) {
     logger.error(err, `Failed to process payments for date ${date}`)
+    throw err
+  }
+}
+
+export const processStaleLockedPayments = async (server) => {
+  const { logger } = server
+  logger.info('Processing stale locked payments')
+
+  try {
+    const staleLockedPayments = await markAllStaleLockedPaymentsAsFailed()
+    if (staleLockedPayments > 0) {
+      logger.error(
+        `${grafanaLogMessages.error.markStaleLockedPaymentsAsFailed}: marked ${staleLockedPayments} stale locked payment(s) as failed`
+      )
+    } else {
+      logger.info('No stale locked payments found')
+    }
+    return staleLockedPayments
+  } catch (err) {
+    logger.error(err, 'Failed to process stale locked payments')
     throw err
   }
 }

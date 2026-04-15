@@ -1,8 +1,14 @@
 import { describe, it, expect, vi } from 'vitest'
-import { processDailyPayments } from './payment-processor.js'
+import {
+  processDailyPayments,
+  processStaleLockedPayments
+} from './payment-processor.js'
 import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
-import { updatePaymentStatus } from '#~/common/helpers/update-payment-status.js'
+import {
+  updatePaymentStatus,
+  markAllStaleLockedPaymentsAsFailed
+} from '#~/common/helpers/update-payment-status.js'
 import { getTodaysDate } from './date.js'
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 
@@ -13,23 +19,28 @@ vi.mock('#~/common/helpers/payment-hub/index.js', () => ({
   sendPaymentHubRequest: vi.fn()
 }))
 vi.mock('#~/common/helpers/update-payment-status.js', () => ({
-  updatePaymentStatus: vi.fn()
+  updatePaymentStatus: vi.fn(),
+  markAllStaleLockedPaymentsAsFailed: vi.fn()
 }))
 vi.mock('#~/api/common/models/grant_payments.js', () => ({
   default: {
-    findOne: vi.fn()
+    findOne: vi.fn(),
+    updateMany: vi.fn()
   }
 }))
 
 describe('processDailyPayments', () => {
   const logger = {
     info: vi.fn(),
+    warn: vi.fn(),
     error: vi.fn()
   }
   const server = { logger }
 
   beforeEach(() => {
     vi.resetAllMocks()
+    // By default, no stale locked payments to clean up
+    markAllStaleLockedPaymentsAsFailed.mockResolvedValue(0)
   })
 
   it('uses provided date, locks each payment and proxies to PaymentHub, returning results', async () => {
@@ -196,10 +207,10 @@ describe('processDailyPayments', () => {
       .mockResolvedValueOnce({ grants: [fakeDocs[0].grants[0]] })
       .mockResolvedValueOnce({ grants: [fakeDocs[1].grants[0]] })
 
-    // first lock succeeds, second returns {n:0} meaning already handled
+    // first lock succeeds, second returns null meaning already handled
     updatePaymentStatus
-      .mockResolvedValueOnce({ n: 1 })
-      .mockResolvedValueOnce({ n: 0 })
+      .mockResolvedValueOnce({ _id: 'doc1' })
+      .mockResolvedValueOnce(null)
 
     sendPaymentHubRequest.mockResolvedValue('ok')
 
@@ -297,6 +308,7 @@ describe('processDailyPayments', () => {
     GrantPaymentsModel.findOne.mockResolvedValue({
       grants: [fakeDocs[0].grants[0]]
     })
+    GrantPaymentsModel.updateMany.mockResolvedValue({ modifiedCount: 0 })
     updatePaymentStatus.mockResolvedValue({ n: 1 })
 
     const result = await processDailyPayments(server, fakeDate)
@@ -429,6 +441,55 @@ describe('processDailyPayments', () => {
     expect(logger.error).toHaveBeenCalledWith(
       expect.any(Error),
       `PaymentHub request failed for record ${fakeDocs[1]._id}`
+    )
+  })
+})
+
+describe('processStaleLockedPayments', () => {
+  const logger = {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn()
+  }
+  const server = { logger }
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('calls markAllStaleLockedPaymentsAsFailed and logs if any were marked', async () => {
+    markAllStaleLockedPaymentsAsFailed.mockResolvedValue(5)
+
+    const result = await processStaleLockedPayments(server)
+
+    expect(markAllStaleLockedPaymentsAsFailed).toHaveBeenCalled()
+    expect(logger.info).toHaveBeenCalledWith('Processing stale locked payments')
+    expect(logger.error).toHaveBeenCalledWith(
+      'markStaleLockedPaymentsAsFailed: marked 5 stale locked payment(s) as failed'
+    )
+    expect(result).toEqual(5)
+  })
+
+  it('does not log error if no stale payments', async () => {
+    markAllStaleLockedPaymentsAsFailed.mockResolvedValue(0)
+
+    const result = await processStaleLockedPayments(server)
+
+    expect(markAllStaleLockedPaymentsAsFailed).toHaveBeenCalled()
+    expect(logger.info).toHaveBeenCalledWith('Processing stale locked payments')
+    expect(logger.info).toHaveBeenCalledWith('No stale locked payments found')
+    expect(logger.error).not.toHaveBeenCalled()
+    expect(result).toEqual(0)
+  })
+
+  it('logs and rethrows errors', async () => {
+    const error = new Error('db error')
+    markAllStaleLockedPaymentsAsFailed.mockRejectedValue(error)
+
+    await expect(processStaleLockedPayments(server)).rejects.toThrow(error)
+    expect(logger.error).toHaveBeenCalledWith(
+      error,
+      'Failed to process stale locked payments'
     )
   })
 })

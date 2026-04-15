@@ -1,5 +1,8 @@
 import cronJob from 'node-cron'
-import { processDailyPayments } from '#~/common/helpers/payment-processor.js'
+import {
+  processDailyPayments,
+  processStaleLockedPayments
+} from '#~/common/helpers/payment-processor.js'
 import { config } from '#~/config/index.js'
 
 const cron = {
@@ -8,8 +11,13 @@ const cron = {
     register: (server) => {
       server.logger.info('Registering cron plugin')
 
-      cronJob.schedule(config.get('cronDailyPaymentSchedule'), () =>
+      cronJob.schedule(config.get('cron.dailyPaymentSchedule'), () =>
         processDailyPayments(server)
+      )
+
+      cronJob.schedule(
+        config.get('cron.staleLockedPaymentCleanupSchedule'),
+        () => processStaleLockedPayments(server)
       )
     }
   }

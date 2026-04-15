@@ -1,5 +1,6 @@
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 import { getLogger } from '#~/common/helpers/logging/logger.js'
+import { config } from '#~/config/index.js'
 
 /**
  * Change the status of a single payment subdocument.
@@ -25,10 +26,10 @@ export const updatePaymentStatus = async (
       arrayFilter['p.status'] = currentStatus
     }
 
-    const result = await GrantPaymentsModel.updateOne(
+    const result = await GrantPaymentsModel.findOneAndUpdate(
       { _id: documentId },
       { $set: { 'grants.$[].payments.$[p].status': status } },
-      { arrayFilters: [arrayFilter] }
+      { arrayFilters: [arrayFilter], returnDocument: 'after' }
     )
 
     logger.info(
@@ -41,5 +42,87 @@ export const updatePaymentStatus = async (
       `Failed to update status to ${status} for payment ${paymentId} in ${documentId}`
     )
     throw err
+  }
+}
+
+/**
+ * Atomically find and mark ALL stale locked payments as failed using a transaction.
+ * This ensures all updates happen atomically across multiple documents.
+ * @returns {Promise<number>} number of payments marked as failed
+ */
+export const markAllStaleLockedPaymentsAsFailed = async () => {
+  const logger = getLogger()
+  const session = await GrantPaymentsModel.startSession()
+
+  try {
+    let markedCount = 0
+
+    await session.withTransaction(async () => {
+      const staleBefore = new Date(Date.now() - config.get('lockedPaymentTtl'))
+
+      // Find all documents with stale locked payments
+      const staleDocs = await GrantPaymentsModel.find(
+        {
+          'grants.payments.status': 'locked',
+          'grants.payments.updatedAt': { $lt: staleBefore }
+        },
+        null,
+        { session }
+      )
+
+      // Update each document atomically within the transaction
+      for (const doc of staleDocs) {
+        await GrantPaymentsModel.updateOne(
+          { _id: doc._id },
+          [
+            {
+              $set: {
+                'grants.$[].payments': {
+                  $map: {
+                    input: '$grants',
+                    as: 'g',
+                    in: {
+                      $map: {
+                        input: '$$g.payments',
+                        as: 'p',
+                        in: {
+                          $cond: [
+                            {
+                              $and: [
+                                { $eq: ['$$p.status', 'locked'] },
+                                { $lt: ['$$p.updatedAt', staleBefore] }
+                              ]
+                            },
+                            {
+                              $mergeObjects: [
+                                '$$p',
+                                {
+                                  status: 'failed',
+                                  updatedAt: new Date()
+                                }
+                              ]
+                            },
+                            '$$p'
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          { session }
+        )
+        markedCount++
+      }
+    })
+
+    return markedCount
+  } catch (err) {
+    logger.error(err, `Error in stale locked payment cleanup: ${err.message}`)
+    throw err
+  } finally {
+    await session.endSession()
   }
 }
