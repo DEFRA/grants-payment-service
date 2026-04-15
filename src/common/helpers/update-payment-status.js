@@ -53,6 +53,7 @@ export const updatePaymentStatus = async (
 export const markAllStaleLockedPaymentsAsFailed = async () => {
   const logger = getLogger()
   const session = await GrantPaymentsModel.startSession()
+  session.setDefaultReadPreference('primary')
 
   try {
     let markedCount = 0
