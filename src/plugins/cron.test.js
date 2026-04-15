@@ -2,7 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // import the mocks so we can inspect them in our tests
 import cronJob from 'node-cron'
-import { processDailyPayments } from '#~/common/helpers/payment-processor.js'
+import {
+  processDailyPayments,
+  processStaleLockedPayments
+} from '#~/common/helpers/payment-processor.js'
 import { cron } from './cron.js'
 
 vi.mock('node-cron', () => ({
@@ -12,7 +15,8 @@ vi.mock('node-cron', () => ({
 }))
 
 vi.mock('#~/common/helpers/payment-processor.js', () => ({
-  processDailyPayments: vi.fn()
+  processDailyPayments: vi.fn(),
+  processStaleLockedPayments: vi.fn()
 }))
 
 describe('cron plugin', () => {
@@ -37,6 +41,10 @@ describe('cron plugin', () => {
       '10 0 * * *',
       expect.any(Function)
     )
+    expect(cronJob.schedule).toHaveBeenCalledWith(
+      '20 0 * * *',
+      expect.any(Function)
+    )
   })
 
   it('calls processDailyPayments when the scheduled callback runs', () => {
@@ -47,5 +55,15 @@ describe('cron plugin', () => {
     scheduledFn()
 
     expect(processDailyPayments).toHaveBeenCalledWith(mockServer)
+  })
+
+  it('calls processStaleLockedPayments when the stale cleanup callback runs', () => {
+    cron.plugin.register(mockServer)
+
+    // capture the second callback
+    const staleCleanupFn = cronJob.schedule.mock.calls[1][1]
+    staleCleanupFn()
+
+    expect(processStaleLockedPayments).toHaveBeenCalledWith(mockServer)
   })
 })

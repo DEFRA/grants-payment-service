@@ -8,6 +8,7 @@ export const grafanaLogMessages = Object.freeze({
   error: {
     createPayment: 'Error creating grant payment',
     cancelPayment: 'Error cancelling grant payment',
-    sendPaymentHubRequest: 'PaymentHub request failed'
+    sendPaymentHubRequest: 'PaymentHub request failed',
+    staleLockPaymentTimeout: 'Payment remained locked beyond timeout threshold'
   }
 })

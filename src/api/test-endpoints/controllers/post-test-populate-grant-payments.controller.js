@@ -23,6 +23,20 @@ const getRandomAmount = (min, max) => {
 }
 
 /**
+ * Calculate payment due dates based on a starting date
+ * @param {string} startDate - The starting date in ISO format (YYYY-MM-DD)
+ * @param {number} count - The number of dates to calculate
+ * @param {number} intervalMonths - The interval between dates in months
+ * @returns {string[]} An array of date strings in ISO format (YYYY-MM-DD)
+ */
+const calculatePaymentDueDates = (startDate, count = 4, intervalMonths = 3) =>
+  Array.from({ length: count }, (_, i) => {
+    const date = new Date(startDate)
+    date.setMonth(date.getMonth() + i * intervalMonths)
+    return date.toISOString().split('T')[0]
+  })
+
+/**
  * Create a random grant payment payload
  */
 const createGrantPaymentPayload = (index, dueDate) => {
@@ -34,6 +48,8 @@ const createGrantPaymentPayload = (index, dueDate) => {
 
   const totalAmount = getRandomAmount(AMOUNT_MIN, AMOUNT_MAX)
   const quarterAmount = Math.floor(totalAmount / 4)
+
+  const paymentDueDates = calculatePaymentDueDates(dueDate)
 
   const grant = {
     sourceSystem: 'FPTT',
@@ -48,23 +64,21 @@ const createGrantPaymentPayload = (index, dueDate) => {
     ledger: 'AP',
     fesCode: 'FALS_FPTT',
     deliveryBody: 'RP00',
-    payments: [
-      {
-        dueDate,
-        totalAmountPence: String(quarterAmount),
-        status: 'pending',
-        invoiceLines: [
-          {
-            schemeCode: 'CMOR1',
-            description: `${dueDate}: Parcel: 1059: Assess moorland and produce a written record`,
-            amountPence: String(quarterAmount),
-            accountCode: 'SOS710',
-            fundCode: 'DRD10',
-            deliveryBody: 'RP00'
-          }
-        ]
-      }
-    ]
+    payments: paymentDueDates.map((paymentDueDate) => ({
+      dueDate: paymentDueDate,
+      totalAmountPence: String(quarterAmount),
+      status: 'pending',
+      invoiceLines: [
+        {
+          schemeCode: 'CMOR1',
+          description: `${paymentDueDate}: Parcel: 1059: Assess moorland and produce a written record`,
+          amountPence: String(quarterAmount),
+          accountCode: 'SOS710',
+          fundCode: 'DRD10',
+          deliveryBody: 'RP00'
+        }
+      ]
+    }))
   }
 
   return {

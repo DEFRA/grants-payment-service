@@ -2,7 +2,10 @@ import { performance } from 'node:perf_hooks'
 import { getTodaysDate } from '#~/common/helpers/date.js'
 import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
-import { updatePaymentStatus } from '#~/common/helpers/update-payment-status.js'
+import {
+  updatePaymentStatus,
+  markAllStaleLockedPaymentsAsFailed
+} from '#~/common/helpers/update-payment-status.js'
 import { transformFpttPaymentDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/fptt-data-transformer.js'
 import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js'
@@ -22,11 +25,7 @@ const processSinglePayment = async (
     'locked',
     'pending'
   )
-  const wasLocked =
-    lockResult &&
-    (lockResult.nModified === 1 ||
-      lockResult.modifiedCount === 1 ||
-      lockResult.n === 1)
+  const wasLocked = !!lockResult
 
   if (!wasLocked) {
     logger.info(`Skipping payment ${payment._id} (already locked or processed)`)
@@ -62,13 +61,14 @@ const processSinglePayment = async (
   }
 }
 
-const processPayments = async (server, docs) => {
+const processPayments = async (server, accounts) => {
   const { logger } = server
-  const actions = (docs || []).flatMap((doc) => {
-    const { _id: docId, sbi, frn, claimId, grants } = doc
+
+  const paymentActions = (accounts || []).flatMap((account) => {
+    const { _id: docId, sbi, frn, claimId, grants } = account
+    const identifiers = { sbi, frn, claimId }
 
     return (grants || []).map(async (grantWithPendingPayments) => {
-      const { payments } = grantWithPendingPayments
       const grant = (
         await GrantPaymentsModel.findOne(
           { _id: docId, 'grants._id': grantWithPendingPayments._id },
@@ -76,9 +76,8 @@ const processPayments = async (server, docs) => {
         )
       ).grants[0]
 
-      const identifiers = { sbi, frn, claimId }
       return Promise.all(
-        (payments || []).map((payment) =>
+        (grantWithPendingPayments.payments || []).map((payment) =>
           processSinglePayment(
             server,
             docId,
@@ -92,7 +91,7 @@ const processPayments = async (server, docs) => {
     })
   })
 
-  const results = await Promise.all(actions)
+  const results = await Promise.all(paymentActions)
   return results.flat()
 }
 
@@ -102,13 +101,13 @@ export const processDailyPayments = async (server, date = getTodaysDate()) => {
 
   try {
     const fetchStart = performance.now()
-    const { docs } = await fetchGrantPaymentsByDate(date, 'pending')
+    const { docs: accounts } = await fetchGrantPaymentsByDate(date, 'pending')
     const fetchDuration = (performance.now() - fetchStart).toFixed(2)
     logger.info(
-      `Found ${docs.length} payment record(s) matching due date ${date} in ${fetchDuration}ms`
+      `Found ${accounts.length} payment record(s) matching due date ${date} in ${fetchDuration}ms`
     )
 
-    const results = await processPayments(server, docs)
+    const results = await processPayments(server, accounts)
     const processDuration = (performance.now() - fetchStart).toFixed(2)
     logger.info(
       `Processed ${results.length} payment(s) for date: ${date} in ${processDuration}ms`
@@ -116,6 +115,26 @@ export const processDailyPayments = async (server, date = getTodaysDate()) => {
     return results
   } catch (err) {
     logger.error(err, `Failed to process payments for date ${date}`)
+    throw err
+  }
+}
+
+export const processStaleLockedPayments = async (server) => {
+  const { logger } = server
+  logger.info('Processing stale locked payments')
+
+  try {
+    const staleLockedPayments = await markAllStaleLockedPaymentsAsFailed()
+    if (staleLockedPayments > 0) {
+      logger.error(
+        `${grafanaLogMessages.error.staleLockPaymentTimeout}: marked ${staleLockedPayments} stale locked payment(s) as failed`
+      )
+    } else {
+      logger.info('No stale locked payments found')
+    }
+    return staleLockedPayments
+  } catch (err) {
+    logger.error(err, 'Failed to process stale locked payments')
     throw err
   }
 }

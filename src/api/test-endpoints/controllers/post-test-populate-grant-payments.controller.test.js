@@ -122,7 +122,7 @@ describe('postTestPopulateGrantPaymentController', () => {
 
     const { h } = makeH()
     const req = {
-      payload: { targetCount: 10, batchSize: 5 },
+      payload: { targetCount: 10, batchSize: 5, dueDate: '2026-04-08' },
       logger: mockLogger
     }
 
@@ -142,7 +142,7 @@ describe('postTestPopulateGrantPaymentController', () => {
 
     const { h } = makeH()
     const req = {
-      payload: { targetCount: 150, batchSize: 50 },
+      payload: { targetCount: 150, batchSize: 50, dueDate: '2026-04-08' },
       logger: mockLogger
     }
 
@@ -160,7 +160,7 @@ describe('postTestPopulateGrantPaymentController', () => {
     GrantPaymentsModel.countDocuments.mockResolvedValue(0)
 
     const faultyReq = {
-      payload: { targetCount: 10 },
+      payload: { targetCount: 10, dueDate: '2026-04-08' },
       logger: {
         info: vi.fn(() => {
           throw new Error('Logger failed')

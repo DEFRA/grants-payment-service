@@ -123,6 +123,26 @@ const config = convict({
       env: 'TRACING_HEADER'
     }
   },
+  lockedPaymentTtl: {
+    doc: 'Time in milliseconds before a locked payment is considered stale and marked as failed',
+    format: 'nat',
+    default: 300000,
+    env: 'LOCKED_PAYMENT_TTL'
+  },
+  cron: {
+    dailyPaymentSchedule: {
+      doc: 'Cron time/schedule for daily payment processing',
+      format: String,
+      default: '10 0 * * *',
+      env: 'CRON_DAILY_PAYMENT_SCHEDULE'
+    },
+    staleLockedPaymentCleanupSchedule: {
+      doc: 'Cron time/schedule for stale locked payment cleanup',
+      format: String,
+      default: '20 0 * * *',
+      env: 'CRON_STALE_LOCKED_PAYMENT_CLEANUP_SCHEDULE'
+    }
+  },
   paymentHub: {
     uri: {
       doc: 'URI for payment hub service bus',
