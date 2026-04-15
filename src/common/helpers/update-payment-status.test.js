@@ -93,6 +93,7 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
 
   it('processes stale locked payments', async () => {
     const mockSession = {
+      setDefaultReadPreference: vi.fn(),
       withTransaction: vi.fn(),
       endSession: vi.fn()
     }
@@ -110,6 +111,7 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
 
     const result = await markAllStaleLockedPaymentsAsFailed()
 
+    expect(mockSession.setDefaultReadPreference).toHaveBeenCalledWith('primary')
     expect(result).toBe(2)
     expect(GrantPaymentsModel.find).toHaveBeenCalledWith(
       {
@@ -125,6 +127,7 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
 
   it('returns 0 when no stale payments found', async () => {
     const mockSession = {
+      setDefaultReadPreference: vi.fn(),
       withTransaction: vi.fn(),
       endSession: vi.fn()
     }
@@ -138,12 +141,14 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
 
     const result = await markAllStaleLockedPaymentsAsFailed()
 
+    expect(mockSession.setDefaultReadPreference).toHaveBeenCalledWith('primary')
     expect(result).toBe(0)
     expect(logger.warn).not.toHaveBeenCalled()
   })
 
   it('handles transaction errors properly', async () => {
     const mockSession = {
+      setDefaultReadPreference: vi.fn(),
       withTransaction: vi.fn(),
       endSession: vi.fn()
     }
