@@ -23,6 +23,7 @@ describe('fetchAllGrantPayments', () => {
     expect(GrantPaymentsModel.find).toHaveBeenCalledWith({})
     expect(result).toEqual({
       docs: fakeDocs,
+      totalDocs: 2,
       pagination: { page: 1, total: 1 }
     })
   })
@@ -46,6 +47,7 @@ describe('fetchAllGrantPayments', () => {
     expect(limitMock).toHaveBeenCalledWith(10)
     expect(result).toEqual({
       docs: fakeDocs,
+      totalDocs: 15,
       pagination: { page: 2, total: 2 }
     })
   })

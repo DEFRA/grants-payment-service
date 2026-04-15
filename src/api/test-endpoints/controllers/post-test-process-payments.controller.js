@@ -8,15 +8,22 @@ import { getTodaysDate } from '#~/common/helpers/date.js'
  * @satisfies {Partial<ServerRoute>}
  */
 const postTestProcessPaymentsController = {
-  handler: (request, h) => {
+  handler: async (request, h) => {
     try {
       const { date } = request.params
 
-      processDailyPayments(request.server, date)
+      const first10Payments = await processDailyPayments(
+        request.server,
+        10,
+        date
+      )
+
+      processDailyPayments(request.server, undefined, date)
 
       return h
         .response({
-          message: `Triggered daily payment processing for ${date || getTodaysDate()}, check logs for details`
+          message: `Triggered daily payment processing for ${date || getTodaysDate()}, showing first 10 payments, check logs for more details`,
+          result: first10Payments
         })
         .code(statusCodes.ok)
     } catch (error) {

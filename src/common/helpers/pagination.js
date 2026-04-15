@@ -16,6 +16,7 @@ export const wrapWithPagination = (
 ) => {
   return {
     docs,
+    totalDocs,
     pagination: {
       page: page || 1,
       total: Math.ceil(totalDocs / limit) || 1
