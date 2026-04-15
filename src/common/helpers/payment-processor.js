@@ -127,7 +127,7 @@ export const processStaleLockedPayments = async (server) => {
     const staleLockedPayments = await markAllStaleLockedPaymentsAsFailed()
     if (staleLockedPayments > 0) {
       logger.error(
-        `${grafanaLogMessages.error.markStaleLockedPaymentsAsFailed}: marked ${staleLockedPayments} stale locked payment(s) as failed`
+        `${grafanaLogMessages.error.staleLockPaymentTimeout}: marked ${staleLockedPayments} stale locked payment(s) as failed`
       )
     } else {
       logger.info('No stale locked payments found')

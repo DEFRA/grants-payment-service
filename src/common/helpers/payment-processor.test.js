@@ -465,7 +465,7 @@ describe('processStaleLockedPayments', () => {
     expect(markAllStaleLockedPaymentsAsFailed).toHaveBeenCalled()
     expect(logger.info).toHaveBeenCalledWith('Processing stale locked payments')
     expect(logger.error).toHaveBeenCalledWith(
-      'markStaleLockedPaymentsAsFailed: marked 5 stale locked payment(s) as failed'
+      'Payment remained locked beyond timeout threshold: marked 5 stale locked payment(s) as failed'
     )
     expect(result).toEqual(5)
   })
