@@ -29,8 +29,7 @@ describe('postTestProcessPaymentsController', () => {
 
   it('calls processor with provided date and returns 200', async () => {
     const fakeDate = '2026-02-20'
-    const fakeResult = ['foo']
-    processDailyPayments.mockResolvedValue(fakeResult)
+    processDailyPayments.mockReturnValue(undefined)
 
     const h = makeH()
     const req = {
@@ -43,12 +42,13 @@ describe('postTestProcessPaymentsController', () => {
 
     expect(processDailyPayments).toHaveBeenCalledWith(req.server, fakeDate)
     expect(response.statusCode).toBe(statusCodes.ok)
-    expect(response.source).toEqual({ result: fakeResult })
+    expect(response.source).toEqual({
+      message: `Triggered daily payment processing for ${fakeDate}, check logs for details`
+    })
   })
 
-  it('passes undefined when date not supplied', async () => {
-    const fakeResult = []
-    processDailyPayments.mockResolvedValue(fakeResult)
+  it('uses current date when date not supplied', async () => {
+    processDailyPayments.mockReturnValue(undefined)
 
     const h = makeH()
     const req = { params: {}, server: {}, logger: { error: vi.fn() } }
@@ -56,12 +56,17 @@ describe('postTestProcessPaymentsController', () => {
     const response = await postTestProcessPaymentsController.handler(req, h)
 
     expect(processDailyPayments).toHaveBeenCalledWith(req.server, undefined)
-    expect(response.source).toEqual({ result: fakeResult })
+    expect(response.source).toEqual({
+      message:
+        'Triggered daily payment processing for 2026-04-15, check logs for details'
+    })
   })
 
   it('forwards Boom errors unchanged', async () => {
     const boomError = Boom.badRequest('nope')
-    processDailyPayments.mockRejectedValue(boomError)
+    processDailyPayments.mockImplementation(() => {
+      throw boomError
+    })
 
     const h = makeH()
     const req = {
@@ -76,7 +81,9 @@ describe('postTestProcessPaymentsController', () => {
 
   it('logs and responds 500 on generic failure', async () => {
     const error = new Error('kaboom')
-    processDailyPayments.mockRejectedValue(error)
+    processDailyPayments.mockImplementation(() => {
+      throw error
+    })
 
     const h = makeH()
     const logger = { error: vi.fn() }

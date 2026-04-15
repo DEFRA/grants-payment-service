@@ -4,22 +4,29 @@ import { config } from '#~/config/index.js'
 
 vi.mock('#~/config/index.js')
 // stub the imported routes so we can inspect them
-vi.mock('#~/routes/health/index.js', () => ({
-  health: { path: '/health' }
+vi.mock('#~/api/health/index.js', () => ({
+  health: { method: 'GET', path: '/health', handler: () => {} },
+  stats: { method: 'GET', path: '/health/stats', handler: () => {} }
 }))
-vi.mock('#~/routes/test-endpoints/index.js', () => ({
+vi.mock('#~/api/test-endpoints/index.js', () => ({
   testEndpoints: { plugin: { name: 'testEndpoints' } }
 }))
 
 describe('router plugin', () => {
   let server
   let healthRoute
+  let statsRoute
 
   beforeEach(() => {
     vi.clearAllMocks()
     healthRoute = {
       method: 'GET',
       path: '/health',
+      handler: expect.any(Function)
+    }
+    statsRoute = {
+      method: 'GET',
+      path: '/health/stats',
       handler: expect.any(Function)
     }
 
@@ -45,7 +52,7 @@ describe('router plugin', () => {
 
   it('always registers health route', async () => {
     await router.plugin.register(server)
-    expect(server.route).toHaveBeenCalledWith([healthRoute])
+    expect(server.route).toHaveBeenCalledWith([healthRoute, statsRoute])
   })
 
   it('does not register test endpoints when flag is false', async () => {
