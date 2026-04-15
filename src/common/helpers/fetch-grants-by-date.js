@@ -1,8 +1,7 @@
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
-import { config } from '#~/config/index.js'
 import { wrapWithPagination } from './pagination.js'
 
-export const fetchGrantPaymentsByDate = async (date, status, page) => {
+export const fetchGrantPaymentsByDate = async (date, status, limit, page) => {
   const match = {
     'grants.payments.dueDate': date
   }
@@ -15,10 +14,13 @@ export const fetchGrantPaymentsByDate = async (date, status, page) => {
 
   const pipeline = [{ $match: match }, { $sort: { createdAt: -1 } }]
 
-  const limit = config.get('paginationLimit')
-  if (page) {
-    const skip = (page - 1) * limit
-    pipeline.push({ $skip: skip }, { $limit: limit })
+  if (limit) {
+    if (page) {
+      const skip = (page - 1) * limit
+      pipeline.push({ $skip: skip })
+    }
+
+    pipeline.push({ $limit: limit })
   }
 
   pipeline.push({

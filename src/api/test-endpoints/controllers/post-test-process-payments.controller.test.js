@@ -29,7 +29,8 @@ describe('postTestProcessPaymentsController', () => {
 
   it('calls processor with provided date and returns 200', async () => {
     const fakeDate = '2026-02-20'
-    processDailyPayments.mockReturnValue(undefined)
+    const fakeResults = [{ _id: 'payment1' }, { _id: 'payment2' }]
+    processDailyPayments.mockResolvedValue(fakeResults)
 
     const h = makeH()
     const req = {
@@ -40,25 +41,28 @@ describe('postTestProcessPaymentsController', () => {
 
     const response = await postTestProcessPaymentsController.handler(req, h)
 
-    expect(processDailyPayments).toHaveBeenCalledWith(req.server, fakeDate)
+    expect(processDailyPayments).toHaveBeenCalledWith(req.server, 10, fakeDate)
     expect(response.statusCode).toBe(statusCodes.ok)
     expect(response.source).toEqual({
-      message: `Triggered daily payment processing for ${fakeDate}, check logs for details`
+      message: `Triggered daily payment processing for ${fakeDate}, showing first 10 payments, check logs for more details`,
+      result: fakeResults
     })
   })
 
   it('uses current date when date not supplied', async () => {
-    processDailyPayments.mockReturnValue(undefined)
+    const fakeResults = []
+    processDailyPayments.mockResolvedValue(fakeResults)
 
     const h = makeH()
     const req = { params: {}, server: {}, logger: { error: vi.fn() } }
 
     const response = await postTestProcessPaymentsController.handler(req, h)
 
-    expect(processDailyPayments).toHaveBeenCalledWith(req.server, undefined)
+    expect(processDailyPayments).toHaveBeenCalledWith(req.server, 10, undefined)
     expect(response.source).toEqual({
       message:
-        'Triggered daily payment processing for 2026-04-15, check logs for details'
+        'Triggered daily payment processing for 2026-04-15, showing first 10 payments, check logs for more details',
+      result: fakeResults
     })
   })
 
