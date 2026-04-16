@@ -93,7 +93,6 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
 
   it('processes stale locked payments', async () => {
     const mockSession = {
-      setDefaultReadPreference: vi.fn(),
       withTransaction: vi.fn(),
       endSession: vi.fn()
     }
@@ -105,14 +104,17 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
     GrantPaymentsModel.find.mockResolvedValue([staleDoc1, staleDoc2])
     GrantPaymentsModel.updateOne.mockResolvedValue({ acknowledged: true })
 
-    mockSession.withTransaction.mockImplementation(async (fn) => {
+    mockSession.withTransaction.mockImplementation(async (fn, options) => {
       await fn()
     })
 
     const result = await markAllStaleLockedPaymentsAsFailed()
 
-    expect(mockSession.setDefaultReadPreference).toHaveBeenCalledWith('primary')
     expect(result).toBe(2)
+    expect(mockSession.withTransaction).toHaveBeenCalledWith(
+      expect.any(Function),
+      { readPreference: 'primary' }
+    )
     expect(GrantPaymentsModel.find).toHaveBeenCalledWith(
       {
         'grants.payments.status': 'locked',
@@ -127,7 +129,6 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
 
   it('returns 0 when no stale payments found', async () => {
     const mockSession = {
-      setDefaultReadPreference: vi.fn(),
       withTransaction: vi.fn(),
       endSession: vi.fn()
     }
@@ -135,20 +136,22 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
     GrantPaymentsModel.startSession.mockResolvedValue(mockSession)
     GrantPaymentsModel.find.mockResolvedValue([])
 
-    mockSession.withTransaction.mockImplementation(async (fn) => {
+    mockSession.withTransaction.mockImplementation(async (fn, options) => {
       await fn()
     })
 
     const result = await markAllStaleLockedPaymentsAsFailed()
 
-    expect(mockSession.setDefaultReadPreference).toHaveBeenCalledWith('primary')
     expect(result).toBe(0)
+    expect(mockSession.withTransaction).toHaveBeenCalledWith(
+      expect.any(Function),
+      { readPreference: 'primary' }
+    )
     expect(logger.warn).not.toHaveBeenCalled()
   })
 
   it('handles transaction errors properly', async () => {
     const mockSession = {
-      setDefaultReadPreference: vi.fn(),
       withTransaction: vi.fn(),
       endSession: vi.fn()
     }
