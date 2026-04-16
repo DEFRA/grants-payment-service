@@ -28,6 +28,7 @@ describe('fetchGrantPaymentsBySbiAndFundCode', () => {
     })
     expect(result).toEqual({
       docs: fakeDocs,
+      totalDocs: 2,
       pagination: { page: 1, total: 1 }
     })
   })
@@ -53,6 +54,7 @@ describe('fetchGrantPaymentsBySbiAndFundCode', () => {
     expect(limitMock).toHaveBeenCalledWith(10)
     expect(result).toEqual({
       docs: fakeDocs,
+      totalDocs: 25,
       pagination: { page: 3, total: 3 }
     })
   })

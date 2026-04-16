@@ -46,6 +46,7 @@ describe('fetchGrantPaymentsByDate', () => {
 
     expect(result).toEqual({
       docs: fakeDocs,
+      totalDocs: 1,
       pagination: { page: 1, total: 1 }
     })
   })
@@ -75,12 +76,13 @@ describe('fetchGrantPaymentsByDate', () => {
 
     expect(result).toEqual({
       docs: fakeDocs,
+      totalDocs: 1,
       pagination: { page: 1, total: 1 }
     })
   })
 
   it('applies pagination when page is provided', async () => {
-    const result = await fetchGrantPaymentsByDate(date, null, 2)
+    const result = await fetchGrantPaymentsByDate(date, null, 10, 2)
 
     expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
       { $match: { 'grants.payments.dueDate': date } },
@@ -92,6 +94,7 @@ describe('fetchGrantPaymentsByDate', () => {
 
     expect(result).toEqual({
       docs: fakeDocs,
+      totalDocs: 1,
       pagination: { page: 2, total: 1 }
     })
   })
