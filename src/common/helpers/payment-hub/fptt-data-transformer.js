@@ -50,7 +50,7 @@ const buildInvoiceLines = (grant, payment) =>
  * @param {Object} currentPayment - The current payment object with _id (from MongoDB)
  * @returns string
  */
-const updateQuarter = (invoiceNumber, payments = [], currentPayment) => {
+const updateQuarter = (invoiceNumber, payments, currentPayment) => {
   const invoiceWithoutQuarter = invoiceNumber.replace(/Q[1-4X]$/i, '')
 
   // Find the index of the current payment based on its _id
