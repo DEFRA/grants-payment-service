@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { handleCreatePaymentEvent } from './handle-create-payment.js'
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
-import { prepareWithPaymentHubConfig } from '#~/common/helpers/payment-hub/prepare-with-payment-hub-config.js'
 import sampleData from '#~/api/common/helpers/sample-data/index.js'
 
 vi.mock('#~/common/helpers/create-grant-payment.js', () => {
@@ -11,14 +10,6 @@ vi.mock('#~/common/helpers/create-grant-payment.js', () => {
   }
 })
 
-vi.mock(
-  '#~/common/helpers/payment-hub/prepare-with-payment-hub-config.js',
-  () => {
-    return {
-      prepareWithPaymentHubConfig: vi.fn()
-    }
-  }
-)
 const validPayload = {
   id: '12-34-56-78-90',
   source: 'farming-grants-agreements-api',
@@ -31,17 +22,11 @@ const validPayload = {
 describe('handleCreatePaymentEvent', () => {
   it('logs receipt of a create_payment message', async () => {
     const logger = { info: vi.fn() }
-    const mockPreparedData = { ...sampleData.grants[0], prepared: true }
-
-    prepareWithPaymentHubConfig.mockReturnValue(mockPreparedData)
     createGrantPayment.mockResolvedValue(validPayload)
 
     await handleCreatePaymentEvent('msg-1', validPayload, logger)
 
-    expect(prepareWithPaymentHubConfig).toHaveBeenCalledWith(
-      sampleData.grants[0]
-    )
-    expect(createGrantPayment).toHaveBeenCalledWith(mockPreparedData)
+    expect(createGrantPayment).toHaveBeenCalledWith(sampleData.grants[0])
     expect(logger.info).toHaveBeenCalledWith(
       {
         messageId: 'msg-1',
@@ -59,7 +44,6 @@ describe('handleCreatePaymentEvent', () => {
     const logger = { info: vi.fn(), error: vi.fn() }
     const error = new Error('Create failed')
 
-    prepareWithPaymentHubConfig.mockReturnValue(sampleData.grants[0])
     createGrantPayment.mockRejectedValue(error)
 
     await handleCreatePaymentEvent('msg-1', validPayload, logger)

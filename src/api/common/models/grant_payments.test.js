@@ -41,6 +41,7 @@ describe('grant_payments schema', () => {
             {
               dueDate: '2026-06-05',
               totalAmountPence: '1263',
+              correlationId: '7cf9bd11-c791-42c9-bd28-fa0fecb2d92c',
               invoiceLines: [
                 {
                   schemeCode: 'CMOR1',
@@ -85,6 +86,7 @@ describe('grant_payments schema', () => {
             {
               dueDate: '2026-06-05',
               totalAmountPence: 1263,
+              correlationId: '7cf9bd11-c791-42c9-bd28-fa0fecb2d92c',
               invoiceLines: [
                 {
                   schemeCode: 'CMOR1',
