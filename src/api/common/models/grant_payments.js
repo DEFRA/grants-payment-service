@@ -12,36 +12,42 @@ const InvoiceLine = new mongoose.Schema({
   deliveryBody: { type: String, required: true }
 })
 
-const Payment = new mongoose.Schema({
-  dueDate: { type: String, required: true },
-  totalAmountPence: { type: Decimal128, required: true },
-  invoiceLines: [{ type: InvoiceLine, required: true }],
-  status: {
-    type: String,
-    required: true,
-    default: 'pending',
-    enum: ['pending', 'locked', 'cancelled', 'submitted', 'failed']
-  }
-})
+const Payment = new mongoose.Schema(
+  {
+    dueDate: { type: String, required: true },
+    totalAmountPence: { type: Decimal128, required: true },
+    invoiceLines: [{ type: InvoiceLine, required: true }],
+    status: {
+      type: String,
+      required: true,
+      default: 'pending',
+      enum: ['pending', 'locked', 'cancelled', 'submitted', 'failed']
+    }
+  },
+  { timestamps: true }
+)
 
-const Grant = new mongoose.Schema({
-  sourceSystem: { type: String, required: true },
-  paymentRequestNumber: { type: Number, required: true },
-  correlationId: { type: String, required: true },
-  invoiceNumber: { type: String, required: true },
-  originalInvoiceNumber: { type: String },
-  agreementNumber: { type: String, required: true },
-  recoveryDate: { type: String },
-  originalSettlementDate: { type: String },
-  remittanceDescription: { type: String },
-  totalAmountPence: { type: Decimal128, required: true },
-  currency: { type: String, required: true },
-  marketingYear: { type: String },
-  ledger: { type: String, required: true },
-  fesCode: { type: String, required: true },
-  deliveryBody: { type: String, required: true },
-  payments: [{ type: Payment, required: true }]
-})
+const Grant = new mongoose.Schema(
+  {
+    sourceSystem: { type: String, required: true },
+    paymentRequestNumber: { type: Number, required: true },
+    correlationId: { type: String, required: true },
+    invoiceNumber: { type: String, required: true },
+    originalInvoiceNumber: { type: String },
+    agreementNumber: { type: String, required: true },
+    recoveryDate: { type: String },
+    originalSettlementDate: { type: String },
+    remittanceDescription: { type: String },
+    totalAmountPence: { type: Decimal128, required: true },
+    currency: { type: String, required: true },
+    marketingYear: { type: String },
+    ledger: { type: String, required: true },
+    fesCode: { type: String, required: true },
+    deliveryBody: { type: String, required: true },
+    payments: [{ type: Payment, required: true }]
+  },
+  { timestamps: true }
+)
 
 const schema = new mongoose.Schema(
   {
