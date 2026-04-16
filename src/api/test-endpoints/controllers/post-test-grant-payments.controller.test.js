@@ -1,6 +1,5 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
-import { prepareWithPaymentHubConfig } from '#~/common/helpers/payment-hub/prepare-with-payment-hub-config.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { postTestGrantPaymentController } from './post-test-grant-payments.controller.js'
 import grants from '#~/api/common/helpers/sample-data/grants.js'
@@ -10,15 +9,6 @@ vi.mock('#~/common/helpers/create-grant-payment.js', () => {
     createGrantPayment: vi.fn()
   }
 })
-
-vi.mock(
-  '#~/common/helpers/payment-hub/prepare-with-payment-hub-config.js',
-  () => {
-    return {
-      prepareWithPaymentHubConfig: vi.fn()
-    }
-  }
-)
 
 const makeH = () => {
   const res = { statusCode: 200, source: undefined }
@@ -51,15 +41,12 @@ describe('postTestGrantPaymentController', () => {
   })
 
   test('returns 201 with id when creation succeeds', async () => {
-    const mockPreparedPayload = { ...validPayload, prepared: true }
-    prepareWithPaymentHubConfig.mockReturnValue(mockPreparedPayload)
     createGrantPayment.mockResolvedValue({ _id: 'abc123' })
 
     const h = makeH()
     const result = await postTestGrantPaymentController.handler(mockReq, h)
 
-    expect(prepareWithPaymentHubConfig).toHaveBeenCalledWith(validPayload)
-    expect(createGrantPayment).toHaveBeenCalledWith(mockPreparedPayload)
+    expect(createGrantPayment).toHaveBeenCalledWith(validPayload)
     expect(result.statusCode).toBe(statusCodes.created)
     expect(result.source).toEqual({
       id: 'abc123',
@@ -70,7 +57,6 @@ describe('postTestGrantPaymentController', () => {
   test('returns 400 for validation error (ValidationError)', async () => {
     const error = new Error('validation failed')
     error.name = 'ValidationError'
-    prepareWithPaymentHubConfig.mockReturnValue(validPayload)
     createGrantPayment.mockRejectedValue(error)
 
     const h = makeH()
@@ -86,7 +72,6 @@ describe('postTestGrantPaymentController', () => {
   test('returns 400 for validation error (ValidatorError)', async () => {
     const error = new Error('validation failed')
     error.name = 'ValidatorError'
-    prepareWithPaymentHubConfig.mockReturnValue(validPayload)
     createGrantPayment.mockRejectedValue(error)
 
     const h = makeH()
@@ -100,7 +85,6 @@ describe('postTestGrantPaymentController', () => {
   })
 
   test('returns 500 for unexpected error', async () => {
-    prepareWithPaymentHubConfig.mockReturnValue(validPayload)
     createGrantPayment.mockRejectedValue(new Error('db down'))
 
     const h = makeH()
@@ -114,7 +98,6 @@ describe('postTestGrantPaymentController', () => {
   })
 
   test('returns 500 when error is null/undefined', async () => {
-    prepareWithPaymentHubConfig.mockReturnValue(validPayload)
     createGrantPayment.mockRejectedValue(undefined)
 
     const h = makeH()
@@ -128,7 +111,6 @@ describe('postTestGrantPaymentController', () => {
   })
 
   test('handles missing _id in created document (using id property)', async () => {
-    prepareWithPaymentHubConfig.mockReturnValue(validPayload)
     createGrantPayment.mockResolvedValue({ id: 'id123' })
 
     const h = makeH()
@@ -139,7 +121,6 @@ describe('postTestGrantPaymentController', () => {
   })
 
   test('handles missing _id and id in created document', async () => {
-    prepareWithPaymentHubConfig.mockReturnValue(validPayload)
     createGrantPayment.mockResolvedValue({ someOtherProp: 'value' })
 
     const h = makeH()
@@ -150,7 +131,6 @@ describe('postTestGrantPaymentController', () => {
   })
 
   test('returns 201 when incoming payload has no grants', async () => {
-    prepareWithPaymentHubConfig.mockReturnValue({ sbi: '123' })
     createGrantPayment.mockResolvedValue({ _id: 'abc123' })
 
     const h = makeH()
@@ -164,7 +144,6 @@ describe('postTestGrantPaymentController', () => {
 
   test('handles _id as an object with toString method', async () => {
     const mockId = { toString: () => 'string-id' }
-    prepareWithPaymentHubConfig.mockReturnValue(validPayload)
     createGrantPayment.mockResolvedValue({ _id: mockId })
 
     const h = makeH()

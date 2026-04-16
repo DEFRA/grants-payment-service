@@ -99,7 +99,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
               marketingYear: '2026'
             }
           ],
-          correlationId: '7cf9bd11-c791-42c9-bd28-fa0fec_id',
+          correlationId: 'payment-correlation-id',
           value: '-12.63',
           annualValue: '702.85'
         })

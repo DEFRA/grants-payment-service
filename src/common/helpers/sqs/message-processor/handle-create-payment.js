@@ -1,5 +1,4 @@
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
-import { prepareWithPaymentHubConfig } from '#~/common/helpers/payment-hub/prepare-with-payment-hub-config.js'
 import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js'
 
 /**
@@ -16,13 +15,7 @@ export async function handleCreatePaymentEvent(messageId, payload, logger) {
   )
 
   try {
-    const grantPaymentWithPaymentHubConfig = prepareWithPaymentHubConfig(
-      payload.data
-    )
-
-    const grantPayment = await createGrantPayment(
-      grantPaymentWithPaymentHubConfig
-    )
+    const grantPayment = await createGrantPayment(payload.data)
 
     logger.info(
       `Managed to successfully create grantPayment entry ${JSON.stringify(grantPayment)}`
