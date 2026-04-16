@@ -24,6 +24,7 @@ describe('fetchGrantPaymentsBySbi', () => {
     expect(GrantPaymentsModel.find).toHaveBeenCalledWith({ sbi })
     expect(result).toEqual({
       docs: fakeDocs,
+      totalDocs: 1,
       pagination: { page: 1, total: 1 }
     })
   })
@@ -48,6 +49,7 @@ describe('fetchGrantPaymentsBySbi', () => {
     expect(limitMock).toHaveBeenCalledWith(10)
     expect(result).toEqual({
       docs: fakeDocs,
+      totalDocs: 45,
       pagination: { page: 5, total: 5 }
     })
   })

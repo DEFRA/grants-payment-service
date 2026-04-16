@@ -2,6 +2,7 @@ import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { getTodaysDate } from '#~/common/helpers/date.js'
 import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
+import { config } from '#~/config/index.js'
 
 /**
  * Controller to get test daily payments for a specific date, or the current date if no date is provided.
@@ -15,6 +16,7 @@ const getTestDailyPaymentsController = {
       const { docs, pagination } = await fetchGrantPaymentsByDate(
         date,
         null,
+        config.get('paginationLimit'),
         page
       )
 

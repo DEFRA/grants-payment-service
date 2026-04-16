@@ -104,13 +104,17 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
     GrantPaymentsModel.find.mockResolvedValue([staleDoc1, staleDoc2])
     GrantPaymentsModel.updateOne.mockResolvedValue({ acknowledged: true })
 
-    mockSession.withTransaction.mockImplementation(async (fn) => {
+    mockSession.withTransaction.mockImplementation(async (fn, options) => {
       await fn()
     })
 
     const result = await markAllStaleLockedPaymentsAsFailed()
 
     expect(result).toBe(2)
+    expect(mockSession.withTransaction).toHaveBeenCalledWith(
+      expect.any(Function),
+      { readPreference: 'primary' }
+    )
     expect(GrantPaymentsModel.find).toHaveBeenCalledWith(
       {
         'grants.payments.status': 'locked',
@@ -132,13 +136,17 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
     GrantPaymentsModel.startSession.mockResolvedValue(mockSession)
     GrantPaymentsModel.find.mockResolvedValue([])
 
-    mockSession.withTransaction.mockImplementation(async (fn) => {
+    mockSession.withTransaction.mockImplementation(async (fn, options) => {
       await fn()
     })
 
     const result = await markAllStaleLockedPaymentsAsFailed()
 
     expect(result).toBe(0)
+    expect(mockSession.withTransaction).toHaveBeenCalledWith(
+      expect.any(Function),
+      { readPreference: 'primary' }
+    )
     expect(logger.warn).not.toHaveBeenCalled()
   })
 

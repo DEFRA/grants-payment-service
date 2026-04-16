@@ -95,26 +95,35 @@ const processPayments = async (server, accounts) => {
   return results.flat()
 }
 
-export const processDailyPayments = async (server, date = getTodaysDate()) => {
+export const processDailyPayments = async (
+  server,
+  limit,
+  date = getTodaysDate()
+) => {
   const { logger } = server
-  logger.info(`Processing payments for date: ${date}`)
+  const logLimitedTo = limit ? ` (limited to ${limit} payments)` : ''
+  logger.info(`Processing payments for date: ${date}${logLimitedTo}`)
 
   try {
     const fetchStart = performance.now()
-    const { docs: accounts } = await fetchGrantPaymentsByDate(date, 'pending')
+    const { docs: accounts, totalDocs: totalAccounts } =
+      await fetchGrantPaymentsByDate(date, 'pending', limit)
     const fetchDuration = (performance.now() - fetchStart).toFixed(2)
     logger.info(
-      `Found ${accounts.length} payment record(s) matching due date ${date} in ${fetchDuration}ms`
+      `Found ${totalAccounts} payment record(s) matching due date ${date}${logLimitedTo} in ${fetchDuration}ms`
     )
 
     const results = await processPayments(server, accounts)
     const processDuration = (performance.now() - fetchStart).toFixed(2)
     logger.info(
-      `Processed ${results.length} payment(s) for date: ${date} in ${processDuration}ms`
+      `Processed ${results.length} payment(s) for date: ${date}${logLimitedTo} in ${processDuration}ms`
     )
     return results
   } catch (err) {
-    logger.error(err, `Failed to process payments for date ${date}`)
+    logger.error(
+      err,
+      `Failed to process payments for date ${date}${logLimitedTo}`
+    )
     throw err
   }
 }

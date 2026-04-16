@@ -57,66 +57,71 @@ export const markAllStaleLockedPaymentsAsFailed = async () => {
   try {
     let markedCount = 0
 
-    await session.withTransaction(async () => {
-      const staleBefore = new Date(Date.now() - config.get('lockedPaymentTtl'))
+    await session.withTransaction(
+      async () => {
+        const staleBefore = new Date(
+          Date.now() - config.get('lockedPaymentTtl')
+        )
 
-      // Find all documents with stale locked payments
-      const staleDocs = await GrantPaymentsModel.find(
-        {
-          'grants.payments.status': 'locked',
-          'grants.payments.updatedAt': { $lt: staleBefore }
-        },
-        null,
-        { session }
-      )
+        // Find all documents with stale locked payments
+        const staleDocs = await GrantPaymentsModel.find(
+          {
+            'grants.payments.status': 'locked',
+            'grants.payments.updatedAt': { $lt: staleBefore }
+          },
+          null,
+          { session }
+        )
 
-      // Update each document atomically within the transaction
-      for (const doc of staleDocs) {
-        await GrantPaymentsModel.updateOne(
-          { _id: doc._id },
-          [
-            {
-              $set: {
-                'grants.$[].payments': {
-                  $map: {
-                    input: '$grants',
-                    as: 'g',
-                    in: {
-                      $map: {
-                        input: '$$g.payments',
-                        as: 'p',
-                        in: {
-                          $cond: [
-                            {
-                              $and: [
-                                { $eq: ['$$p.status', 'locked'] },
-                                { $lt: ['$$p.updatedAt', staleBefore] }
-                              ]
-                            },
-                            {
-                              $mergeObjects: [
-                                '$$p',
-                                {
-                                  status: 'failed',
-                                  updatedAt: new Date()
-                                }
-                              ]
-                            },
-                            '$$p'
-                          ]
+        // Update each document atomically within the transaction
+        for (const doc of staleDocs) {
+          await GrantPaymentsModel.updateOne(
+            { _id: doc._id },
+            [
+              {
+                $set: {
+                  'grants.$[].payments': {
+                    $map: {
+                      input: '$grants',
+                      as: 'g',
+                      in: {
+                        $map: {
+                          input: '$$g.payments',
+                          as: 'p',
+                          in: {
+                            $cond: [
+                              {
+                                $and: [
+                                  { $eq: ['$$p.status', 'locked'] },
+                                  { $lt: ['$$p.updatedAt', staleBefore] }
+                                ]
+                              },
+                              {
+                                $mergeObjects: [
+                                  '$$p',
+                                  {
+                                    status: 'failed',
+                                    updatedAt: new Date()
+                                  }
+                                ]
+                              },
+                              '$$p'
+                            ]
+                          }
                         }
                       }
                     }
                   }
                 }
               }
-            }
-          ],
-          { session }
-        )
-        markedCount++
-      }
-    })
+            ],
+            { session }
+          )
+          markedCount++
+        }
+      },
+      { readPreference: 'primary' }
+    )
 
     return markedCount
   } catch (err) {
