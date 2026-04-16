@@ -23,10 +23,10 @@ const postTestProcessPaymentsController = {
       processDailyPayments(request.server, undefined, date).then(
         ({ results, fetchDuration, processDuration }) => {
           const totalFetch = (
-            parseFloat(fetchDur) + parseFloat(fetchDuration)
+            Number.parseFloat(fetchDur) + Number.parseFloat(fetchDuration)
           ).toFixed(2)
           const totalProc = (
-            parseFloat(procDur) + parseFloat(processDuration)
+            Number.parseFloat(procDur) + Number.parseFloat(processDuration)
           ).toFixed(2)
 
           request.logger.info(

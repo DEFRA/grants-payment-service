@@ -31,44 +31,46 @@ const buildGrantPaymentsAggregationPipeline = (date, status, limit, page) => {
     pipeline.push({ $limit: limit })
   }
 
-  pipeline.push({
-    $project: {
-      sbi: 1,
-      frn: 1,
-      claimId: 1,
-      grants: {
-        $map: {
-          input: '$grants',
-          as: 'g',
-          in: {
-            $mergeObjects: [
-              '$$g',
-              {
-                payments: {
-                  $filter: {
-                    input: '$$g.payments',
-                    as: 'p',
-                    cond: { $and: filters }
+  pipeline.push(
+    {
+      $project: {
+        sbi: 1,
+        frn: 1,
+        claimId: 1,
+        grants: {
+          $map: {
+            input: '$grants',
+            as: 'g',
+            in: {
+              $mergeObjects: [
+                '$$g',
+                {
+                  payments: {
+                    $filter: {
+                      input: '$$g.payments',
+                      as: 'p',
+                      cond: { $and: filters }
+                    }
                   }
                 }
-              }
-            ]
+              ]
+            }
+          }
+        }
+      }
+    },
+
+    // Final stage: exclude any records where no grants ended up with any payments
+    {
+      $match: {
+        grants: {
+          $elemMatch: {
+            'payments.0': { $exists: true }
           }
         }
       }
     }
-  })
-
-  // Final stage: exclude any records where no grants ended up with any payments
-  pipeline.push({
-    $match: {
-      grants: {
-        $elemMatch: {
-          'payments.0': { $exists: true }
-        }
-      }
-    }
-  })
+  )
 
   return { pipeline, match }
 }
