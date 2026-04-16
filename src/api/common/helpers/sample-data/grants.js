@@ -8,7 +8,7 @@ export default [
       {
         sourceSystem: 'FPTT',
         paymentRequestNumber: 1,
-        correlationId: '7cf9bd11-c791-42c9-bd28-fa0fec_id',
+        correlationId: 'grant-correlation-id',
         invoiceNumber: 'R00000004-V001Q2',
         originalInvoiceNumber: '',
         agreementNumber: 'FPTT264870631',
@@ -20,6 +20,7 @@ export default [
           {
             dueDate: '2026-06-05',
             totalAmountPence: '1263',
+            correlationId: 'payment-correlation-id',
             status: 'pending',
             invoiceLines: [
               {
