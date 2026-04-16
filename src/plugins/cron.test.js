@@ -47,14 +47,22 @@ describe('cron plugin', () => {
     )
   })
 
-  it('calls processDailyPayments when the scheduled callback runs', () => {
+  it('calls processDailyPayments when the scheduled callback runs', async () => {
+    processDailyPayments.mockResolvedValue({
+      results: ['res1', 'res2'],
+      fetchDuration: '10.00',
+      processDuration: '20.00'
+    })
     cron.plugin.register(mockServer)
 
     // capture the callback that was passed to schedule and execute it
     const scheduledFn = cronJob.schedule.mock.calls[0][1]
-    scheduledFn()
+    await scheduledFn()
 
     expect(processDailyPayments).toHaveBeenCalledWith(mockServer)
+    expect(mockServer.logger.info).toHaveBeenCalledWith(
+      'Processed 2 daily payment(s) (fetch: 10.00ms, process: 20.00ms)'
+    )
   })
 
   it('calls processStaleLockedPayments when the stale cleanup callback runs', () => {

@@ -238,7 +238,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
         dueDate: 123,
         invoiceLines: []
       })
-    ).toThrow(/Cannot read properties of undefined/)
+    ).toThrow(/Payment not found in the payments array/)
   })
 
   it('defaults marketingYear to the current year when not provided in grant', () => {
