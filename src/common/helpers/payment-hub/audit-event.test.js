@@ -123,12 +123,40 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
       expect.objectContaining({
         audit: expect.objectContaining({
           eventtype: 'GrantsPaymentHubRequest',
-          action: 'PAYMENT_HUB_REQUEST_SENT',
-          entity: 'Payments',
+          action: 'submitted',
+          entity: 'payment',
           entityid: 'INV-001',
           status: 'success',
           details: context
         })
+      })
+    )
+  })
+
+  test('audit.action is a valid action value', () => {
+    const validActions = [
+      'created',
+      'read',
+      'updated',
+      'deleted',
+      'submitted',
+      'accepted',
+      'rejected',
+      'withdrawn'
+    ]
+
+    auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
+
+    const [payload] = audit.mock.calls[0]
+    expect(validActions).toContain(payload.audit.action)
+  })
+
+  test('audit.entity is agreement', () => {
+    auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audit: expect.objectContaining({ entity: 'payment' })
       })
     )
   })

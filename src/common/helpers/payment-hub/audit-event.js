@@ -29,6 +29,12 @@ const eventTypes = {
   [AuditEvent.PAYMENT_HUB_REQUEST_SENT]: 'GrantsPaymentHubRequest'
 }
 
+// Audit action for each audit event, used in audit.action
+// Must be one of: created, read, updated, deleted, submitted, accepted, rejected, withdrawn
+const eventActions = {
+  [AuditEvent.PAYMENT_HUB_REQUEST_SENT]: 'submitted'
+}
+
 /**
  * Builds the full audit payload for a payment hub request.
  * @param {AuditEvent} event
@@ -55,8 +61,8 @@ const buildAuditPayload = (event, context = {}, status = 'success') => ({
 
   audit: {
     eventtype: eventTypes[event],
-    action: event,
-    entity: 'Payments',
+    action: eventActions[event],
+    entity: 'payment',
     entityid: context.invoiceNumber,
     status,
     details: context
