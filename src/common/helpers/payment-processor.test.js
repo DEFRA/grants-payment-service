@@ -527,6 +527,72 @@ describe('processDailyPayments', () => {
 
     expect(result).toEqual(['success'])
   })
+
+  it('processes payments in batches when there are many actions', async () => {
+    const fakeDate = '2026-02-20'
+    // Create 25 accounts to trigger batching (batch size should be 10)
+    const fakeDocs = Array.from({ length: 25 }, (_, i) => ({
+      _id: `doc-${i}`,
+      grants: [
+        {
+          _id: `g-${i}`,
+          sourceSystem: 'FPTT',
+          invoiceNumber: `INV-${i}`,
+          agreementNumber: `AGR-${i}`,
+          payments: [
+            {
+              _id: `p-${i}`,
+              sourceSystem: 'FPTT',
+              dueDate: fakeDate,
+              invoiceLines: []
+            }
+          ]
+        }
+      ]
+    }))
+
+    fetchGrantPaymentsByDate.mockResolvedValue({
+      docs: fakeDocs,
+      totalDocs: 25,
+      pagination: { page: 1, total: 1 }
+    })
+
+    // Mock findOne to return the grant for each call
+    GrantPaymentsModel.findOne.mockImplementation((query) => {
+      const docIndex = fakeDocs.findIndex((d) => d._id === query._id)
+      return Promise.resolve({ grants: [fakeDocs[docIndex].grants[0]] })
+    })
+
+    updatePaymentStatus.mockResolvedValue({ n: 1 })
+    sendPaymentHubRequest.mockResolvedValue('success')
+
+    const result = await processDailyPayments(server, undefined, fakeDate)
+
+    expect(result.length).toBe(25)
+    expect(sendPaymentHubRequest).toHaveBeenCalledTimes(25)
+
+    // Verify batch logging
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Starting batch processing of 25 payment requests'
+      )
+    )
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Processing payment request batch 1/3 (10 requests)'
+      )
+    )
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Processing payment request batch 2/3 (10 requests)'
+      )
+    )
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Processing payment request batch 3/3 (5 requests)'
+      )
+    )
+  })
 })
 
 describe('processStaleLockedPayments', () => {

@@ -1,4 +1,5 @@
 import { performance } from 'node:perf_hooks'
+import { config } from '#~/config/index.js'
 import { getTodaysDate } from '#~/common/helpers/date.js'
 import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
@@ -61,20 +62,66 @@ const processSinglePayment = async (
   }
 }
 
+/**
+ * Processes a list of tasks in batches
+ * @param {Array<Function>} tasks - List of async functions representing tasks
+ * @param {Object} options - Batching options
+ */
+const processInBatches = async (
+  tasks,
+  { logger, minBatchSize, maxBatchSize }
+) => {
+  const totalTasks = tasks.length
+  if (totalTasks === 0) return []
+
+  const batchSize = Math.max(
+    minBatchSize,
+    Math.min(maxBatchSize, Math.ceil(totalTasks / 10))
+  )
+  const totalBatches = Math.ceil(totalTasks / batchSize)
+
+  logger.info(
+    `Starting batch processing of ${totalTasks} payment requests (batchSize: ${batchSize}, totalBatches: ${totalBatches})`
+  )
+
+  const results = []
+  for (let i = 0; i < totalTasks; i += batchSize) {
+    const batchNum = Math.floor(i / batchSize) + 1
+    const currentBatchTasks = tasks.slice(i, i + batchSize)
+
+    logger.info(
+      `Processing payment request batch ${batchNum}/${totalBatches} (${currentBatchTasks.length} requests)`
+    )
+
+    const batchResults = await Promise.all(
+      currentBatchTasks.map((task) => task())
+    )
+    results.push(...batchResults)
+  }
+
+  return results
+}
+
 const processPayments = async (server, accounts) => {
   const { logger } = server
 
-  const paymentActions = (accounts || []).flatMap((account) => {
+  const grantProcessingTasks = (accounts || []).flatMap((account) => {
     const { _id: docId, sbi, frn, claimId, grants } = account
     const identifiers = { sbi, frn, claimId }
 
-    return (grants || []).map(async (grantWithPendingPayments) => {
-      const grant = (
-        await GrantPaymentsModel.findOne(
-          { _id: docId, 'grants._id': grantWithPendingPayments._id },
-          { 'grants.$': 1 }
+    return (grants || []).map((grantWithPendingPayments) => async () => {
+      const grantResult = await GrantPaymentsModel.findOne(
+        { _id: docId, 'grants._id': grantWithPendingPayments._id },
+        { 'grants.$': 1 }
+      )
+      const grant = grantResult?.grants[0]
+
+      if (!grant) {
+        logger.warn(
+          `Grant ${grantWithPendingPayments._id} not found for document ${docId}`
         )
-      ).grants[0]
+        return []
+      }
 
       return Promise.all(
         (grantWithPendingPayments.payments || []).map((payment) =>
@@ -91,7 +138,11 @@ const processPayments = async (server, accounts) => {
     })
   })
 
-  const results = await Promise.all(paymentActions)
+  const results = await processInBatches(grantProcessingTasks, {
+    logger,
+    ...config.get('paymentProcessor')
+  })
+
   return results.flat()
 }
 

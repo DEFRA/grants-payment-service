@@ -143,6 +143,20 @@ const config = convict({
       env: 'CRON_STALE_LOCKED_PAYMENT_CLEANUP_SCHEDULE'
     }
   },
+  paymentProcessor: {
+    minBatchSize: {
+      doc: 'Minimum number of payments to process in a single batch',
+      format: 'nat',
+      default: 10,
+      env: 'PAYMENT_PROCESSOR_MIN_BATCH_SIZE'
+    },
+    maxBatchSize: {
+      doc: 'Maximum number of payments to process in a single batch',
+      format: 'nat',
+      default: 100,
+      env: 'PAYMENT_PROCESSOR_MAX_BATCH_SIZE'
+    }
+  },
   paymentHub: {
     uri: {
       doc: 'URI for payment hub service bus',
