@@ -1,7 +1,6 @@
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
 import { serializeError } from '#~/common/helpers/serialize-error.js'
-import { prepareWithPaymentHubConfig } from '#~/common/helpers/payment-hub/prepare-with-payment-hub-config.js'
 
 const postTestGrantPaymentController = {
   options: {
@@ -15,12 +14,7 @@ const postTestGrantPaymentController = {
   },
   handler: async (req, res) => {
     try {
-      const payload = req.payload
-
-      const grantPaymentWithPaymentHubConfig =
-        prepareWithPaymentHubConfig(payload)
-
-      const created = await createGrantPayment(grantPaymentWithPaymentHubConfig)
+      const created = await createGrantPayment(req.payload)
 
       const id = created?._id?.toString?.() || created?.id || created?._id
 

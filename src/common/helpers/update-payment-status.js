@@ -77,45 +77,21 @@ export const markAllStaleLockedPaymentsAsFailed = async () => {
         for (const doc of staleDocs) {
           await GrantPaymentsModel.updateOne(
             { _id: doc._id },
-            [
-              {
-                $set: {
-                  'grants.$[].payments': {
-                    $map: {
-                      input: '$grants',
-                      as: 'g',
-                      in: {
-                        $map: {
-                          input: '$$g.payments',
-                          as: 'p',
-                          in: {
-                            $cond: [
-                              {
-                                $and: [
-                                  { $eq: ['$$p.status', 'locked'] },
-                                  { $lt: ['$$p.updatedAt', staleBefore] }
-                                ]
-                              },
-                              {
-                                $mergeObjects: [
-                                  '$$p',
-                                  {
-                                    status: 'failed',
-                                    updatedAt: new Date()
-                                  }
-                                ]
-                              },
-                              '$$p'
-                            ]
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
+            {
+              $set: {
+                'grants.$[].payments.$[p].status': 'failed',
+                'grants.$[].payments.$[p].updatedAt': new Date()
               }
-            ],
-            { session }
+            },
+            {
+              session,
+              arrayFilters: [
+                {
+                  'p.status': 'locked',
+                  'p.updatedAt': { $lt: staleBefore }
+                }
+              ]
+            }
           )
           markedCount++
         }

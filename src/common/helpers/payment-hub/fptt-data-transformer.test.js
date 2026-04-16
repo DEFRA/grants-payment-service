@@ -19,7 +19,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     currency: 'GBP',
     originalInvoiceNumber: 'OINV',
     remittanceDescription: 'ignored',
-    correlationId: 'CORR',
+    correlationId: 'grant-correlationId',
     ledger: 'AP',
     fesCode: 'FALS_FPTT'
   }
@@ -32,6 +32,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       recoveryDate: '2026-06-06',
       originalSettlementDate: '2026-06-07',
       currency: 'EUR',
+      correlationId: 'payment-correlationId',
       invoiceLines: [
         {
           schemeCode: 'CMOR1',
@@ -66,7 +67,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       recoveryDate: '06/06/2026',
       originalInvoiceNumber: 'OINV',
       originalSettlementDate: '07/06/2026',
-      correlationId: 'CORR'
+      correlationId: 'payment-correlationId'
     })
 
     expect(result.invoiceLines).toHaveLength(1)

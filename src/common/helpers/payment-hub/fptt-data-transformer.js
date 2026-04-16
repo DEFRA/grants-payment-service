@@ -94,9 +94,7 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
     'Farm Payments Technical Test Payment'
   ),
   invoiceLines: buildInvoiceLines(grant, payment),
-
-  // Not listed in Service Bus Payment Requests - FPTT.xlsx
-  correlationId: grant.correlationId,
+  correlationId: payment.correlationId,
 
   // AR fields — only included when valid data is present
   ...(grant.debtType && { debtType: validateDebtType(grant.debtType) }),
