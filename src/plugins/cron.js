@@ -12,7 +12,13 @@ const cron = {
       server.logger.info('Registering cron plugin')
 
       cronJob.schedule(config.get('cron.dailyPaymentSchedule'), () =>
-        processDailyPayments(server)
+        processDailyPayments(server).then(
+          ({ results, fetchDuration, processDuration }) => {
+            server.logger.info(
+              `Processed ${results.length} daily payment(s) (fetch: ${fetchDuration}ms, process: ${processDuration}ms)`
+            )
+          }
+        )
       )
 
       cronJob.schedule(

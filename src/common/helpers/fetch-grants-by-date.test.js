@@ -14,7 +14,9 @@ describe('fetchGrantPaymentsByDate', () => {
 
   beforeEach(() => {
     date = '2026-02-20'
-    fakeDocs = [{ _id: 'a' }]
+    fakeDocs = [
+      { _id: 'a', grants: [{ payments: [{ dueDate: '2026-02-20' }] }] }
+    ]
     // mock behaviour
     GrantPaymentsModel.aggregate.mockResolvedValue(fakeDocs)
     GrantPaymentsModel.countDocuments.mockResolvedValue(1)
@@ -23,26 +25,34 @@ describe('fetchGrantPaymentsByDate', () => {
   it('builds a simple pipeline when only date is provided', async () => {
     const result = await fetchGrantPaymentsByDate(date)
 
-    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
-      { $match: { 'grants.payments.dueDate': date } },
-      { $sort: { createdAt: -1 } },
-      expect.objectContaining({
-        $project: expect.objectContaining({
-          sbi: 1,
-          frn: 1,
-          claimId: 1,
-          grants: expect.any(Object)
-        })
-      })
-    ])
+    const expectedMatch = {
+      grants: {
+        $elemMatch: {
+          payments: {
+            $elemMatch: { dueDate: date }
+          }
+        }
+      }
+    }
 
-    // inspect the filter condition from the captured pipeline
-    const calledPipeline = GrantPaymentsModel.aggregate.mock.calls[0][0]
-    const projectStage = calledPipeline.find((s) => s.$project)
-    const cond =
-      projectStage.$project.grants.$map.in.$mergeObjects[1].payments.$filter
-        .cond
-    expect(cond).toEqual({ $and: [{ $eq: ['$$p.dueDate', date] }] })
+    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        { $match: expectedMatch },
+        { $sort: { createdAt: -1 } },
+        expect.objectContaining({ $project: expect.any(Object) }),
+        expect.objectContaining({
+          $match: {
+            grants: {
+              $elemMatch: { 'payments.0': { $exists: true } }
+            }
+          }
+        })
+      ])
+    )
+
+    expect(GrantPaymentsModel.countDocuments).toHaveBeenCalledWith(
+      expectedMatch
+    )
 
     expect(result).toEqual({
       docs: fakeDocs,
@@ -54,25 +64,26 @@ describe('fetchGrantPaymentsByDate', () => {
   it('includes status in the pipeline when provided', async () => {
     const result = await fetchGrantPaymentsByDate(date, 'pending')
 
-    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
-      {
-        $match: {
-          'grants.payments.dueDate': date,
-          'grants.payments.status': 'pending'
+    const expectedMatch = {
+      grants: {
+        $elemMatch: {
+          payments: {
+            $elemMatch: { dueDate: date, status: 'pending' }
+          }
         }
-      },
-      { $sort: { createdAt: -1 } },
-      expect.any(Object)
-    ])
+      }
+    }
 
-    const calledPipeline = GrantPaymentsModel.aggregate.mock.calls[0][0]
-    const projectStage = calledPipeline.find((s) => s.$project)
-    const cond =
-      projectStage.$project.grants.$map.in.$mergeObjects[1].payments.$filter
-        .cond
-    expect(cond).toEqual({
-      $and: [{ $eq: ['$$p.dueDate', date] }, { $eq: ['$$p.status', 'pending'] }]
-    })
+    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        { $match: expectedMatch },
+        { $sort: { createdAt: -1 } }
+      ])
+    )
+
+    expect(GrantPaymentsModel.countDocuments).toHaveBeenCalledWith(
+      expectedMatch
+    )
 
     expect(result).toEqual({
       docs: fakeDocs,
@@ -84,13 +95,9 @@ describe('fetchGrantPaymentsByDate', () => {
   it('applies pagination when page is provided', async () => {
     const result = await fetchGrantPaymentsByDate(date, null, 10, 2)
 
-    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
-      { $match: { 'grants.payments.dueDate': date } },
-      { $sort: { createdAt: -1 } },
-      { $skip: 10 },
-      { $limit: 10 },
-      expect.any(Object)
-    ])
+    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith(
+      expect.arrayContaining([{ $skip: 10 }, { $limit: 10 }])
+    )
 
     expect(result).toEqual({
       docs: fakeDocs,
