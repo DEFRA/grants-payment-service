@@ -2,6 +2,7 @@ import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { processDailyPayments } from '#~/common/helpers/payment-processor.js'
 import { getTodaysDate } from '#~/common/helpers/date.js'
+import { config } from '#~/config/index.js'
 
 /**
  * Controller to post trigger payment processing for a specific date, or the current date if no date is provided.
@@ -12,9 +13,10 @@ const postTestProcessPaymentsController = {
     try {
       const { date } = request.params
 
-      const first10Payments = await processDailyPayments(
+      const paginationLimit = config.get('paginationLimit')
+      const firstXPayments = await processDailyPayments(
         request.server,
-        10,
+        paginationLimit,
         date
       )
 
@@ -22,8 +24,8 @@ const postTestProcessPaymentsController = {
 
       return h
         .response({
-          message: `Triggered daily payment processing for ${date || getTodaysDate()}, showing first 10 payments, check logs for more details`,
-          result: first10Payments
+          message: `Triggered daily payment processing for ${date || getTodaysDate()}, showing first ${paginationLimit} payments, check logs for more details`,
+          result: firstXPayments
         })
         .code(statusCodes.ok)
     } catch (error) {
