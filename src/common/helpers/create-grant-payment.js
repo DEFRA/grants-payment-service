@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid'
+import { randomUUID } from 'node:crypto'
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 import { prepareWithPaymentHubConfig } from '#~/common/helpers/payment-hub/prepare-with-payment-hub-config.js'
 
@@ -6,10 +6,10 @@ const addCorrelationId = (grantPayment) => ({
   ...grantPayment,
   grants: (grantPayment.grants || []).map((grant) => ({
     ...grant,
-    correlationId: grant.correlationId || uuidv4(),
+    correlationId: grant.correlationId || randomUUID(),
     payments: (grant.payments || []).map((payment) => ({
       ...payment,
-      correlationId: payment.correlationId || uuidv4()
+      correlationId: payment.correlationId || randomUUID()
     }))
   }))
 })
