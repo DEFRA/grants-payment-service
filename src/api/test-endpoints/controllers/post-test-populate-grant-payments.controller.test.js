@@ -15,6 +15,17 @@ vi.mock('#~/api/common/models/grant_payments.js', () => ({
   }
 }))
 
+vi.mock('#~/config/index.js', () => ({
+  config: {
+    get: vi.fn((key) => {
+      if (key === 'paymentProcessor') {
+        return { minBatchSize: 10, maxBatchSize: 100 }
+      }
+      return {}
+    })
+  }
+}))
+
 const makeH = () => {
   const res = { statusCode: 200, source: undefined }
   const h = {

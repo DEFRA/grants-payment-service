@@ -1,6 +1,7 @@
 import { performance } from 'node:perf_hooks'
+import { config } from '#~/config/index.js'
 import { getTodaysDate } from '#~/common/helpers/date.js'
-import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
+import { streamGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
 import {
   updatePaymentStatus,
@@ -9,7 +10,6 @@ import {
 import { transformFpttPaymentDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/fptt-data-transformer.js'
 import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js'
-import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 
 const processSinglePayment = async (
   server,
@@ -61,37 +61,19 @@ const processSinglePayment = async (
   }
 }
 
-const processPayments = async (server, accounts) => {
+const processAccountPayments = async (server, account) => {
   const { logger } = server
+  const { _id: docId, sbi, frn, claimId, grants } = account
+  const identifiers = { sbi, frn, claimId }
 
-  const paymentActions = (accounts || []).flatMap((account) => {
-    const { _id: docId, sbi, frn, claimId, grants } = account
-    const identifiers = { sbi, frn, claimId }
-
-    return (grants || []).map(async (grantWithPendingPayments) => {
-      const grant = (
-        await GrantPaymentsModel.findOne(
-          { _id: docId, 'grants._id': grantWithPendingPayments._id },
-          { 'grants.$': 1 }
-        )
-      ).grants[0]
-
-      return Promise.all(
-        (grantWithPendingPayments.payments || []).map((payment) =>
-          processSinglePayment(
-            server,
-            docId,
-            grant,
-            payment,
-            identifiers,
-            logger
-          )
-        )
+  const results = await Promise.all(
+    (grants || []).flatMap((grant) =>
+      (grant.matchedPayments || []).map((payment) =>
+        processSinglePayment(server, docId, grant, payment, identifiers, logger)
       )
-    })
-  })
+    )
+  )
 
-  const results = await Promise.all(paymentActions)
   return results.flat()
 }
 
@@ -106,19 +88,27 @@ export const processDailyPayments = async (
 
   try {
     const fetchStart = performance.now()
-    const { docs: accounts, totalDocs: totalAccounts } =
-      await fetchGrantPaymentsByDate(date, 'pending', limit)
+    const cursor = streamGrantPaymentsByDate(date, 'pending', limit)
     const fetchDuration = (performance.now() - fetchStart).toFixed(2)
-    logger.info(
-      `Found ${totalAccounts} payment record(s) matching due date ${date}${logLimitedTo} in ${fetchDuration}ms`
+
+    const results = []
+    const processStart = performance.now()
+
+    await cursor.eachAsync(
+      async (account) => {
+        const accountResults = await processAccountPayments(server, account)
+        results.push(...accountResults)
+      },
+      { parallel: config.get('paymentProcessor.maxBatchSize') }
     )
 
-    const results = await processPayments(server, accounts)
-    const processDuration = (performance.now() - fetchStart).toFixed(2)
-    logger.info(
-      `Processed ${results.length} payment(s) for date: ${date}${logLimitedTo} in ${processDuration}ms`
-    )
-    return results
+    const processDuration = (performance.now() - processStart).toFixed(2)
+
+    if (results.length === 0) {
+      return { results: [], fetchDuration, processDuration: '0.00' }
+    }
+
+    return { results, fetchDuration, processDuration }
   } catch (err) {
     logger.error(
       err,

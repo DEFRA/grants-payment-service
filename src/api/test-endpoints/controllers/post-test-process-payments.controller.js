@@ -14,13 +14,26 @@ const postTestProcessPaymentsController = {
       const { date } = request.params
 
       const paginationLimit = config.get('paginationLimit')
-      const firstXPayments = await processDailyPayments(
-        request.server,
-        paginationLimit,
-        date
-      )
+      const {
+        results: firstXPayments,
+        fetchDuration: fetchDur,
+        processDuration: procDur
+      } = await processDailyPayments(request.server, paginationLimit, date)
 
-      processDailyPayments(request.server, undefined, date)
+      processDailyPayments(request.server, undefined, date).then(
+        ({ results, fetchDuration, processDuration }) => {
+          const totalFetch = (
+            Number.parseFloat(fetchDur) + Number.parseFloat(fetchDuration)
+          ).toFixed(2)
+          const totalProc = (
+            Number.parseFloat(procDur) + Number.parseFloat(processDuration)
+          ).toFixed(2)
+
+          request.logger.info(
+            `Processed ${firstXPayments.length + results.length} daily payment(s) (fetch: ${totalFetch}ms, process: ${totalProc}ms)`
+          )
+        }
+      )
 
       return h
         .response({

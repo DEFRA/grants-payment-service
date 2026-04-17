@@ -31,13 +31,17 @@ describe('postTestProcessPaymentsController', () => {
   it('calls processor with provided date and returns 200', async () => {
     const fakeDate = '2026-02-20'
     const fakeResults = [{ _id: 'payment1' }, { _id: 'payment2' }]
-    processDailyPayments.mockResolvedValue(fakeResults)
+    processDailyPayments.mockResolvedValue({
+      results: fakeResults,
+      fetchDuration: '10.00',
+      processDuration: '20.00'
+    })
 
     const h = makeH()
     const req = {
       params: { date: fakeDate },
-      server: {},
-      logger: { error: vi.fn() }
+      server: { logger: { info: vi.fn() } },
+      logger: { info: vi.fn(), error: vi.fn() }
     }
 
     const response = await postTestProcessPaymentsController.handler(req, h)
@@ -52,10 +56,18 @@ describe('postTestProcessPaymentsController', () => {
 
   it('uses current date when date not supplied', async () => {
     const fakeResults = []
-    processDailyPayments.mockResolvedValue(fakeResults)
+    processDailyPayments.mockResolvedValue({
+      results: fakeResults,
+      fetchDuration: '5.00',
+      processDuration: '0.00'
+    })
 
     const h = makeH()
-    const req = { params: {}, server: {}, logger: { error: vi.fn() } }
+    const req = {
+      params: {},
+      server: { logger: { info: vi.fn() } },
+      logger: { info: vi.fn(), error: vi.fn() }
+    }
 
     const response = await postTestProcessPaymentsController.handler(req, h)
 
