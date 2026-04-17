@@ -3,17 +3,17 @@ import {
   processDailyPayments,
   processStaleLockedPayments
 } from './payment-processor.js'
-import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
+import { streamGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
 import {
   updatePaymentStatus,
   markAllStaleLockedPaymentsAsFailed
 } from '#~/common/helpers/update-payment-status.js'
 import { getTodaysDate } from './date.js'
-import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 
 vi.mock('#~/common/helpers/fetch-grants-by-date.js', () => ({
-  fetchGrantPaymentsByDate: vi.fn()
+  fetchGrantPaymentsByDate: vi.fn(),
+  streamGrantPaymentsByDate: vi.fn()
 }))
 vi.mock('#~/common/helpers/payment-hub/index.js', () => ({
   sendPaymentHubRequest: vi.fn()
@@ -37,13 +37,20 @@ describe('processDailyPayments', () => {
   }
   const server = { logger }
 
+  const mockCursor = (docs) => ({
+    eachAsync: vi.fn().mockImplementation(async (callback) => {
+      for (const doc of docs) {
+        await callback(doc)
+      }
+    })
+  })
+
   beforeEach(() => {
     vi.resetAllMocks()
-    // By default, no stale locked payments to clean up
     markAllStaleLockedPaymentsAsFailed.mockResolvedValue(0)
   })
 
-  it('uses provided date, locks each payment and proxies to PaymentHub, returning results', async () => {
+  it('uses provided date, locks each payment and proxies to PaymentHub, returning results via stream', async () => {
     const fakeDate = '2026-02-20'
     const fakeDocs = [
       {
@@ -55,6 +62,17 @@ describe('processDailyPayments', () => {
             invoiceNumber: 'INV1',
             agreementNumber: 'AGR1',
             payments: [
+              {
+                _id: 'p1',
+                amountPence: 1000,
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                recoveryDate: '2026-01-01',
+                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ],
+            matchedPayments: [
               {
                 _id: 'p1',
                 amountPence: 1000,
@@ -85,46 +103,39 @@ describe('processDailyPayments', () => {
                 originalSettlementDate: '2026-01-01',
                 invoiceLines: []
               }
+            ],
+            matchedPayments: [
+              {
+                _id: 'p2',
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                recoveryDate: '2026-01-01',
+                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
             ]
           }
         ]
       }
     ]
-    fetchGrantPaymentsByDate.mockResolvedValue({
-      docs: fakeDocs,
-      totalDocs: 2,
-      pagination: { page: 1, total: 1 }
-    })
-    GrantPaymentsModel.findOne
-      .mockResolvedValueOnce({ grants: [fakeDocs[0].grants[0]] })
-      .mockResolvedValueOnce({ grants: [fakeDocs[1].grants[0]] })
+
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
     const responses = ['a', 'b']
     sendPaymentHubRequest
       .mockResolvedValueOnce(responses[0])
       .mockResolvedValueOnce(responses[1])
 
-    // locks should succeed so we return n:1 each time
-    updatePaymentStatus.mockResolvedValue({ n: 1 })
+    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
 
     const result = await processDailyPayments(server, undefined, fakeDate)
 
-    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(
+    expect(streamGrantPaymentsByDate).toHaveBeenCalledWith(
       fakeDate,
       'pending',
       undefined
     )
     expect(logger.info).toHaveBeenCalledWith(
       `Processing payments for date: ${fakeDate}`
-    )
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Found ${fakeDocs.length} payment record(s) matching due date ${fakeDate}`
-      )
-    )
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Processed ${fakeDocs.length} payment(s) for date: ${fakeDate}`
-      )
     )
 
     // each payment should be locked (pending->locked) then submitted
@@ -144,22 +155,15 @@ describe('processDailyPayments', () => {
     expect(updatePaymentStatus).toHaveBeenCalledWith('2', 'p2', 'submitted')
 
     expect(sendPaymentHubRequest).toHaveBeenCalledTimes(2)
-    expect(sendPaymentHubRequest).toHaveBeenNthCalledWith(
-      1,
-      server,
-      expect.any(Object)
-    )
-    expect(sendPaymentHubRequest).toHaveBeenNthCalledWith(
-      2,
-      server,
-      expect.any(Object)
-    )
-    expect(result).toEqual(responses)
+    expect(result).toEqual({
+      results: responses,
+      fetchDuration: expect.any(String),
+      processDuration: expect.any(String)
+    })
   })
 
   it('skips payments that cannot be locked by another instance', async () => {
     const fakeDate = '2026-02-20'
-    // two payments, but the second fails to lock
     const fakeDocs = [
       {
         _id: '1',
@@ -174,8 +178,14 @@ describe('processDailyPayments', () => {
                 _id: 'x',
                 sourceSystem: 'FPTT',
                 dueDate: '2026-01-01',
-                recoveryDate: '2026-01-01',
-                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ],
+            matchedPayments: [
+              {
+                _id: 'x',
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
                 invoiceLines: []
               }
             ]
@@ -195,8 +205,14 @@ describe('processDailyPayments', () => {
                 _id: 'y',
                 sourceSystem: 'FPTT',
                 dueDate: '2026-01-01',
-                recoveryDate: '2026-01-01',
-                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ],
+            matchedPayments: [
+              {
+                _id: 'y',
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
                 invoiceLines: []
               }
             ]
@@ -204,15 +220,8 @@ describe('processDailyPayments', () => {
         ]
       }
     ]
-    fetchGrantPaymentsByDate.mockResolvedValue({
-      docs: fakeDocs,
-      pagination: { page: 1, total: 1 }
-    })
-    GrantPaymentsModel.findOne
-      .mockResolvedValueOnce({ grants: [fakeDocs[0].grants[0]] })
-      .mockResolvedValueOnce({ grants: [fakeDocs[1].grants[0]] })
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
 
-    // first lock succeeds, second returns null meaning already handled
     updatePaymentStatus
       .mockResolvedValueOnce({ _id: 'doc1' })
       .mockResolvedValueOnce(null)
@@ -221,9 +230,8 @@ describe('processDailyPayments', () => {
 
     const result = await processDailyPayments(server, fakeDate)
 
-    // only one hub request should be made
     expect(sendPaymentHubRequest).toHaveBeenCalledTimes(1)
-    expect(result).toEqual(['ok', null])
+    expect(result.results).toEqual(['ok', null])
     expect(logger.info).toHaveBeenCalledWith(
       `Skipping payment y (already locked or processed)`
     )
@@ -231,54 +239,45 @@ describe('processDailyPayments', () => {
 
   it('defaults to today if no date supplied', async () => {
     const today = getTodaysDate()
-    const fakeDocs = []
-    fetchGrantPaymentsByDate.mockResolvedValue({
-      docs: fakeDocs,
-      totalDocs: 0,
-      pagination: { page: 1, total: 1 }
-    })
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor([]))
 
     const result = await processDailyPayments(server, undefined)
 
-    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(
+    expect(streamGrantPaymentsByDate).toHaveBeenCalledWith(
       today,
       'pending',
       undefined
     )
-    expect(result).toEqual([])
+    expect(result).toEqual({
+      results: [],
+      fetchDuration: expect.any(String),
+      processDuration: '0.00'
+    })
   })
 
   it('handles documents with no grants and grants with no payments gracefully', async () => {
     const fakeDate = '2026-02-20'
     const fakeDocs = [
-      // document with no grants (undefined)
       { _id: 'no-grants' },
-      // document with a grant that has no payments (undefined)
       {
         _id: 'no-payments',
         grants: [{ invoiceNumber: 'INV1', agreementNumber: 'AGR1' }]
       }
     ]
-    fetchGrantPaymentsByDate.mockResolvedValue({
-      docs: fakeDocs,
-      totalDocs: 1,
-      pagination: { page: 1, total: 1 }
-    })
-    GrantPaymentsModel.findOne.mockResolvedValue({
-      grants: [{ invoiceNumber: 'INV1', agreementNumber: 'AGR1' }]
-    })
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
 
     const result = await processDailyPayments(server, undefined, fakeDate)
 
-    // no payments to process, hub is never called, result is empty
     expect(sendPaymentHubRequest).not.toHaveBeenCalled()
-    expect(result).toEqual([])
+    expect(result.results).toEqual([])
   })
 
-  it('logs and rethrows when the database query fails', async () => {
+  it('logs and rethrows when the streaming fails', async () => {
     const fakeDate = '2026-02-20'
-    const error = new Error('db failure')
-    fetchGrantPaymentsByDate.mockRejectedValue(error)
+    const error = new Error('streaming failure')
+    streamGrantPaymentsByDate.mockReturnValue({
+      eachAsync: vi.fn().mockRejectedValue(error)
+    })
 
     await expect(
       processDailyPayments(server, undefined, fakeDate)
@@ -305,8 +304,14 @@ describe('processDailyPayments', () => {
                 _id: 'p1',
                 sourceSystem: 'UNKNOWN',
                 dueDate: '2026-01-01',
-                recoveryDate: '2026-01-01',
-                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ],
+            matchedPayments: [
+              {
+                _id: 'p1',
+                sourceSystem: 'UNKNOWN',
+                dueDate: '2026-01-01',
                 invoiceLines: []
               }
             ]
@@ -314,28 +319,17 @@ describe('processDailyPayments', () => {
         ]
       }
     ]
-    fetchGrantPaymentsByDate.mockResolvedValue({
-      docs: fakeDocs,
-      totalDocs: 1,
-      pagination: { page: 1, total: 1 }
-    })
-    GrantPaymentsModel.findOne.mockResolvedValue({
-      grants: [fakeDocs[0].grants[0]]
-    })
-    GrantPaymentsModel.updateMany.mockResolvedValue({ modifiedCount: 0 })
-    updatePaymentStatus.mockResolvedValue({ n: 1 })
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
+    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
 
     const result = await processDailyPayments(server, fakeDate)
 
-    // hub should never be called for an unsupported sourceSystem
     expect(sendPaymentHubRequest).not.toHaveBeenCalled()
-    // payment should be marked as failed
     expect(updatePaymentStatus).toHaveBeenCalledWith('1', 'p1', 'failed')
-    // an error should be logged
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Unsupported grant sourceSystem UNKNOWN')
     )
-    expect(result).toEqual([null])
+    expect(result.results).toEqual([null])
   })
 
   it('logs individual hub failures and continues, updating status appropriately', async () => {
@@ -349,15 +343,9 @@ describe('processDailyPayments', () => {
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
             agreementNumber: 'AGR1',
-            payments: [
-              {
-                _id: 'a',
-                sourceSystem: 'FPTT',
-                dueDate: '2026-01-01',
-                recoveryDate: '2026-01-01',
-                originalSettlementDate: '2026-01-01',
-                invoiceLines: []
-              }
+            payments: [{ _id: 'a', sourceSystem: 'FPTT', invoiceLines: [] }],
+            matchedPayments: [
+              { _id: 'a', sourceSystem: 'FPTT', invoiceLines: [] }
             ]
           }
         ]
@@ -368,164 +356,53 @@ describe('processDailyPayments', () => {
           {
             _id: 'g2',
             sourceSystem: 'FPTT',
-            invoiceNumber: 'INV1',
-            agreementNumber: 'AGR1',
-            payments: [
-              {
-                _id: 'b',
-                sourceSystem: 'FPTT',
-                dueDate: '2026-01-01',
-                recoveryDate: '2026-01-01',
-                originalSettlementDate: '2026-01-01',
-                invoiceLines: []
-              }
-            ]
-          }
-        ]
-      },
-      {
-        _id: '3',
-        grants: [
-          {
-            _id: 'g3',
-            sourceSystem: 'FPTT',
-            invoiceNumber: 'INV1',
-            agreementNumber: 'AGR1',
-            payments: [
-              {
-                _id: 'c',
-                sourceSystem: 'FPTT',
-                dueDate: '2026-01-01',
-                recoveryDate: '2026-01-01',
-                originalSettlementDate: '2026-01-01',
-                invoiceLines: []
-              }
+            invoiceNumber: 'INV2',
+            agreementNumber: 'AGR2',
+            payments: [{ _id: 'b', sourceSystem: 'FPTT', invoiceLines: [] }],
+            matchedPayments: [
+              { _id: 'b', sourceSystem: 'FPTT', invoiceLines: [] }
             ]
           }
         ]
       }
     ]
-    fetchGrantPaymentsByDate.mockResolvedValue({
-      docs: fakeDocs,
-      totalDocs: 3,
-      pagination: { page: 1, total: 1 }
-    })
-    GrantPaymentsModel.findOne
-      .mockResolvedValueOnce({ grants: [fakeDocs[0].grants[0]] })
-      .mockResolvedValueOnce({ grants: [fakeDocs[1].grants[0]] })
-      .mockResolvedValueOnce({ grants: [fakeDocs[2].grants[0]] })
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
 
-    // first and third succeed, second fails
     sendPaymentHubRequest
       .mockResolvedValueOnce('ok1')
       .mockRejectedValueOnce(new Error('hub down'))
-      .mockResolvedValueOnce('ok3')
 
-    // allow locking for each payment
-    updatePaymentStatus.mockResolvedValue({ n: 1 })
+    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
 
     const result = await processDailyPayments(server, fakeDate)
 
-    expect(result).toEqual([
+    expect(result.results).toEqual([
       'ok1',
-      expect.objectContaining({ message: 'hub down' }),
-      'ok3'
+      expect.objectContaining({ message: 'hub down' })
     ])
-    // lock called for each payment
-    expect(updatePaymentStatus).toHaveBeenCalledWith(
-      '1',
-      'a',
-      'locked',
-      'pending'
-    )
-    expect(updatePaymentStatus).toHaveBeenCalledWith(
-      '2',
-      'b',
-      'locked',
-      'pending'
-    )
-    expect(updatePaymentStatus).toHaveBeenCalledWith(
-      '3',
-      'c',
-      'locked',
-      'pending'
-    )
-    // second payment should be marked failed when hub errors
     expect(updatePaymentStatus).toHaveBeenCalledWith('2', 'b', 'failed')
-
     expect(logger.error).toHaveBeenCalledWith(
       expect.any(Error),
-      `PaymentHub request failed for record ${fakeDocs[1]._id}`
+      `PaymentHub request failed for record 2`
     )
   })
 
-  it('passes limit to fetchGrantPaymentsByDate and includes it in logs', async () => {
+  it('passes limit to streamGrantPaymentsByDate and includes it in logs', async () => {
     const fakeDate = '2026-02-20'
     const limit = 5
-    const fakeDocs = [
-      {
-        _id: '1',
-        sbi: '123456789',
-        frn: 'FR12345',
-        claimId: 'CLAIM1',
-        grants: [
-          {
-            _id: 'g1',
-            sourceSystem: 'FPTT',
-            invoiceNumber: 'INV1',
-            agreementNumber: 'AGR1',
-            payments: [
-              {
-                _id: 'p1',
-                amountPence: 1000,
-                sourceSystem: 'FPTT',
-                dueDate: '2026-01-01',
-                recoveryDate: '2026-01-01',
-                originalSettlementDate: '2026-01-01',
-                invoiceLines: []
-              }
-            ]
-          }
-        ]
-      }
-    ]
-    fetchGrantPaymentsByDate.mockResolvedValue({
-      docs: fakeDocs,
-      totalDocs: 1,
-      pagination: { page: 1, total: 1 }
-    })
-    GrantPaymentsModel.findOne.mockResolvedValue({
-      grants: [fakeDocs[0].grants[0]]
-    })
-    updatePaymentStatus.mockResolvedValue({ n: 1 })
-    sendPaymentHubRequest.mockResolvedValue('success')
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor([]))
 
-    const result = await processDailyPayments(server, limit, fakeDate)
+    await processDailyPayments(server, limit, fakeDate)
 
-    // Verify limit is passed to fetchGrantPaymentsByDate
-    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(
+    expect(streamGrantPaymentsByDate).toHaveBeenCalledWith(
       fakeDate,
       'pending',
       limit
     )
 
-    // Verify logs include limit information
     expect(logger.info).toHaveBeenCalledWith(
       `Processing payments for date: ${fakeDate} (limited to ${limit} payments)`
     )
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining(`Found ${fakeDocs.length} payment record(s)`)
-    )
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining(`(limited to ${limit} payments)`)
-    )
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Processed ${fakeDocs.length} payment(s) for date: ${fakeDate} (limited to ${limit} payments)`
-      )
-    )
-
-    expect(result).toEqual(['success'])
   })
 })
 

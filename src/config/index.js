@@ -130,6 +130,12 @@ const config = convict({
     env: 'LOCKED_PAYMENT_TTL'
   },
   cron: {
+    timezone: {
+      doc: 'Timezone for cron jobs',
+      format: String,
+      default: 'Europe/London',
+      env: 'CRON_TIMEZONE'
+    },
     dailyPaymentSchedule: {
       doc: 'Cron time/schedule for daily payment processing',
       format: String,
@@ -141,6 +147,20 @@ const config = convict({
       format: String,
       default: '20 0 * * *',
       env: 'CRON_STALE_LOCKED_PAYMENT_CLEANUP_SCHEDULE'
+    }
+  },
+  paymentProcessor: {
+    minBatchSize: {
+      doc: 'Minimum number of payments to process in a single batch',
+      format: 'nat',
+      default: 10,
+      env: 'PAYMENT_PROCESSOR_MIN_BATCH_SIZE'
+    },
+    maxBatchSize: {
+      doc: 'Maximum number of payments to process in a single batch',
+      format: 'nat',
+      default: 100,
+      env: 'PAYMENT_PROCESSOR_MAX_BATCH_SIZE'
     }
   },
   paymentHub: {

@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import { config } from '#~/config/index.js'
 import Joi from 'joi'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
@@ -194,9 +195,10 @@ const postTestPopulateGrantPaymentController = {
     // Calculate batchSize based on targetCount
     // For small targetCount (< 100), use smaller batch size (e.g., 10)
     // For larger targetCount, use larger batch size (up to 100)
+    const { minBatchSize, maxBatchSize } = config.get('paymentProcessor')
     const calculatedBatchSize = Math.max(
-      10,
-      Math.min(100, Math.ceil(targetCount / 10))
+      minBatchSize,
+      Math.min(maxBatchSize, Math.ceil(targetCount / 10))
     )
 
     setImmediate(async () => {

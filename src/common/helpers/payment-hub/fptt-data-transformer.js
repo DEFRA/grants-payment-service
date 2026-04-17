@@ -54,7 +54,7 @@ const updateQuarter = (invoiceNumber, payments, currentPayment) => {
   const invoiceWithoutQuarter = invoiceNumber.replace(/Q[1-4X]$/i, '')
 
   // Find the index of the current payment based on its _id
-  const paymentIndex = payments.findIndex(
+  const paymentIndex = (payments || []).findIndex(
     (p) => p._id.toString() === currentPayment._id.toString()
   )
 
