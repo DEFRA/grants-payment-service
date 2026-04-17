@@ -4,7 +4,11 @@ const mockConfigGet = vi.hoisted(() =>
   vi.fn((key) => {
     const configMap = {
       cdpEnvironment: 'test',
-      serviceName: 'grants-payment-service'
+      serviceName: 'grants-payment-service',
+      'aws.region': 'eu-west-2',
+      'sns.endpoint': 'http://localhost:4566',
+      'sns.auditTopicArn':
+        'arn:aws:sns:eu-west-2:000000000000:fcp_audit_grants_payment_service'
     }
     return configMap[key]
   })
@@ -17,7 +21,14 @@ describe('AuditEvent', () => {
 
   beforeEach(async () => {
     vi.resetModules()
-    vi.doMock('@defra/cdp-auditing', () => ({ audit: vi.fn() }))
+    vi.doMock('@aws-sdk/client-sns', () => ({
+      SNSClient: vi.fn().mockImplementation(function () {
+        this.send = vi.fn().mockResolvedValue({})
+      }),
+      PublishCommand: vi.fn().mockImplementation(function (input) {
+        this.input = input
+      })
+    }))
     ;({ AuditEvent } = await import('./audit-event.js'))
   })
 
@@ -43,15 +54,25 @@ describe('AuditEvent', () => {
 })
 
 describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
-  let audit
   let auditEvent
   let AuditEvent
+  let mockSend
+  let SNSClient
+  let PublishCommand
 
   beforeEach(async () => {
     vi.resetModules()
-    vi.doMock('@defra/cdp-auditing', () => ({ audit: vi.fn() }))
+    mockSend = vi.fn().mockResolvedValue({})
+    vi.doMock('@aws-sdk/client-sns', () => ({
+      SNSClient: vi.fn().mockImplementation(function () {
+        this.send = mockSend
+      }),
+      PublishCommand: vi.fn().mockImplementation(function (input) {
+        this.input = input
+      })
+    }))
     ;({ auditEvent, AuditEvent } = await import('./audit-event.js'))
-    ;({ audit } = await import('@defra/cdp-auditing'))
+    ;({ SNSClient, PublishCommand } = await import('@aws-sdk/client-sns'))
   })
 
   afterEach(() => {
@@ -59,7 +80,32 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
     vi.clearAllMocks()
   })
 
-  test('calls audit with correct top-level fields', () => {
+  const getPublishedPayload = () => {
+    const [publishCommandInstance] = mockSend.mock.calls[0]
+    return JSON.parse(publishCommandInstance.input.Message)
+  }
+
+  test('creates SNSClient with correct region and endpoint', async () => {
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
+
+    expect(SNSClient).toHaveBeenCalledWith({
+      region: 'eu-west-2',
+      endpoint: 'http://localhost:4566'
+    })
+  })
+
+  test('publishes to the correct topic ARN', async () => {
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
+
+    expect(PublishCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        TopicArn:
+          'arn:aws:sns:eu-west-2:000000000000:fcp_audit_grants_payment_service'
+      })
+    )
+  })
+
+  test('publishes correct top-level fields', async () => {
     const context = {
       correlationId: 'corr-xyz',
       contractNumber: 'C12345',
@@ -69,45 +115,39 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
       agreementNumber: 'AGR-001'
     }
 
-    auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
 
-    expect(audit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        correlationid: 'corr-xyz',
-        datetime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
-        environment: 'test',
-        application: 'Grants',
-        component: 'grants-payment-service'
-      })
-    )
+    expect(getPublishedPayload()).toMatchObject({
+      correlationid: 'corr-xyz',
+      datetime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+      environment: 'test',
+      application: 'Grants',
+      component: 'grants-payment-service'
+    })
   })
 
-  test('calls audit with correct security fields', () => {
+  test('publishes correct security fields', async () => {
     const context = {
       contractNumber: 'C12345',
       sbi: 123456789,
       frn: 1234567890
     }
 
-    auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
 
-    expect(audit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        security: expect.objectContaining({
-          pmccode: '0706',
-          priority: '0',
-          details: expect.objectContaining({
-            transactioncode: '2310',
-            message: 'Payment request sent to payment hub',
-            additionalinfo:
-              'contractNumber: C12345, sbi: 123456789, frn: 1234567890'
-          })
-        })
-      })
-    )
+    expect(getPublishedPayload().security).toMatchObject({
+      pmccode: '0706',
+      priority: '0',
+      details: {
+        transactioncode: '2310',
+        message: 'Payment request sent to payment hub',
+        additionalinfo:
+          'contractNumber: C12345, sbi: 123456789, frn: 1234567890'
+      }
+    })
   })
 
-  test('calls audit with correct audit fields', () => {
+  test('publishes correct audit fields', async () => {
     const context = {
       correlationId: 'corr-xyz',
       contractNumber: 'C12345',
@@ -118,52 +158,40 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
       agreementNumber: 'AGR-001'
     }
 
-    auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
 
-    expect(audit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        audit: expect.objectContaining({
-          eventtype: 'GrantsPaymentHubRequest',
-          entities: [{ entity: 'payment', action: 'submitted', id: 'INV-001' }],
-          status: 'success',
-          details: context,
-          accounts: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
-        })
-      })
-    )
+    expect(getPublishedPayload().audit).toMatchObject({
+      eventtype: 'GrantsPaymentHubRequest',
+      entities: [{ entity: 'payment', action: 'submitted', id: 'INV-001' }],
+      status: 'success',
+      details: context,
+      accounts: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
+    })
   })
 
-  test('calls audit with correct audit.accounts fields', () => {
-    const context = {
+  test('publishes correct audit.accounts fields', async () => {
+    const context = { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
+
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
+
+    expect(getPublishedPayload().audit.accounts).toEqual({
       sbi: 123456789,
       frn: 1234567890,
       crn: 'CRN-001'
-    }
-
-    auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
-
-    expect(audit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        audit: expect.objectContaining({
-          accounts: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
-        })
-      })
-    )
+    })
   })
 
-  test('audit.accounts populates only known fields', () => {
-    auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, { sbi: 111111111 })
+  test('audit.accounts populates only known fields', async () => {
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, { sbi: 111111111 })
 
-    expect(audit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        audit: expect.objectContaining({
-          accounts: { sbi: 111111111, frn: undefined, crn: undefined }
-        })
-      })
-    )
+    expect(getPublishedPayload().audit.accounts).toEqual({
+      sbi: 111111111,
+      frn: undefined,
+      crn: undefined
+    })
   })
 
-  test('audit.entities contains valid action values', () => {
+  test('audit.entities contains valid action values', async () => {
     const validActions = [
       'created',
       'read',
@@ -175,55 +203,49 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
       'withdrawn'
     ]
 
-    auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
 
-    const [payload] = audit.mock.calls[0]
-    for (const entry of payload.audit.entities) {
+    for (const entry of getPublishedPayload().audit.entities) {
       expect(validActions).toContain(entry.action)
     }
   })
 
-  test('audit.entities contains a payment entity', () => {
-    auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
+  test('audit.entities contains a payment entity', async () => {
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
 
-    const [payload] = audit.mock.calls[0]
-    expect(payload.audit.entities.some((e) => e.entity === 'payment')).toBe(
-      true
-    )
+    expect(
+      getPublishedPayload().audit.entities.some((e) => e.entity === 'payment')
+    ).toBe(true)
   })
 
-  test('passes failure status through to the audit payload', () => {
-    auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {}, 'failure')
+  test('passes failure status through to the published payload', async () => {
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {}, 'failure')
 
-    expect(audit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        audit: expect.objectContaining({ status: 'failure' })
-      })
-    )
+    expect(getPublishedPayload().audit.status).toBe('failure')
   })
 
-  test('handles empty context gracefully', () => {
-    auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT)
+  test('handles empty context gracefully', async () => {
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT)
 
-    expect(audit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        correlationid: undefined,
-        audit: expect.objectContaining({
-          entities: [{ entity: 'payment', action: 'submitted', id: undefined }]
-        })
-      })
-    )
+    const payload = getPublishedPayload()
+    expect(payload.correlationid).toBeUndefined()
+    expect(payload.audit.entities).toEqual([
+      { entity: 'payment', action: 'submitted', id: undefined }
+    ])
   })
 
-  test('defaults status to success when not provided', () => {
-    auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {
+  test('defaults status to success when not provided', async () => {
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {
       invoiceNumber: 'INV-001'
     })
 
-    expect(audit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        audit: expect.objectContaining({ status: 'success' })
-      })
-    )
+    expect(getPublishedPayload().audit.status).toBe('success')
+  })
+
+  test('message is valid JSON', async () => {
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
+
+    const [publishCommandInstance] = mockSend.mock.calls[0]
+    expect(() => JSON.parse(publishCommandInstance.input.Message)).not.toThrow()
   })
 })
