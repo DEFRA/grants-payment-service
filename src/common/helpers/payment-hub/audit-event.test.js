@@ -114,6 +114,7 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
       invoiceNumber: 'INV-001',
       sbi: 123456789,
       frn: 1234567890,
+      crn: 'CRN-001',
       agreementNumber: 'AGR-001'
     }
 
@@ -127,7 +128,38 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
           entity: 'payment',
           entityid: 'INV-001',
           status: 'success',
-          details: context
+          details: context,
+          accounts: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
+        })
+      })
+    )
+  })
+
+  test('calls audit with correct audit.accounts fields', () => {
+    const context = {
+      sbi: 123456789,
+      frn: 1234567890,
+      crn: 'CRN-001'
+    }
+
+    auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audit: expect.objectContaining({
+          accounts: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
+        })
+      })
+    )
+  })
+
+  test('audit.accounts populates only known fields', () => {
+    auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, { sbi: 111111111 })
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audit: expect.objectContaining({
+          accounts: { sbi: 111111111, frn: undefined, crn: undefined }
         })
       })
     )

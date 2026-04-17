@@ -38,7 +38,7 @@ const eventActions = {
 /**
  * Builds the full audit payload for a payment hub request.
  * @param {AuditEvent} event
- * @param {{ correlationId?: string, contractNumber?: string, invoiceNumber?: string, sbi?: number, frn?: number, agreementNumber?: string }} context
+ * @param {{ correlationId?: string, contractNumber?: string, invoiceNumber?: string, sbi?: number, frn?: number, crn?: string, agreementNumber?: string }} context
  * @param {'success'|'failure'} status
  */
 const buildAuditPayload = (event, context = {}, status = 'success') => ({
@@ -65,14 +65,19 @@ const buildAuditPayload = (event, context = {}, status = 'success') => ({
     entity: 'payment',
     entityid: context.invoiceNumber,
     status,
-    details: context
+    details: context,
+    accounts: {
+      sbi: context.sbi,
+      frn: context.frn,
+      crn: context.crn
+    }
   }
 })
 
 /**
  * Records a payment hub request audit event.
  * @param {AuditEvent} event
- * @param {{ correlationId?: string, contractNumber?: string, invoiceNumber?: string, sbi?: number, frn?: number, agreementNumber?: string }} context
+ * @param {{ correlationId?: string, contractNumber?: string, invoiceNumber?: string, sbi?: number, frn?: number, crn?: string, agreementNumber?: string }} context
  * @param {'success'|'failure'} [status]
  */
 export const auditEvent = (event, context = {}, status = 'success') => {
