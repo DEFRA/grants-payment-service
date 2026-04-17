@@ -124,9 +124,7 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
       expect.objectContaining({
         audit: expect.objectContaining({
           eventtype: 'GrantsPaymentHubRequest',
-          action: 'submitted',
-          entity: 'payment',
-          entityid: 'INV-001',
+          entities: [{ entity: 'payment', action: 'submitted', id: 'INV-001' }],
           status: 'success',
           details: context,
           accounts: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
@@ -165,7 +163,7 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
     )
   })
 
-  test('audit.action is a valid action value', () => {
+  test('audit.entities contains valid action values', () => {
     const validActions = [
       'created',
       'read',
@@ -180,16 +178,17 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
     auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
 
     const [payload] = audit.mock.calls[0]
-    expect(validActions).toContain(payload.audit.action)
+    for (const entry of payload.audit.entities) {
+      expect(validActions).toContain(entry.action)
+    }
   })
 
-  test('audit.entity is agreement', () => {
+  test('audit.entities contains a payment entity', () => {
     auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
 
-    expect(audit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        audit: expect.objectContaining({ entity: 'payment' })
-      })
+    const [payload] = audit.mock.calls[0]
+    expect(payload.audit.entities.some((e) => e.entity === 'payment')).toBe(
+      true
     )
   })
 
@@ -209,7 +208,9 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({
         correlationid: undefined,
-        audit: expect.objectContaining({ entityid: undefined })
+        audit: expect.objectContaining({
+          entities: [{ entity: 'payment', action: 'submitted', id: undefined }]
+        })
       })
     )
   })
