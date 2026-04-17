@@ -1,4 +1,4 @@
-import cronJob from 'node-cron'
+import { Cron } from 'croner'
 import {
   processDailyPayments,
   processStaleLockedPayments
@@ -11,20 +11,27 @@ const cron = {
     register: (server) => {
       server.logger.info('Registering cron plugin')
 
-      cronJob.schedule(config.get('cron.dailyPaymentSchedule'), () =>
-        processDailyPayments(server).then(
-          ({ results, fetchDuration, processDuration }) => {
-            server.logger.info(
-              `Processed ${results.length} daily payment(s) (fetch: ${fetchDuration}ms, process: ${processDuration}ms)`
-            )
-          }
-        )
-      )
+      const options = { timezone: config.get('cron.timezone') }
 
-      cronJob.schedule(
-        config.get('cron.staleLockedPaymentCleanupSchedule'),
-        () => processStaleLockedPayments(server)
-      )
+      return {
+        dailyPaymentSchedule: new Cron(
+          config.get('cron.dailyPaymentSchedule'),
+          options,
+          () =>
+            processDailyPayments(server).then(
+              ({ results, fetchDuration, processDuration }) => {
+                server.logger.info(
+                  `Processed ${results.length} daily payment(s) (fetch: ${fetchDuration}ms, process: ${processDuration}ms)`
+                )
+              }
+            )
+        ),
+        staleLockedPaymentCleanupSchedule: new Cron(
+          config.get('cron.staleLockedPaymentCleanupSchedule'),
+          options,
+          () => processStaleLockedPayments(server)
+        )
+      }
     }
   }
 }

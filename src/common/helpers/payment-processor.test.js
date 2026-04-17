@@ -71,6 +71,17 @@ describe('processDailyPayments', () => {
                 originalSettlementDate: '2026-01-01',
                 invoiceLines: []
               }
+            ],
+            matchedPayments: [
+              {
+                _id: 'p1',
+                amountPence: 1000,
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                recoveryDate: '2026-01-01',
+                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
             ]
           }
         ]
@@ -84,6 +95,16 @@ describe('processDailyPayments', () => {
             invoiceNumber: 'INV1',
             agreementNumber: 'AGR1',
             payments: [
+              {
+                _id: 'p2',
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                recoveryDate: '2026-01-01',
+                originalSettlementDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ],
+            matchedPayments: [
               {
                 _id: 'p2',
                 sourceSystem: 'FPTT',
@@ -159,6 +180,14 @@ describe('processDailyPayments', () => {
                 dueDate: '2026-01-01',
                 invoiceLines: []
               }
+            ],
+            matchedPayments: [
+              {
+                _id: 'x',
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                invoiceLines: []
+              }
             ]
           }
         ]
@@ -172,6 +201,14 @@ describe('processDailyPayments', () => {
             invoiceNumber: 'INV1',
             agreementNumber: 'AGR1',
             payments: [
+              {
+                _id: 'y',
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ],
+            matchedPayments: [
               {
                 _id: 'y',
                 sourceSystem: 'FPTT',
@@ -269,6 +306,14 @@ describe('processDailyPayments', () => {
                 dueDate: '2026-01-01',
                 invoiceLines: []
               }
+            ],
+            matchedPayments: [
+              {
+                _id: 'p1',
+                sourceSystem: 'UNKNOWN',
+                dueDate: '2026-01-01',
+                invoiceLines: []
+              }
             ]
           }
         ]
@@ -298,7 +343,10 @@ describe('processDailyPayments', () => {
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV1',
             agreementNumber: 'AGR1',
-            payments: [{ _id: 'a', sourceSystem: 'FPTT', invoiceLines: [] }]
+            payments: [{ _id: 'a', sourceSystem: 'FPTT', invoiceLines: [] }],
+            matchedPayments: [
+              { _id: 'a', sourceSystem: 'FPTT', invoiceLines: [] }
+            ]
           }
         ]
       },
@@ -310,7 +358,10 @@ describe('processDailyPayments', () => {
             sourceSystem: 'FPTT',
             invoiceNumber: 'INV2',
             agreementNumber: 'AGR2',
-            payments: [{ _id: 'b', sourceSystem: 'FPTT', invoiceLines: [] }]
+            payments: [{ _id: 'b', sourceSystem: 'FPTT', invoiceLines: [] }],
+            matchedPayments: [
+              { _id: 'b', sourceSystem: 'FPTT', invoiceLines: [] }
+            ]
           }
         ]
       }

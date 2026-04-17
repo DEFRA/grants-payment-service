@@ -43,7 +43,7 @@ describe('fetchGrantPaymentsByDate', () => {
         expect.objectContaining({
           $match: {
             grants: {
-              $elemMatch: { 'payments.0': { $exists: true } }
+              $elemMatch: { 'matchedPayments.0': { $exists: true } }
             }
           }
         })

@@ -97,12 +97,11 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
       endSession: vi.fn()
     }
 
-    const staleDoc1 = { _id: 'doc1', grants: [] }
-    const staleDoc2 = { _id: 'doc2', grants: [] }
-
     GrantPaymentsModel.startSession.mockResolvedValue(mockSession)
-    GrantPaymentsModel.find.mockResolvedValue([staleDoc1, staleDoc2])
-    GrantPaymentsModel.updateOne.mockResolvedValue({ acknowledged: true })
+    GrantPaymentsModel.updateMany.mockResolvedValue({
+      acknowledged: true,
+      modifiedCount: 2
+    })
 
     mockSession.withTransaction.mockImplementation(async (fn, options) => {
       await fn()
@@ -115,15 +114,30 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
       expect.any(Function),
       { readPreference: 'primary' }
     )
-    expect(GrantPaymentsModel.find).toHaveBeenCalledWith(
+    expect(GrantPaymentsModel.updateMany).toHaveBeenCalledWith(
       {
-        'grants.payments.status': 'locked',
-        'grants.payments.updatedAt': { $lt: expect.any(Date) }
+        grants: {
+          $elemMatch: {
+            payments: {
+              $elemMatch: {
+                status: 'locked',
+                updatedAt: { $lt: expect.any(Date) }
+              }
+            }
+          }
+        }
       },
-      null,
-      { session: mockSession }
+      expect.any(Object),
+      {
+        session: mockSession,
+        arrayFilters: [
+          {
+            'p.status': 'locked',
+            'p.updatedAt': { $lt: expect.any(Date) }
+          }
+        ]
+      }
     )
-    expect(GrantPaymentsModel.updateOne).toHaveBeenCalledTimes(2)
     expect(mockSession.endSession).toHaveBeenCalled()
   })
 
@@ -134,7 +148,10 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
     }
 
     GrantPaymentsModel.startSession.mockResolvedValue(mockSession)
-    GrantPaymentsModel.find.mockResolvedValue([])
+    GrantPaymentsModel.updateMany.mockResolvedValue({
+      acknowledged: true,
+      modifiedCount: 0
+    })
 
     mockSession.withTransaction.mockImplementation(async (fn, options) => {
       await fn()
