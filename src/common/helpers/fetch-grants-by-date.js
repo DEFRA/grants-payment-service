@@ -45,7 +45,7 @@ const buildGrantPaymentsAggregationPipeline = (date, status, limit, page) => {
               $mergeObjects: [
                 '$$g',
                 {
-                  payments: {
+                  matchedPayments: {
                     $filter: {
                       input: '$$g.payments',
                       as: 'p',
@@ -65,7 +65,7 @@ const buildGrantPaymentsAggregationPipeline = (date, status, limit, page) => {
       $match: {
         grants: {
           $elemMatch: {
-            'payments.0': { $exists: true }
+            'matchedPayments.0': { $exists: true }
           }
         }
       }

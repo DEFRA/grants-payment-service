@@ -55,7 +55,7 @@ export const markAllStaleLockedPaymentsAsFailed = async () => {
   const session = await GrantPaymentsModel.startSession()
 
   try {
-    let markedCount = 0
+    let modifiedCount = 0
 
     await session.withTransaction(
       async () => {
@@ -63,43 +63,43 @@ export const markAllStaleLockedPaymentsAsFailed = async () => {
           Date.now() - config.get('lockedPaymentTtl')
         )
 
-        // Find all documents with stale locked payments
-        const staleDocs = await GrantPaymentsModel.find(
+        // Atomically update all documents with stale locked payments
+        const result = await GrantPaymentsModel.updateMany(
           {
-            'grants.payments.status': 'locked',
-            'grants.payments.updatedAt': { $lt: staleBefore }
+            grants: {
+              $elemMatch: {
+                payments: {
+                  $elemMatch: {
+                    status: 'locked',
+                    updatedAt: { $lt: staleBefore }
+                  }
+                }
+              }
+            }
           },
-          null,
-          { session }
+          {
+            $set: {
+              'grants.$[].payments.$[p].status': 'failed',
+              'grants.$[].payments.$[p].updatedAt': new Date()
+            }
+          },
+          {
+            session,
+            arrayFilters: [
+              {
+                'p.status': 'locked',
+                'p.updatedAt': { $lt: staleBefore }
+              }
+            ]
+          }
         )
 
-        // Update each document atomically within the transaction
-        for (const doc of staleDocs) {
-          await GrantPaymentsModel.updateOne(
-            { _id: doc._id },
-            {
-              $set: {
-                'grants.$[].payments.$[p].status': 'failed',
-                'grants.$[].payments.$[p].updatedAt': new Date()
-              }
-            },
-            {
-              session,
-              arrayFilters: [
-                {
-                  'p.status': 'locked',
-                  'p.updatedAt': { $lt: staleBefore }
-                }
-              ]
-            }
-          )
-          markedCount++
-        }
+        modifiedCount = result.modifiedCount
       },
       { readPreference: 'primary' }
     )
 
-    return markedCount
+    return modifiedCount
   } catch (err) {
     logger.error(err, `Error in stale locked payment cleanup: ${err.message}`)
     throw err

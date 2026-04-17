@@ -130,6 +130,12 @@ const config = convict({
     env: 'LOCKED_PAYMENT_TTL'
   },
   cron: {
+    timezone: {
+      doc: 'Timezone for cron jobs',
+      format: String,
+      default: 'Europe/London',
+      env: 'CRON_TIMEZONE'
+    },
     dailyPaymentSchedule: {
       doc: 'Cron time/schedule for daily payment processing',
       format: String,

@@ -68,7 +68,7 @@ const processAccountPayments = async (server, account) => {
 
   const results = await Promise.all(
     (grants || []).flatMap((grant) =>
-      (grant.payments || []).map((payment) =>
+      (grant.matchedPayments || []).map((payment) =>
         processSinglePayment(server, docId, grant, payment, identifiers, logger)
       )
     )
