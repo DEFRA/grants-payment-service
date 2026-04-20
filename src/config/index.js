@@ -218,6 +218,21 @@ const config = convict({
       env: 'AWS_REGION'
     }
   },
+  sns: {
+    endpoint: {
+      doc: 'AWS SNS endpoint (local/dev only; in CDP this is typically not required)',
+      format: String,
+      default: FLOCI_ENDPOINT,
+      env: 'SNS_ENDPOINT'
+    },
+    auditTopicArn: {
+      doc: 'SNS topic ARN for audit events (fcp_audit_grants_payment_service)',
+      format: String,
+      default:
+        'arn:aws:sns:eu-west-2:000000000000:fcp_audit_grants_payment_service',
+      env: 'SNS_TOPIC_ARN_AUDIT'
+    }
+  },
   sqs: {
     endpoint: {
       doc: 'AWS SQS endpoint (local/dev only; in CDP this is typically not required)',
