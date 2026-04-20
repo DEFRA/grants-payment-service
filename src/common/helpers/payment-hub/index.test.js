@@ -5,6 +5,14 @@ import { initCache } from '#~/common/helpers/cache.js'
 
 vi.mock('#~/config/index.js')
 vi.mock('#~/common/helpers/cache.js')
+vi.mock('@aws-sdk/client-sns', () => ({
+  SNSClient: vi.fn().mockImplementation(function () {
+    this.send = vi.fn().mockResolvedValue({})
+  }),
+  PublishCommand: vi.fn().mockImplementation(function (input) {
+    this.input = input
+  })
+}))
 vi.mock('crypto', () => ({
   __esModule: true,
   default: {
