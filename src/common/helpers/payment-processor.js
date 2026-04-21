@@ -48,9 +48,24 @@ const processSinglePayment = async (
   }
 
   try {
-    const res = await sendPaymentHubRequest(server, paymentHubData)
-    await updatePaymentStatus(docId, payment._id, 'submitted')
-    return res
+    // Run in the background, with its own error handling to make processing faster
+    sendPaymentHubRequest(server, paymentHubData)
+      .then(async (res) => {
+        await updatePaymentStatus(docId, payment._id, 'submitted')
+        return res
+      })
+      .catch(async (err) => {
+        logger.error(
+          err,
+          `${grafanaLogMessages.error.sendPaymentHubRequest} for record ${docId}`
+        )
+        await updatePaymentStatus(docId, payment._id, 'failed')
+      })
+
+    return {
+      paymentId: payment._id,
+      docId
+    }
   } catch (err) {
     logger.error(
       err,
@@ -103,10 +118,6 @@ export const processDailyPayments = async (
     )
 
     const processDuration = (performance.now() - processStart).toFixed(2)
-
-    if (results.length === 0) {
-      return { results: [], fetchDuration, processDuration: '0.00' }
-    }
 
     return { results, fetchDuration, processDuration }
   } catch (err) {

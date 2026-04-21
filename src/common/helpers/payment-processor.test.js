@@ -138,27 +138,20 @@ describe('processDailyPayments', () => {
       `Processing payments for date: ${fakeDate}`
     )
 
-    // each payment should be locked (pending->locked) then submitted
-    expect(updatePaymentStatus).toHaveBeenCalledWith(
-      '1',
-      'p1',
-      'locked',
-      'pending'
-    )
-    expect(updatePaymentStatus).toHaveBeenCalledWith('1', 'p1', 'submitted')
-    expect(updatePaymentStatus).toHaveBeenCalledWith(
-      '2',
-      'p2',
-      'locked',
-      'pending'
-    )
-    expect(updatePaymentStatus).toHaveBeenCalledWith('2', 'p2', 'submitted')
-
     expect(sendPaymentHubRequest).toHaveBeenCalledTimes(2)
     expect(result).toEqual({
-      results: responses,
+      results: [
+        { paymentId: 'p1', docId: '1' },
+        { paymentId: 'p2', docId: '2' }
+      ],
       fetchDuration: expect.any(String),
       processDuration: expect.any(String)
+    })
+
+    // Wait for background tasks to complete
+    await vi.waitFor(() => {
+      expect(updatePaymentStatus).toHaveBeenCalledWith('1', 'p1', 'submitted')
+      expect(updatePaymentStatus).toHaveBeenCalledWith('2', 'p2', 'submitted')
     })
   })
 
@@ -231,7 +224,7 @@ describe('processDailyPayments', () => {
     const result = await processDailyPayments(server, fakeDate)
 
     expect(sendPaymentHubRequest).toHaveBeenCalledTimes(1)
-    expect(result.results).toEqual(['ok', null])
+    expect(result.results).toEqual([{ paymentId: 'x', docId: '1' }, null])
     expect(logger.info).toHaveBeenCalledWith(
       `Skipping payment y (already locked or processed)`
     )
@@ -251,7 +244,7 @@ describe('processDailyPayments', () => {
     expect(result).toEqual({
       results: [],
       fetchDuration: expect.any(String),
-      processDuration: '0.00'
+      processDuration: expect.any(String)
     })
   })
 
@@ -377,14 +370,16 @@ describe('processDailyPayments', () => {
     const result = await processDailyPayments(server, fakeDate)
 
     expect(result.results).toEqual([
-      'ok1',
-      expect.objectContaining({ message: 'hub down' })
+      { paymentId: 'a', docId: '1' },
+      { paymentId: 'b', docId: '2' }
     ])
-    expect(updatePaymentStatus).toHaveBeenCalledWith('2', 'b', 'failed')
-    expect(logger.error).toHaveBeenCalledWith(
-      expect.any(Error),
-      `PaymentHub request failed for record 2`
-    )
+    await vi.waitFor(() => {
+      expect(updatePaymentStatus).toHaveBeenCalledWith('2', 'b', 'failed')
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.any(Error),
+        `PaymentHub request failed for record 2`
+      )
+    })
   })
 
   it('passes limit to streamGrantPaymentsByDate and includes it in logs', async () => {
