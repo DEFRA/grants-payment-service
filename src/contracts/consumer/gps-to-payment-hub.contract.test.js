@@ -28,7 +28,6 @@ describe('cron job schedule sending a POST request to payment hub', () => {
 
   beforeAll(async () => {
     global.fetchMock.disableMocks()
-    vi.useFakeTimers()
 
     const mongoOverrides = buildIsolatedMongoOptions('payment-hub-contract')
 
@@ -36,9 +35,6 @@ describe('cron job schedule sending a POST request to payment hub', () => {
     config.set('port', crypto.randomInt(30001, 65535))
     config.set('mongoUri', mongoOverrides.mongoUrl)
     config.set('featureFlags.isPaymentHubEnabled', true)
-
-    const date = new Date(2026, 5, 5, 2, 9)
-    vi.setSystemTime(date)
 
     // Create and start the server
     server = await createServer({
@@ -55,7 +51,6 @@ describe('cron job schedule sending a POST request to payment hub', () => {
     }
     config.set('featureFlags.isPaymentHubEnabled', false)
 
-    vi.useRealTimers()
     global.fetchMock.enableMocks()
   })
 
@@ -112,10 +107,8 @@ describe('cron job schedule sending a POST request to payment hub', () => {
         config.set('paymentHub.key', 'test-key')
         config.set('paymentHub.keyName', 'test-key-name')
 
-        const expectedTime = new Date(2026, 5, 5, 2, 9).toISOString()
-        expect(new Date().toISOString()).toBe(expectedTime)
-
-        await processDailyPayments(server)
+        // Use the date that matches the seeded payment data (2026-06-05)
+        await processDailyPayments(server, null, '2026-06-05')
       })
   })
 })

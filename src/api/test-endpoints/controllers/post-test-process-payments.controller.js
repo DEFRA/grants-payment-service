@@ -17,20 +17,24 @@ const postTestProcessPaymentsController = {
       const {
         results: firstXPayments,
         fetchDuration: fetchDur,
-        processDuration: procDur
+        processDuration: procDur,
+        sendDuration: sendDur
       } = await processDailyPayments(request.server, paginationLimit, date)
 
       processDailyPayments(request.server, undefined, date).then(
-        ({ results, fetchDuration, processDuration }) => {
+        ({ results, fetchDuration, processDuration, sendDuration }) => {
           const totalFetch = (
             Number.parseFloat(fetchDur) + Number.parseFloat(fetchDuration)
           ).toFixed(2)
           const totalProc = (
             Number.parseFloat(procDur) + Number.parseFloat(processDuration)
           ).toFixed(2)
+          const totalSend = (
+            Number.parseFloat(sendDur) + Number.parseFloat(sendDuration)
+          ).toFixed(2)
 
           request.logger.info(
-            `Processed ${firstXPayments.length + results.length} daily payment(s) (fetch: ${totalFetch}ms, process: ${totalProc}ms)`
+            `Processed ${firstXPayments.length + results.length} daily payment(s) (fetch: ${totalFetch}ms, process: ${totalProc}ms, send: ${totalSend}ms)`
           )
         }
       )

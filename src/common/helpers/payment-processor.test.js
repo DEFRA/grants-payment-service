@@ -145,7 +145,8 @@ describe('processDailyPayments', () => {
         { paymentId: 'p2', docId: '2' }
       ],
       fetchDuration: expect.any(String),
-      processDuration: expect.any(String)
+      processDuration: expect.any(String),
+      sendDuration: expect.any(String)
     })
 
     // Wait for background tasks to complete
@@ -244,7 +245,8 @@ describe('processDailyPayments', () => {
     expect(result).toEqual({
       results: [],
       fetchDuration: expect.any(String),
-      processDuration: expect.any(String)
+      processDuration: expect.any(String),
+      sendDuration: expect.any(String)
     })
   })
 

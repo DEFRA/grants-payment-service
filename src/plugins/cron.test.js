@@ -51,7 +51,8 @@ describe('cron plugin', () => {
     processDailyPayments.mockResolvedValue({
       results: ['res1', 'res2'],
       fetchDuration: '10.00',
-      processDuration: '20.00'
+      processDuration: '20.00',
+      sendDuration: '5.00'
     })
     cron.plugin.register(mockServer)
 
@@ -61,7 +62,7 @@ describe('cron plugin', () => {
 
     expect(processDailyPayments).toHaveBeenCalledWith(mockServer)
     expect(mockServer.logger.info).toHaveBeenCalledWith(
-      'Processed 2 daily payment(s) (fetch: 10.00ms, process: 20.00ms)'
+      'Processed 2 daily payment(s) (fetch: 10.00ms, process: 20.00ms, send: 5.00ms)'
     )
   })
 

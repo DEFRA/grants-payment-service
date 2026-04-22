@@ -17,7 +17,8 @@ const processSinglePayment = async (
   grant,
   payment,
   identifiers,
-  logger
+  logger,
+  backgroundTasks
 ) => {
   const lockResult = await updatePaymentStatus(
     docId,
@@ -29,7 +30,7 @@ const processSinglePayment = async (
 
   if (!wasLocked) {
     logger.info(`Skipping payment ${payment._id} (already locked or processed)`)
-    return null
+    return { result: null, backgroundTask: null }
   }
 
   let paymentHubData
@@ -44,12 +45,12 @@ const processSinglePayment = async (
       `Unsupported grant sourceSystem ${grant.sourceSystem} for payment ${payment._id}`
     )
     await updatePaymentStatus(docId, payment._id, 'failed')
-    return null
+    return { result: null, backgroundTask: null }
   }
 
   try {
     // Run in the background, with its own error handling to make processing faster
-    sendPaymentHubRequest(server, paymentHubData)
+    const backgroundTask = sendPaymentHubRequest(server, paymentHubData)
       .then(async (res) => {
         await updatePaymentStatus(docId, payment._id, 'submitted')
         return res
@@ -62,9 +63,16 @@ const processSinglePayment = async (
         await updatePaymentStatus(docId, payment._id, 'failed')
       })
 
+    if (backgroundTasks) {
+      backgroundTasks.push(backgroundTask)
+    }
+
     return {
-      paymentId: payment._id,
-      docId
+      result: {
+        paymentId: payment._id,
+        docId
+      },
+      backgroundTask
     }
   } catch (err) {
     logger.error(
@@ -72,11 +80,11 @@ const processSinglePayment = async (
       `${grafanaLogMessages.error.sendPaymentHubRequest} for record ${docId}`
     )
     await updatePaymentStatus(docId, payment._id, 'failed')
-    return serializeError(err)
+    return { result: serializeError(err), backgroundTask: null }
   }
 }
 
-const processAccountPayments = async (server, account) => {
+const processAccountPayments = async (server, account, backgroundTasks) => {
   const { logger } = server
   const { _id: docId, sbi, frn, claimId, grants } = account
   const identifiers = { sbi, frn, claimId }
@@ -84,12 +92,20 @@ const processAccountPayments = async (server, account) => {
   const results = await Promise.all(
     (grants || []).flatMap((grant) =>
       (grant.matchedPayments || []).map((payment) =>
-        processSinglePayment(server, docId, grant, payment, identifiers, logger)
+        processSinglePayment(
+          server,
+          docId,
+          grant,
+          payment,
+          identifiers,
+          logger,
+          backgroundTasks
+        )
       )
     )
   )
 
-  return results.flat()
+  return results.map((r) => r.result).flat()
 }
 
 export const processDailyPayments = async (
@@ -107,19 +123,27 @@ export const processDailyPayments = async (
     const fetchDuration = (performance.now() - fetchStart).toFixed(2)
 
     const results = []
+    const backgroundTasks = []
     const processStart = performance.now()
-
     await cursor.eachAsync(
       async (account) => {
-        const accountResults = await processAccountPayments(server, account)
+        const accountResults = await processAccountPayments(
+          server,
+          account,
+          backgroundTasks
+        )
         results.push(...accountResults)
       },
       { parallel: config.get('paymentProcessor.maxBatchSize') }
     )
-
     const processDuration = (performance.now() - processStart).toFixed(2)
 
-    return { results, fetchDuration, processDuration }
+    const sendStart = performance.now()
+    // Wait for all background payment hub requests to complete
+    await Promise.all(backgroundTasks.filter(Boolean))
+    const sendDuration = (performance.now() - sendStart).toFixed(2)
+
+    return { results, fetchDuration, processDuration, sendDuration }
   } catch (err) {
     logger.error(
       err,
