@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { vi, expect } from 'vitest'
 
 import crypto from 'node:crypto'
 
@@ -108,7 +108,21 @@ describe('cron job schedule sending a POST request to payment hub', () => {
         config.set('paymentHub.keyName', 'test-key-name')
 
         // Use the date that matches the seeded payment data (2026-06-05)
-        await processDailyPayments(server, null, '2026-06-05')
+        const actual = await processDailyPayments(server, null, '2026-06-05')
+
+        expect(actual).toEqual(
+          expect.objectContaining({
+            results: expect.arrayContaining([
+              expect.objectContaining({
+                docId: expect.any(Object),
+                paymentId: expect.any(Object)
+              })
+            ]),
+            fetchDuration: expect.any(String),
+            processDuration: expect.any(String),
+            sendDuration: expect.any(String)
+          })
+        )
       })
   })
 })

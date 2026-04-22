@@ -3,10 +3,10 @@ export default [
     sbi: '106284736',
     frn: '12544567',
     claimId: 'R00000004',
+    scheme: 'SFI',
     grants: [
       {
         sourceSystem: 'FPTT',
-        scheme: 'SFI',
         paymentRequestNumber: 1,
         correlationId: 'grant-correlation-id',
         invoiceNumber: 'R00000004-V001Q2',

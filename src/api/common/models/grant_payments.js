@@ -31,7 +31,6 @@ const Payment = new mongoose.Schema(
 const Grant = new mongoose.Schema(
   {
     sourceSystem: { type: String, required: true },
-    scheme: { type: String },
     paymentRequestNumber: { type: Number, required: true },
     correlationId: { type: String, required: true },
     invoiceNumber: { type: String, required: true },

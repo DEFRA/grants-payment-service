@@ -105,7 +105,7 @@ const processAccountPayments = async (server, account, backgroundTasks) => {
     )
   )
 
-  return results.map((r) => r.result).flat()
+  return results.flatMap((r) => r.result)
 }
 
 export const processDailyPayments = async (
