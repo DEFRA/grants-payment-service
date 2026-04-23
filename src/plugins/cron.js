@@ -19,9 +19,9 @@ const cron = {
           options,
           () =>
             processDailyPayments(server).then(
-              ({ results, fetchDuration, processDuration }) => {
+              ({ results, fetchDuration, processDuration, sendDuration }) => {
                 server.logger.info(
-                  `Processed ${results.length} daily payment(s) (fetch: ${fetchDuration}ms, process: ${processDuration}ms)`
+                  `Processed ${results.length} daily payment(s) (fetch: ${fetchDuration}ms, process: ${processDuration}ms, send: ${sendDuration}ms)`
                 )
               }
             )

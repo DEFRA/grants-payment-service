@@ -35,20 +35,43 @@ describe('fetchGrantPaymentsByDate', () => {
       }
     }
 
-    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        { $match: expectedMatch },
-        { $sort: { createdAt: -1 } },
-        expect.objectContaining({ $project: expect.any(Object) }),
-        expect.objectContaining({
-          $match: {
-            grants: {
-              $elemMatch: { 'matchedPayments.0': { $exists: true } }
+    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
+      { $match: expectedMatch },
+      {
+        $project: {
+          sbi: 1,
+          frn: 1,
+          claimId: 1,
+          grants: {
+            $map: {
+              input: '$grants',
+              as: 'g',
+              in: {
+                $mergeObjects: [
+                  '$$g',
+                  {
+                    matchedPayments: {
+                      $filter: {
+                        input: '$$g.payments',
+                        as: 'p',
+                        cond: { $and: [{ $eq: ['$$p.dueDate', date] }] }
+                      }
+                    }
+                  }
+                ]
+              }
             }
           }
-        })
-      ])
-    )
+        }
+      },
+      {
+        $match: {
+          grants: {
+            $elemMatch: { 'matchedPayments.0': { $exists: true } }
+          }
+        }
+      }
+    ])
 
     expect(GrantPaymentsModel.countDocuments).toHaveBeenCalledWith(
       expectedMatch
@@ -74,12 +97,48 @@ describe('fetchGrantPaymentsByDate', () => {
       }
     }
 
-    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        { $match: expectedMatch },
-        { $sort: { createdAt: -1 } }
-      ])
-    )
+    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
+      { $match: expectedMatch },
+      {
+        $project: {
+          sbi: 1,
+          frn: 1,
+          claimId: 1,
+          grants: {
+            $map: {
+              input: '$grants',
+              as: 'g',
+              in: {
+                $mergeObjects: [
+                  '$$g',
+                  {
+                    matchedPayments: {
+                      $filter: {
+                        input: '$$g.payments',
+                        as: 'p',
+                        cond: {
+                          $and: [
+                            { $eq: ['$$p.dueDate', date] },
+                            { $eq: ['$$p.status', 'pending'] }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          grants: {
+            $elemMatch: { 'matchedPayments.0': { $exists: true } }
+          }
+        }
+      }
+    ])
 
     expect(GrantPaymentsModel.countDocuments).toHaveBeenCalledWith(
       expectedMatch
@@ -96,7 +155,11 @@ describe('fetchGrantPaymentsByDate', () => {
     const result = await fetchGrantPaymentsByDate(date, null, 10, 2)
 
     expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith(
-      expect.arrayContaining([{ $skip: 10 }, { $limit: 10 }])
+      expect.arrayContaining([
+        { $skip: 10 },
+        { $limit: 10 },
+        { $sort: { createdAt: -1 } }
+      ])
     )
 
     expect(result).toEqual({
@@ -104,5 +167,13 @@ describe('fetchGrantPaymentsByDate', () => {
       totalDocs: 1,
       pagination: { page: 2, total: 1 }
     })
+  })
+
+  it('includes $sort when limit is provided without page', async () => {
+    await fetchGrantPaymentsByDate(date, null, 10)
+
+    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith(
+      expect.arrayContaining([{ $limit: 10 }, { $sort: { createdAt: -1 } }])
+    )
   })
 })

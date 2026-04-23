@@ -20,7 +20,7 @@ const buildGrantPaymentsAggregationPipeline = (date, status, limit, page) => {
     }
   }
 
-  const pipeline = [{ $match: match }, { $sort: { createdAt: -1 } }]
+  const pipeline = [{ $match: match }]
 
   if (limit) {
     if (page) {
@@ -28,7 +28,7 @@ const buildGrantPaymentsAggregationPipeline = (date, status, limit, page) => {
       pipeline.push({ $skip: skip })
     }
 
-    pipeline.push({ $limit: limit })
+    pipeline.push({ $limit: limit }, { $sort: { createdAt: -1 } })
   }
 
   pipeline.push(

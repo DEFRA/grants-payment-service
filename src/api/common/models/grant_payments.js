@@ -75,11 +75,10 @@ schema.index({ sbi: 1, createdAt: -1 })
 schema.index({ sbi: 1, 'grants.payments.invoiceLines.fundCode': 1 })
 // cancelGrantPayments: filter on { sbi, frn }
 schema.index({ sbi: 1, frn: 1 })
-// fetchGrantPaymentsByDate (daily cron): filter on dueDate + status, sort by createdAt
+// fetchGrantPaymentsByDate (daily cron): filter on dueDate + status
 schema.index({
   'grants.payments.dueDate': 1,
-  'grants.payments.status': 1,
-  createdAt: -1
+  'grants.payments.status': 1
 })
 
 export default mongoose.model(collection, schema)

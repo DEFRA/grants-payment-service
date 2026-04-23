@@ -157,10 +157,10 @@ git config --global core.autocrlf false
 
 GPS consumes messages from two AWS SQS FIFO queues:
 
-| Queue | Purpose |
-| :---- | :------ |
+| Queue                           | Purpose                                                                                                                                               |
+| :------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `gps__sqs__create_payment.fifo` | Receives new payment schedules from the Agreements service. Creates a grant payment record in MongoDB with one or more scheduled payment instalments. |
-| `gps__sqs__cancel_payment.fifo` | Receives cancellation requests. Cancels all pending payments for the given SBI and FRN where the due date is today or in the future. |
+| `gps__sqs__cancel_payment.fifo` | Receives cancellation requests. Cancels all pending payments for the given SBI and FRN where the due date is today or in the future.                  |
 
 ### Daily payment processing
 
@@ -186,9 +186,9 @@ All payment submissions (successful or failed) are published to an SNS audit top
 
 ## API endpoints
 
-| Endpoint | Description |
-| :------- | :---------- |
-| `GET: /health` | Health check (includes MongoDB connection status and feature flags) |
+| Endpoint             | Description                                                                  |
+| :------------------- | :--------------------------------------------------------------------------- |
+| `GET: /health`       | Health check (includes MongoDB connection status and feature flags)          |
 | `GET: /health/stats` | Database statistics (account counts, grant counts, payment counts by status) |
 
 ### Test endpoints
@@ -197,44 +197,44 @@ These are available when `ENABLE_TEST_ENDPOINTS=true` and are disabled in produc
 configuration. These endpoints can seed the database and trigger payment processing, so they must never be enabled in
 production.
 
-| Method | Endpoint | Description |
-| :----- | :------- | :---------- |
-| POST | `/api/test/grant-payments` | Create a grant payment record |
-| GET | `/api/test/grant-payments` | List all grant payments |
-| GET | `/api/test/grant-payments/{sbi}` | Get payments by SBI |
-| GET | `/api/test/grant-payments/{sbi}/{fundCode}` | Get payments by SBI and fund code |
-| POST | `/api/test/process-payments/{date?}` | Manually trigger daily payment processing |
-| GET | `/api/test/daily-payments/{date?}` | Get payments due on a given date |
-| POST | `/api/test/populate-grant-payments` | Seed database with sample payment data |
-| POST | `/api/test/queue-message/{queueName?}` | Publish a test message to an SQS queue |
+| Method | Endpoint                                    | Description                               |
+| :----- | :------------------------------------------ | :---------------------------------------- |
+| POST   | `/api/test/grant-payments`                  | Create a grant payment record             |
+| GET    | `/api/test/grant-payments`                  | List all grant payments                   |
+| GET    | `/api/test/grant-payments/{sbi}`            | Get payments by SBI                       |
+| GET    | `/api/test/grant-payments/{sbi}/{fundCode}` | Get payments by SBI and fund code         |
+| POST   | `/api/test/process-payments/{date?}`        | Manually trigger daily payment processing |
+| GET    | `/api/test/daily-payments/{date?}`          | Get payments due on a given date          |
+| POST   | `/api/test/populate-grant-payments`         | Seed database with sample payment data    |
+| POST   | `/api/test/queue-message/{queueName?}`      | Publish a test message to an SQS queue    |
 
 ## Configuration
 
 Configuration is managed with [Convict](https://github.com/mozilla/node-convict) and validated at startup. Key
 environment variables:
 
-| Variable | Default | Description |
-| :------- | :------ | :---------- |
-| `PORT` | `3009` | Server port |
-| `MONGO_URI` | `mongodb://127.0.0.1:27017/` | MongoDB connection string |
-| `MONGO_DATABASE` | `grants-payment-service` | Database name |
-| `QUEUE_URL` | - | SQS URL for the create payment FIFO queue |
-| `CANCEL_PAYMENT_QUEUE_URL` | - | SQS URL for the cancel payment FIFO queue |
-| `SNS_TOPIC_ARN_AUDIT` | - | SNS topic ARN for audit events |
-| `ENABLE_PAYMENT_HUB` | `false` | Feature flag to enable Payment Hub submissions |
-| `PAYMENT_HUB_URI` | `https://paymenthub/` | Payment Hub base URL (placeholder default) |
-| `PAYMENT_HUB_SA_KEY_NAME` | `MyManagedAccessKey` | Service bus shared access key name |
-| `PAYMENT_HUB_SA_KEY` | `my_key` | Service bus shared access key (secret -- override in deployed environments) |
-| `PAYMENT_HUB_TTL` | `86400` | SAS token time-to-live in seconds |
-| `CRON_DAILY_PAYMENT_SCHEDULE` | `10 0 * * *` | Cron expression for daily payment processing |
-| `CRON_STALE_LOCKED_PAYMENT_CLEANUP_SCHEDULE` | `20 0 * * *` | Cron expression for stale lock cleanup |
-| `CRON_TIMEZONE` | `Europe/London` | Timezone for cron schedules |
-| `PAYMENT_PROCESSOR_MIN_BATCH_SIZE` | `10` | Minimum payments per batch |
-| `PAYMENT_PROCESSOR_MAX_BATCH_SIZE` | `100` | Maximum payments per batch |
-| `LOCKED_PAYMENT_TTL` | `300000` | Stale lock timeout in milliseconds (5 minutes) |
-| `ENABLE_TEST_ENDPOINTS` | `true` | Enable test-only API endpoints |
-| `PAGE_LIMIT` | `10` | Default pagination page size |
-| `LOG_LEVEL` | `info` | Pino log level |
+| Variable                                     | Default                      | Description                                                                 |
+| :------------------------------------------- | :--------------------------- | :-------------------------------------------------------------------------- |
+| `PORT`                                       | `3009`                       | Server port                                                                 |
+| `MONGO_URI`                                  | `mongodb://127.0.0.1:27017/` | MongoDB connection string                                                   |
+| `MONGO_DATABASE`                             | `grants-payment-service`     | Database name                                                               |
+| `QUEUE_URL`                                  | -                            | SQS URL for the create payment FIFO queue                                   |
+| `CANCEL_PAYMENT_QUEUE_URL`                   | -                            | SQS URL for the cancel payment FIFO queue                                   |
+| `SNS_TOPIC_ARN_AUDIT`                        | -                            | SNS topic ARN for audit events                                              |
+| `ENABLE_PAYMENT_HUB`                         | `false`                      | Feature flag to enable Payment Hub submissions                              |
+| `PAYMENT_HUB_URI`                            | `https://paymenthub/`        | Payment Hub base URL (placeholder default)                                  |
+| `PAYMENT_HUB_SA_KEY_NAME`                    | `MyManagedAccessKey`         | Service bus shared access key name                                          |
+| `PAYMENT_HUB_SA_KEY`                         | `my_key`                     | Service bus shared access key (secret -- override in deployed environments) |
+| `PAYMENT_HUB_TTL`                            | `86400`                      | SAS token time-to-live in seconds                                           |
+| `CRON_DAILY_PAYMENT_SCHEDULE`                | `10 0 * * *`                 | Cron expression for daily payment processing                                |
+| `CRON_STALE_LOCKED_PAYMENT_CLEANUP_SCHEDULE` | `20 0 * * *`                 | Cron expression for stale lock cleanup                                      |
+| `CRON_TIMEZONE`                              | `Europe/London`              | Timezone for cron schedules                                                 |
+| `PAYMENT_PROCESSOR_MIN_BATCH_SIZE`           | `10`                         | Minimum payments per batch                                                  |
+| `PAYMENT_PROCESSOR_MAX_BATCH_SIZE`           | `100`                        | Maximum payments per batch                                                  |
+| `LOCKED_PAYMENT_TTL`                         | `300000`                     | Stale lock timeout in milliseconds (5 minutes)                              |
+| `ENABLE_TEST_ENDPOINTS`                      | `true`                       | Enable test-only API endpoints                                              |
+| `PAGE_LIMIT`                                 | `10`                         | Default pagination page size                                                |
+| `LOG_LEVEL`                                  | `info`                       | Pino log level                                                              |
 
 See [src/config/index.js](./src/config/index.js) for the full configuration schema.
 
