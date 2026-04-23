@@ -152,10 +152,8 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
       correlationId: 'corr-xyz',
       contractNumber: 'C12345',
       invoiceNumber: 'INV-001',
-      sbi: 123456789,
-      frn: 1234567890,
-      crn: 'CRN-001',
-      agreementNumber: 'AGR-001'
+      agreementNumber: 'AGR-001',
+      identifiers: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
     }
 
     await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
@@ -170,7 +168,9 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
   })
 
   test('publishes correct audit.accounts fields', async () => {
-    const context = { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
+    const context = {
+      identifiers: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
+    }
 
     await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
 
@@ -182,7 +182,9 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
   })
 
   test('audit.accounts populates only known fields', async () => {
-    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, { sbi: 111111111 })
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {
+      identifiers: { sbi: 111111111 }
+    })
 
     expect(getPublishedPayload().audit.accounts).toEqual({
       sbi: 111111111,
