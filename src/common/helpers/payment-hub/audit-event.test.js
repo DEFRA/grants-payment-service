@@ -14,7 +14,13 @@ const mockConfigGet = vi.hoisted(() =>
   })
 )
 
+const mockNetworkInterfaces = vi.hoisted(() => vi.fn())
+
 vi.mock('#~/config/index.js', () => ({ config: { get: mockConfigGet } }))
+
+vi.mock('node:os', () => ({
+  networkInterfaces: mockNetworkInterfaces
+}))
 
 describe('AuditEvent', () => {
   let AuditEvent
@@ -63,6 +69,9 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
   beforeEach(async () => {
     vi.resetModules()
     mockSend = vi.fn().mockResolvedValue({})
+    mockNetworkInterfaces.mockReturnValue({
+      eth0: [{ address: '192.168.1.100', family: 'IPv4', internal: false }]
+    })
     vi.doMock('@aws-sdk/client-sns', () => ({
       SNSClient: vi.fn().mockImplementation(function () {
         this.send = mockSend
@@ -152,10 +161,8 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
       correlationId: 'corr-xyz',
       contractNumber: 'C12345',
       invoiceNumber: 'INV-001',
-      sbi: 123456789,
-      frn: 1234567890,
-      crn: 'CRN-001',
-      agreementNumber: 'AGR-001'
+      agreementNumber: 'AGR-001',
+      identifiers: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
     }
 
     await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
@@ -170,7 +177,9 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
   })
 
   test('publishes correct audit.accounts fields', async () => {
-    const context = { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
+    const context = {
+      identifiers: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
+    }
 
     await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
 
@@ -182,7 +191,9 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
   })
 
   test('audit.accounts populates only known fields', async () => {
-    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, { sbi: 111111111 })
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {
+      identifiers: { sbi: 111111111 }
+    })
 
     expect(getPublishedPayload().audit.accounts).toEqual({
       sbi: 111111111,
@@ -216,6 +227,33 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
     expect(
       getPublishedPayload().audit.entities.some((e) => e.entity === 'payment')
     ).toBe(true)
+  })
+
+  test('ip is populated from request.server.info.host when available', async () => {
+    const mockRequest = { server: { info: { host: '10.0.0.5' } } }
+    await auditEvent(
+      AuditEvent.PAYMENT_HUB_REQUEST_SENT,
+      {},
+      'success',
+      mockRequest
+    )
+    expect(getPublishedPayload().ip).toBe('10.0.0.5')
+  })
+
+  test('ip falls back to os.networkInterfaces() when no request is available', async () => {
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
+    expect(getPublishedPayload().ip).toBe('192.168.1.100')
+  })
+
+  test('ip falls back to os.networkInterfaces() when server host is 0.0.0.0', async () => {
+    const mockRequest = { server: { info: { host: '0.0.0.0' } } }
+    await auditEvent(
+      AuditEvent.PAYMENT_HUB_REQUEST_SENT,
+      {},
+      'success',
+      mockRequest
+    )
+    expect(getPublishedPayload().ip).toBe('192.168.1.100')
   })
 
   test('passes failure status through to the published payload', async () => {

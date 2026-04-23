@@ -1,5 +1,22 @@
+import { networkInterfaces } from 'node:os'
+
 import { PublishCommand, SNSClient } from '@aws-sdk/client-sns'
 import { config } from '#~/config/index.js'
+
+const getLocalIp = (request) => {
+  const hapiHost = request?.server?.info?.host
+  if (hapiHost && hapiHost !== '0.0.0.0') {
+    return hapiHost
+  }
+  for (const iface of Object.values(networkInterfaces())) {
+    for (const addr of iface) {
+      if (!addr.internal && addr.family === 'IPv4') {
+        return addr.address
+      }
+    }
+  }
+  return ''
+}
 
 /**
  * Audit event types.
@@ -42,14 +59,21 @@ const eventEntities = {
  * @param {AuditEvent} event
  * @param {{ correlationId?: string, contractNumber?: string, invoiceNumber?: string, sbi?: number, frn?: number, crn?: string, agreementNumber?: string }} context
  * @param {'success'|'failure'} status
+ * @param {import('@hapi/hapi').Request|null} request
  */
-const buildAuditPayload = (event, context = {}, status = 'success') => ({
+const buildAuditPayload = (
+  event,
+  context = {},
+  status = 'success',
+  request = null
+) => ({
   correlationid: context.correlationId,
   datetime: new Date().toISOString(),
   environment: config.get('cdpEnvironment'),
   version: '0.1.0',
   application: 'Grants',
   component: config.get('serviceName'),
+  ip: getLocalIp(request),
 
   security: {
     pmccode: eventPmcCodes[event],
@@ -67,9 +91,9 @@ const buildAuditPayload = (event, context = {}, status = 'success') => ({
     status,
     details: context,
     accounts: {
-      sbi: context.sbi,
-      frn: context.frn,
-      crn: context.crn
+      sbi: context.identifiers?.sbi,
+      frn: context.identifiers?.frn,
+      crn: context.identifiers?.crn
     }
   }
 })
@@ -79,8 +103,14 @@ const buildAuditPayload = (event, context = {}, status = 'success') => ({
  * @param {AuditEvent} event
  * @param {{ correlationId?: string, contractNumber?: string, invoiceNumber?: string, sbi?: number, frn?: number, crn?: string, agreementNumber?: string }} context
  * @param {'success'|'failure'} [status]
+ * @param {import('@hapi/hapi').Request|null} [request]
  */
-export const auditEvent = async (event, context = {}, status = 'success') => {
+export const auditEvent = async (
+  event,
+  context = {},
+  status = 'success',
+  request = null
+) => {
   const client = new SNSClient({
     region: config.get('aws.region'),
     endpoint: config.get('sns.endpoint')
@@ -89,7 +119,9 @@ export const auditEvent = async (event, context = {}, status = 'success') => {
   await client.send(
     new PublishCommand({
       TopicArn: config.get('sns.auditTopicArn'),
-      Message: JSON.stringify(buildAuditPayload(event, context, status))
+      Message: JSON.stringify(
+        buildAuditPayload(event, context, status, request)
+      )
     })
   )
 }
