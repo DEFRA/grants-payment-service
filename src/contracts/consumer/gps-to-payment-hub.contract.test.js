@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { vi, expect } from 'vitest'
 
 import crypto from 'node:crypto'
 
@@ -28,7 +28,6 @@ describe('cron job schedule sending a POST request to payment hub', () => {
 
   beforeAll(async () => {
     global.fetchMock.disableMocks()
-    vi.useFakeTimers()
 
     const mongoOverrides = buildIsolatedMongoOptions('payment-hub-contract')
 
@@ -36,9 +35,6 @@ describe('cron job schedule sending a POST request to payment hub', () => {
     config.set('port', crypto.randomInt(30001, 65535))
     config.set('mongoUri', mongoOverrides.mongoUrl)
     config.set('featureFlags.isPaymentHubEnabled', true)
-
-    const date = new Date(2026, 5, 5, 2, 9)
-    vi.setSystemTime(date)
 
     // Create and start the server
     server = await createServer({
@@ -55,7 +51,6 @@ describe('cron job schedule sending a POST request to payment hub', () => {
     }
     config.set('featureFlags.isPaymentHubEnabled', false)
 
-    vi.useRealTimers()
     global.fetchMock.enableMocks()
   })
 
@@ -112,10 +107,22 @@ describe('cron job schedule sending a POST request to payment hub', () => {
         config.set('paymentHub.key', 'test-key')
         config.set('paymentHub.keyName', 'test-key-name')
 
-        const expectedTime = new Date(2026, 5, 5, 2, 9).toISOString()
-        expect(new Date().toISOString()).toBe(expectedTime)
+        // Use the date that matches the seeded payment data (2026-06-05)
+        const actual = await processDailyPayments(server, null, '2026-06-05')
 
-        await processDailyPayments(server)
+        expect(actual).toEqual(
+          expect.objectContaining({
+            results: expect.arrayContaining([
+              expect.objectContaining({
+                docId: expect.any(Object),
+                paymentId: expect.any(Object)
+              })
+            ]),
+            fetchDuration: expect.any(String),
+            processDuration: expect.any(String),
+            sendDuration: expect.any(String)
+          })
+        )
       })
   })
 })
