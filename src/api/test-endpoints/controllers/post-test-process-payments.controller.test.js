@@ -121,4 +121,115 @@ describe('postTestProcessPaymentsController', () => {
       error: serializeError(error)
     })
   })
+
+  it('handles background tasks with payment hub responses', async () => {
+    const fakeDate = '2026-02-20'
+    const fakeResults = [{ _id: 'payment1' }]
+    const fakeResponse = { paymentHubId: 'hub-123', status: 'sent' }
+    const resolvedTask = Promise.resolve(fakeResponse)
+
+    processDailyPayments.mockResolvedValueOnce({
+      results: fakeResults,
+      backgroundTasks: [resolvedTask],
+      fetchDuration: '10.00',
+      processDuration: '20.00',
+      sendDuration: '5.00'
+    })
+
+    processDailyPayments.mockResolvedValueOnce({
+      results: [{ _id: 'payment2' }],
+      fetchDuration: '5.00',
+      processDuration: '10.00',
+      sendDuration: '2.00'
+    })
+
+    const h = makeH()
+    const logger = { info: vi.fn(), error: vi.fn() }
+    const req = {
+      params: { date: fakeDate },
+      server: { logger: { info: vi.fn() } },
+      logger
+    }
+
+    const response = await postTestProcessPaymentsController.handler(req, h)
+
+    expect(response.statusCode).toBe(statusCodes.ok)
+    expect(response.source.result).toEqual([
+      { ...fakeResponse, db: fakeResults[0] }
+    ])
+
+    // Wait for background processDailyPayments promise to resolve
+    await new Promise((resolve) => setTimeout(resolve, 10))
+
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining('Processed 2 daily payment(s)')
+    )
+  })
+
+  it('filters out null/undefined background tasks', async () => {
+    const fakeResults = [{ _id: 'payment1' }]
+    const fakeResponse = { paymentHubId: 'hub-123' }
+
+    processDailyPayments.mockResolvedValueOnce({
+      results: fakeResults,
+      backgroundTasks: [null, Promise.resolve(fakeResponse), undefined],
+      fetchDuration: '10.00',
+      processDuration: '20.00',
+      sendDuration: '5.00'
+    })
+
+    processDailyPayments.mockResolvedValueOnce({
+      results: [],
+      fetchDuration: '0.00',
+      processDuration: '0.00',
+      sendDuration: '0.00'
+    })
+
+    const h = makeH()
+    const logger = { info: vi.fn(), error: vi.fn() }
+    const req = {
+      params: {},
+      server: { logger: { info: vi.fn() } },
+      logger
+    }
+
+    const response = await postTestProcessPaymentsController.handler(req, h)
+
+    expect(response.statusCode).toBe(statusCodes.ok)
+    expect(response.source.result).toEqual([
+      { ...fakeResponse, db: fakeResults[0] }
+    ])
+  })
+
+  it('handles undefined backgroundTasks with fallback to empty array', async () => {
+    const fakeResults = [{ _id: 'payment1' }]
+
+    processDailyPayments.mockResolvedValueOnce({
+      results: fakeResults,
+      backgroundTasks: undefined,
+      fetchDuration: '10.00',
+      processDuration: '20.00',
+      sendDuration: '5.00'
+    })
+
+    processDailyPayments.mockResolvedValueOnce({
+      results: [],
+      fetchDuration: '0.00',
+      processDuration: '0.00',
+      sendDuration: '0.00'
+    })
+
+    const h = makeH()
+    const logger = { info: vi.fn(), error: vi.fn() }
+    const req = {
+      params: { date: '2026-02-20' },
+      server: { logger: { info: vi.fn() } },
+      logger
+    }
+
+    const response = await postTestProcessPaymentsController.handler(req, h)
+
+    expect(response.statusCode).toBe(statusCodes.ok)
+    expect(response.source.result).toEqual([{ db: fakeResults[0] }])
+  })
 })
