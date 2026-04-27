@@ -143,7 +143,13 @@ export const processDailyPayments = async (
     await Promise.all(backgroundTasks.filter(Boolean))
     const sendDuration = (performance.now() - sendStart).toFixed(2)
 
-    return { results, fetchDuration, processDuration, sendDuration }
+    return {
+      results,
+      backgroundTasks,
+      fetchDuration,
+      processDuration,
+      sendDuration
+    }
   } catch (err) {
     logger.error(
       err,
