@@ -2,11 +2,18 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { handleCreatePaymentEvent } from './handle-create-payment.js'
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
+import { transformFpttPaymentDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/fptt-data-transformer.js'
 import sampleData from '#~/api/common/helpers/sample-data/index.js'
 
 vi.mock('#~/common/helpers/create-grant-payment.js', () => {
   return {
     createGrantPayment: vi.fn()
+  }
+})
+
+vi.mock('#~/common/helpers/payment-hub/fptt-data-transformer.js', () => {
+  return {
+    transformFpttPaymentDataToPaymentHubFormat: vi.fn()
   }
 })
 
@@ -37,6 +44,41 @@ describe('handleCreatePaymentEvent', () => {
     )
     expect(logger.info).toHaveBeenCalledWith(
       `Managed to successfully create grantPayment entry ${JSON.stringify(validPayload)}`
+    )
+  })
+
+  it('logs dry-run payment hub data for each payment', async () => {
+    const logger = { info: vi.fn() }
+    const grantPayment = {
+      sbi: '106284736',
+      frn: '12544567',
+      claimId: 'R00000004',
+      grants: [
+        {
+          sourceSystem: 'FPTT',
+          payments: [
+            { _id: 'payment-123', dueDate: '2026-06-05', invoiceLines: [] }
+          ]
+        }
+      ]
+    }
+    const paymentHubData = {
+      sourceSystem: 'FPTT',
+      frn: '12544567',
+      sbi: '106284736'
+    }
+    createGrantPayment.mockResolvedValue(grantPayment)
+    transformFpttPaymentDataToPaymentHubFormat.mockReturnValue(paymentHubData)
+
+    await handleCreatePaymentEvent('msg-1', validPayload, logger)
+
+    expect(transformFpttPaymentDataToPaymentHubFormat).toHaveBeenCalledWith(
+      { sbi: '106284736', frn: '12544567', claimId: 'R00000004' },
+      grantPayment.grants[0],
+      grantPayment.grants[0].payments[0]
+    )
+    expect(logger.info).toHaveBeenCalledWith(
+      `Dry run: Payment payment-123 due date 2026-06-05 Payment Hub data: ${JSON.stringify(paymentHubData, null, 2)}`
     )
   })
 
