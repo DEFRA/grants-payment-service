@@ -82,6 +82,36 @@ describe('handleCreatePaymentEvent', () => {
     )
   })
 
+  it('handles grant payment with no grants array', async () => {
+    const logger = { info: vi.fn() }
+    const grantPayment = {
+      sbi: '106284736',
+      frn: '12544567',
+      claimId: 'R00000004',
+      grants: null
+    }
+    createGrantPayment.mockResolvedValue(grantPayment)
+
+    await handleCreatePaymentEvent('msg-1', validPayload, logger)
+
+    expect(transformFpttPaymentDataToPaymentHubFormat).not.toHaveBeenCalled()
+  })
+
+  it('handles grants with no payments array', async () => {
+    const logger = { info: vi.fn() }
+    const grantPayment = {
+      sbi: '106284736',
+      frn: '12544567',
+      claimId: 'R00000004',
+      grants: [{ sourceSystem: 'FPTT', payments: null }]
+    }
+    createGrantPayment.mockResolvedValue(grantPayment)
+
+    await handleCreatePaymentEvent('msg-1', validPayload, logger)
+
+    expect(transformFpttPaymentDataToPaymentHubFormat).not.toHaveBeenCalled()
+  })
+
   it('logs an error if createGrantPayment fails', async () => {
     const logger = { info: vi.fn(), error: vi.fn() }
     const error = new Error('Create failed')
