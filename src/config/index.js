@@ -194,7 +194,7 @@ const config = convict({
     testEndpoints: {
       doc: 'Enable test endpoints',
       format: 'Boolean',
-      default: true,
+      default: false,
       env: 'ENABLE_TEST_ENDPOINTS'
     },
     isPaymentHubEnabled: {
