@@ -202,12 +202,6 @@ const config = convict({
       format: 'Boolean',
       default: false,
       env: 'ENABLE_PAYMENT_HUB'
-    },
-    clearDbOnStartup: {
-      doc: 'Clear all grant payments data on server startup',
-      format: 'Boolean',
-      default: false,
-      env: 'CLEAR_DB_ON_STARTUP'
     }
   },
   paginationLimit: {
