@@ -9,7 +9,7 @@ import {
   updatePaymentStatus,
   markAllStaleLockedPaymentsAsFailed
 } from '#~/common/helpers/update-payment-status.js'
-import { getTodaysDate } from './date.js'
+import { getTomorrowsDate } from './date.js'
 
 vi.mock('#~/common/helpers/fetch-grants-by-date.js', () => ({
   fetchGrantPaymentsByDate: vi.fn(),
@@ -232,14 +232,14 @@ describe('processDailyPayments', () => {
     )
   })
 
-  it('defaults to today if no date supplied', async () => {
-    const today = getTodaysDate()
+  it('defaults to tomorrow if no date supplied', async () => {
+    const tomorrow = getTomorrowsDate()
     streamGrantPaymentsByDate.mockReturnValue(mockCursor([]))
 
     const result = await processDailyPayments(server, undefined)
 
     expect(streamGrantPaymentsByDate).toHaveBeenCalledWith(
-      today,
+      tomorrow,
       'pending',
       undefined
     )
