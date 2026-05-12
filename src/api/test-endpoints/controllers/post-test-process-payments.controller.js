@@ -1,7 +1,7 @@
 import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { processDailyPayments } from '#~/common/helpers/payment-processor.js'
-import { getTodaysDate } from '#~/common/helpers/date.js'
+import { getTomorrowsDate } from '#~/common/helpers/date.js'
 import { config } from '#~/config/index.js'
 
 /**
@@ -53,7 +53,7 @@ const postTestProcessPaymentsController = {
 
       return h
         .response({
-          message: `Triggered daily payment processing for ${date || getTodaysDate()}, showing first ${paginationLimit} payments with full details, check logs for more details`,
+          message: `Triggered daily payment processing for ${date || getTomorrowsDate()}, showing first ${paginationLimit} payments with full details, check logs for more details`,
           result: paymentsWithResponses
         })
         .code(statusCodes.ok)

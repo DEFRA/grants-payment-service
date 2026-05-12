@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { getTestDailyPaymentsController } from './get-test-daily-payments.controller.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
-import { getTodaysDate } from '#~/common/helpers/date.js'
+import { getTomorrowsDate } from '#~/common/helpers/date.js'
 import { serializeError } from '#~/common/helpers/serialize-error.js'
 
 vi.mock('#~/common/helpers/fetch-grants-by-date.js', () => ({
@@ -52,8 +52,8 @@ describe('getTestDailyPaymentsController', () => {
     })
   })
 
-  it('defaults to today when no date supplied', async () => {
-    const today = getTodaysDate()
+  it('defaults to tomorrow when no date supplied', async () => {
+    const tomorrow = getTomorrowsDate()
     const fakeDocs = []
     const pagination = { page: 1, total: 1 }
     fetchGrantPaymentsByDate.mockResolvedValue({
@@ -68,8 +68,12 @@ describe('getTestDailyPaymentsController', () => {
       h
     )
 
-    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(today, null, 10, 1)
-    expect(result.source).toEqual({ date: today, docs: fakeDocs, pagination })
+    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(tomorrow, null, 10, 1)
+    expect(result.source).toEqual({
+      date: tomorrow,
+      docs: fakeDocs,
+      pagination
+    })
   })
 
   it('handles non-boom errors and returns 500', async () => {

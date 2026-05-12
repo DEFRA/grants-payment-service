@@ -133,7 +133,7 @@ const config = convict({
     timezone: {
       doc: 'Timezone for cron jobs',
       format: String,
-      default: 'Europe/London',
+      default: 'UTC',
       env: 'CRON_TIMEZONE'
     },
     dailyPaymentSchedule: {
