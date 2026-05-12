@@ -37,12 +37,12 @@ describe('cron plugin', () => {
     )
     expect(Cron).toHaveBeenCalledWith(
       '10 0 * * *',
-      { timezone: 'Europe/London' },
+      { timezone: 'UTC' },
       expect.any(Function)
     )
     expect(Cron).toHaveBeenCalledWith(
       '20 0 * * *',
-      { timezone: 'Europe/London' },
+      { timezone: 'UTC' },
       expect.any(Function)
     )
   })

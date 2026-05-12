@@ -1,6 +1,6 @@
 import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
-import { getTodaysDate } from '#~/common/helpers/date.js'
+import { getTomorrowsDate } from '#~/common/helpers/date.js'
 import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
 import { config } from '#~/config/index.js'
 
@@ -11,7 +11,7 @@ import { config } from '#~/config/index.js'
 const getTestDailyPaymentsController = {
   handler: async (request, h) => {
     try {
-      const { date = getTodaysDate() } = request.params
+      const { date = getTomorrowsDate() } = request.params
       const page = Number.parseInt(request.query?.page) || 1
       const { docs, pagination } = await fetchGrantPaymentsByDate(
         date,

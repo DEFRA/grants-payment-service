@@ -1,6 +1,6 @@
 import { performance } from 'node:perf_hooks'
 import { config } from '#~/config/index.js'
-import { getTodaysDate } from '#~/common/helpers/date.js'
+import { getTomorrowsDate } from '#~/common/helpers/date.js'
 import { streamGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
 import {
@@ -111,7 +111,7 @@ const processAccountPayments = async (server, account, backgroundTasks) => {
 export const processDailyPayments = async (
   server,
   limit,
-  date = getTodaysDate()
+  date = getTomorrowsDate()
 ) => {
   const { logger } = server
   const logLimitedTo = limit ? ` (limited to ${limit} payments)` : ''
