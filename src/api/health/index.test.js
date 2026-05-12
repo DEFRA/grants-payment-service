@@ -58,8 +58,7 @@ describe('#healthController', () => {
         version: 'versionMock',
         featureFlags: {
           testEndpoints: true,
-          isPaymentHubEnabled: false,
-          clearDbOnStartup: false
+          isPaymentHubEnabled: false
         }
       })
       expect(statusCode).toBe(statusCodes.ok)
@@ -118,8 +117,7 @@ describe('#healthController', () => {
         version: 'dev',
         featureFlags: {
           testEndpoints: true,
-          isPaymentHubEnabled: false,
-          clearDbOnStartup: false
+          isPaymentHubEnabled: false
         }
       })
       expect(response.statusCode).toBe(statusCodes.ok)
