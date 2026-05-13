@@ -9,7 +9,7 @@ import {
   updatePaymentStatus,
   markAllStaleLockedPaymentsAsFailed
 } from '#~/common/helpers/update-payment-status.js'
-import { getTomorrowsDate } from './date.js'
+import { getTomorrowsDate, getPreviousDay } from './date.js'
 
 vi.mock('#~/common/helpers/fetch-grants-by-date.js', () => ({
   fetchGrantPaymentsByDate: vi.fn(),
@@ -135,7 +135,7 @@ describe('processDailyPayments', () => {
       undefined
     )
     expect(logger.info).toHaveBeenCalledWith(
-      `Processing payments for date: ${fakeDate}`
+      `Processing payments for dates: ${getPreviousDay(fakeDate)} - ${fakeDate}`
     )
 
     expect(sendPaymentHubRequest).toHaveBeenCalledTimes(2)
@@ -282,7 +282,7 @@ describe('processDailyPayments', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       error,
-      `Failed to process payments for date ${fakeDate}`
+      `Failed to process payments for dates: ${getPreviousDay(fakeDate)} - ${fakeDate}`
     )
   })
 
@@ -400,7 +400,7 @@ describe('processDailyPayments', () => {
     )
 
     expect(logger.info).toHaveBeenCalledWith(
-      `Processing payments for date: ${fakeDate} (limited to ${limit} payments)`
+      `Processing payments for dates: ${getPreviousDay(fakeDate)} - ${fakeDate} (limited to ${limit} payments)`
     )
   })
 })

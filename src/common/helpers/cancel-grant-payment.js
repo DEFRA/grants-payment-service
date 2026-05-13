@@ -1,7 +1,8 @@
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
+import { getTodaysDate } from '#~/common/helpers/date.js'
 
 export const cancelGrantPayments = async (sbi, frn) => {
-  const today = new Date().toISOString().split('T')[0]
+  const today = getTodaysDate()
 
   const grantPayments = await GrantPaymentsModel.find({ sbi, frn })
 

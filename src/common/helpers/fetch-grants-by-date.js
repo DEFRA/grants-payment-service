@@ -1,9 +1,11 @@
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
+import { getPreviousDay } from './date.js'
 import { wrapWithPagination } from './pagination.js'
 
 const buildGrantPaymentsAggregationPipeline = (date, status, limit, page) => {
-  const paymentMatch = { dueDate: date }
-  const filters = [{ $eq: ['$$p.dueDate', date] }]
+  const previousDay = getPreviousDay(date)
+  const paymentMatch = { dueDate: { $in: [date, previousDay] } }
+  const filters = [{ $in: ['$$p.dueDate', [date, previousDay]] }]
 
   if (status) {
     paymentMatch.status = status

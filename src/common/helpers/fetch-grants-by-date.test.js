@@ -24,12 +24,13 @@ describe('fetchGrantPaymentsByDate', () => {
 
   it('builds a simple pipeline when only date is provided', async () => {
     const result = await fetchGrantPaymentsByDate(date)
+    const previousDay = '2026-02-19'
 
     const expectedMatch = {
       grants: {
         $elemMatch: {
           payments: {
-            $elemMatch: { dueDate: date }
+            $elemMatch: { dueDate: { $in: [date, previousDay] } }
           }
         }
       }
@@ -54,7 +55,9 @@ describe('fetchGrantPaymentsByDate', () => {
                       $filter: {
                         input: '$$g.payments',
                         as: 'p',
-                        cond: { $and: [{ $eq: ['$$p.dueDate', date] }] }
+                        cond: {
+                          $and: [{ $in: ['$$p.dueDate', [date, previousDay]] }]
+                        }
                       }
                     }
                   }
@@ -86,12 +89,16 @@ describe('fetchGrantPaymentsByDate', () => {
 
   it('includes status in the pipeline when provided', async () => {
     const result = await fetchGrantPaymentsByDate(date, 'pending')
+    const previousDay = '2026-02-19'
 
     const expectedMatch = {
       grants: {
         $elemMatch: {
           payments: {
-            $elemMatch: { dueDate: date, status: 'pending' }
+            $elemMatch: {
+              dueDate: { $in: [date, previousDay] },
+              status: 'pending'
+            }
           }
         }
       }
@@ -118,7 +125,7 @@ describe('fetchGrantPaymentsByDate', () => {
                         as: 'p',
                         cond: {
                           $and: [
-                            { $eq: ['$$p.dueDate', date] },
+                            { $in: ['$$p.dueDate', [date, previousDay]] },
                             { $eq: ['$$p.status', 'pending'] }
                           ]
                         }

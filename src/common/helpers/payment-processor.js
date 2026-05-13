@@ -1,6 +1,6 @@
 import { performance } from 'node:perf_hooks'
 import { config } from '#~/config/index.js'
-import { getTomorrowsDate } from '#~/common/helpers/date.js'
+import { getTomorrowsDate, getPreviousDay } from '#~/common/helpers/date.js'
 import { streamGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
 import {
@@ -114,8 +114,11 @@ export const processDailyPayments = async (
   date = getTomorrowsDate()
 ) => {
   const { logger } = server
+  const previousDay = getPreviousDay(date)
   const logLimitedTo = limit ? ` (limited to ${limit} payments)` : ''
-  logger.info(`Processing payments for date: ${date}${logLimitedTo}`)
+  logger.info(
+    `Processing payments for dates: ${previousDay} - ${date}${logLimitedTo}`
+  )
 
   try {
     const fetchStart = performance.now()
@@ -153,7 +156,7 @@ export const processDailyPayments = async (
   } catch (err) {
     logger.error(
       err,
-      `Failed to process payments for date ${date}${logLimitedTo}`
+      `Failed to process payments for dates: ${previousDay} - ${date}${logLimitedTo}`
     )
     throw err
   }
