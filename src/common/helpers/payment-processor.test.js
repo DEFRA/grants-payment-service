@@ -9,7 +9,7 @@ import {
   updatePaymentStatus,
   markAllStaleLockedPaymentsAsFailed
 } from '#~/common/helpers/update-payment-status.js'
-import { getTomorrowsDate } from './date.js'
+import { getTodaysDate, getNextDay } from './date.js'
 
 vi.mock('#~/common/helpers/fetch-grants-by-date.js', () => ({
   fetchGrantPaymentsByDate: vi.fn(),
@@ -135,7 +135,7 @@ describe('processDailyPayments', () => {
       undefined
     )
     expect(logger.info).toHaveBeenCalledWith(
-      `Processing payments for date: ${fakeDate}`
+      `Processing payments for dates: ${fakeDate} - ${getNextDay(fakeDate)}`
     )
 
     expect(sendPaymentHubRequest).toHaveBeenCalledTimes(2)
@@ -232,14 +232,14 @@ describe('processDailyPayments', () => {
     )
   })
 
-  it('defaults to tomorrow if no date supplied', async () => {
-    const tomorrow = getTomorrowsDate()
+  it('defaults to today if no date supplied', async () => {
+    const today = getTodaysDate()
     streamGrantPaymentsByDate.mockReturnValue(mockCursor([]))
 
     const result = await processDailyPayments(server, undefined)
 
     expect(streamGrantPaymentsByDate).toHaveBeenCalledWith(
-      tomorrow,
+      today,
       'pending',
       undefined
     )
@@ -282,7 +282,7 @@ describe('processDailyPayments', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       error,
-      `Failed to process payments for date ${fakeDate}`
+      `Failed to process payments for dates: ${fakeDate} - ${getNextDay(fakeDate)}`
     )
   })
 
@@ -400,7 +400,7 @@ describe('processDailyPayments', () => {
     )
 
     expect(logger.info).toHaveBeenCalledWith(
-      `Processing payments for date: ${fakeDate} (limited to ${limit} payments)`
+      `Processing payments for dates: ${fakeDate} - ${getNextDay(fakeDate)} (limited to ${limit} payments)`
     )
   })
 })
