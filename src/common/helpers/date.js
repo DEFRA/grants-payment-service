@@ -4,8 +4,8 @@ const offsetDate = (days, date = new Date()) => {
   return d.toISOString().split('T')[0]
 }
 
-export const getPreviousDay = (date) => offsetDate(-1, date)
-
 export const getTodaysDate = () => offsetDate(0)
 
 export const getTomorrowsDate = () => offsetDate(1)
+
+export const getNextDay = (date) => offsetDate(1, date)

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { getTomorrowsDate, getTodaysDate, getPreviousDay } from './date.js'
+import { getTodaysDate, getTomorrowsDate, getNextDay } from './date.js'
 
 describe('date helpers', () => {
   beforeEach(() => {
@@ -8,6 +8,15 @@ describe('date helpers', () => {
 
   afterEach(() => {
     vi.useRealTimers()
+  })
+
+  describe('getTodaysDate', () => {
+    it('returns the date portion of today in YYYY-MM-DD format', () => {
+      const fakeNow = new Date('2026-02-20T12:00:00.000Z')
+      vi.setSystemTime(fakeNow)
+
+      expect(getTodaysDate()).toBe('2026-02-20')
+    })
   })
 
   describe('getTomorrowsDate', () => {
@@ -47,26 +56,17 @@ describe('date helpers', () => {
     })
   })
 
-  describe('getTodaysDate', () => {
-    it('returns the date portion of today in YYYY-MM-DD format', () => {
-      const fakeNow = new Date('2026-02-20T12:00:00.000Z')
-      vi.setSystemTime(fakeNow)
-
-      expect(getTodaysDate()).toBe('2026-02-20')
-    })
-  })
-
-  describe('getPreviousDay', () => {
-    it('returns the previous day of a given date', () => {
-      expect(getPreviousDay('2026-02-20')).toBe('2026-02-19')
+  describe('getNextDay', () => {
+    it('returns the next day of a given date', () => {
+      expect(getNextDay('2026-02-20')).toBe('2026-02-21')
     })
 
     it('handles month transitions correctly', () => {
-      expect(getPreviousDay('2025-02-01')).toBe('2025-01-31')
+      expect(getNextDay('2025-01-31')).toBe('2025-02-01')
     })
 
     it('handles year transition correctly', () => {
-      expect(getPreviousDay('2026-01-01')).toBe('2025-12-31')
+      expect(getNextDay('2025-12-31')).toBe('2026-01-01')
     })
   })
 })
