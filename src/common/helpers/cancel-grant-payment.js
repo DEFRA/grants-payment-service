@@ -12,7 +12,10 @@ export const cancelGrantPayments = async (sbi, frn) => {
     let hasChanges = false
     grantPayment.grants.forEach((grant) => {
       grant.payments.forEach((payment) => {
-        if (payment.status === 'pending' && payment.dueDate >= today) {
+        if (
+          payment.status === 'pending' &&
+          new Date(payment.dueDate) >= new Date(today)
+        ) {
           payment.status = 'cancelled'
           hasChanges = true
         }
