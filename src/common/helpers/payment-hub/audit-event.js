@@ -128,6 +128,6 @@ export const auditEvent = async (
     )
   } catch (error) {
     const logger = getLogger()
-    logger.warn('Failed to send audit event:', error)
+    logger.warn(error, 'Failed to publish audit event')
   }
 }
