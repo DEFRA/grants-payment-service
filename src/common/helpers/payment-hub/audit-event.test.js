@@ -287,3 +287,73 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
     expect(() => JSON.parse(publishCommandInstance.input.Message)).not.toThrow()
   })
 })
+
+describe('auditEvent error handling', () => {
+  let auditEvent
+  let AuditEvent
+  let mockSend
+  let mockLogger
+
+  beforeEach(async () => {
+    vi.resetModules()
+    mockSend = vi.fn()
+    mockLogger = { warn: vi.fn() }
+    mockNetworkInterfaces.mockReturnValue({
+      eth0: [{ address: '192.168.1.100', family: 'IPv4', internal: false }]
+    })
+
+    const mockGetLogger = vi.fn(() => mockLogger)
+
+    vi.doMock('@aws-sdk/client-sns', () => ({
+      SNSClient: vi.fn().mockImplementation(function () {
+        this.send = mockSend
+      }),
+      PublishCommand: vi.fn().mockImplementation(function (input) {
+        this.input = input
+      })
+    }))
+
+    vi.doMock('#~/common/helpers/logging/logger.js', () => ({
+      getLogger: mockGetLogger
+    }))
+    ;({ auditEvent, AuditEvent } = await import('./audit-event.js'))
+  })
+
+  afterEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
+  test('logs warning when SNS publish fails', async () => {
+    const testError = new Error('SNS publish failed')
+    mockSend.mockRejectedValue(testError)
+
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      testError,
+      'Failed to publish audit event'
+    )
+  })
+
+  test('does not throw when SNS publish fails', async () => {
+    mockSend.mockRejectedValue(new Error('SNS publish failed'))
+
+    await expect(
+      auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
+    ).resolves.not.toThrow()
+  })
+
+  test('handles AWS SDK errors gracefully', async () => {
+    const awsError = new Error('AccessDenied')
+    awsError.code = 'AccessDenied'
+    mockSend.mockRejectedValue(awsError)
+
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      awsError,
+      'Failed to publish audit event'
+    )
+  })
+})
