@@ -1,10 +1,17 @@
 import neostandard from 'neostandard'
+import importX from 'eslint-plugin-import-x'
 
 const config = neostandard({
   env: ['node', 'vitest'],
   ignores: [...neostandard.resolveIgnoresFromGitignore()],
   noJsx: true,
   noStyle: true
+})
+
+config.push({
+  plugins: {
+    'import-x': importX
+  }
 })
 
 config.push({
