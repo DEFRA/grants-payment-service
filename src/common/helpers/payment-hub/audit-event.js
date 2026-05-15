@@ -2,6 +2,7 @@ import { networkInterfaces } from 'node:os'
 
 import { PublishCommand, SNSClient } from '@aws-sdk/client-sns'
 import { config } from '#~/config/index.js'
+import { getLogger } from '#~/common/helpers/logging/logger.js'
 
 const getLocalIp = (request) => {
   const hapiHost = request?.server?.info?.host
@@ -111,17 +112,22 @@ export const auditEvent = async (
   status = 'success',
   request = null
 ) => {
-  const client = new SNSClient({
-    region: config.get('aws.region'),
-    endpoint: config.get('sns.endpoint')
-  })
-
-  await client.send(
-    new PublishCommand({
-      TopicArn: config.get('sns.auditTopicArn'),
-      Message: JSON.stringify(
-        buildAuditPayload(event, context, status, request)
-      )
+  try {
+    const client = new SNSClient({
+      region: config.get('aws.region'),
+      endpoint: config.get('sns.endpoint')
     })
-  )
+
+    await client.send(
+      new PublishCommand({
+        TopicArn: config.get('sns.auditTopicArn'),
+        Message: JSON.stringify(
+          buildAuditPayload(event, context, status, request)
+        )
+      })
+    )
+  } catch (error) {
+    const logger = getLogger()
+    logger.warn('Failed to send audit event:', error)
+  }
 }
