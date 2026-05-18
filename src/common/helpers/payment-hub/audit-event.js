@@ -112,6 +112,7 @@ export const auditEvent = async (
   status = 'success',
   request = null
 ) => {
+  const logger = getLogger()
   try {
     const client = new SNSClient({
       region: config.get('aws.region'),
@@ -126,8 +127,8 @@ export const auditEvent = async (
         )
       })
     )
+    logger.info('Audit event successfully published')
   } catch (error) {
-    const logger = getLogger()
     logger.warn(error, 'Failed to publish audit event')
   }
 }
