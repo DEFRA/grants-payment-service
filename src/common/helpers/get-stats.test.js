@@ -30,11 +30,19 @@ describe('getStats', () => {
     vi.clearAllMocks()
   })
 
-  const setupMocks = (accounts, grantStats, paymentStats) => {
+  const setupMocks = (
+    accounts,
+    grantStats,
+    paymentStats,
+    pendingOverdue = [{ count: 0 }],
+    withoutDueDate = [{ count: 0 }]
+  ) => {
     mockGrantPayments.countDocuments.mockResolvedValue(accounts)
     mockGrantPayments.aggregate
       .mockResolvedValueOnce(grantStats)
       .mockResolvedValueOnce(paymentStats)
+      .mockResolvedValueOnce(pendingOverdue)
+      .mockResolvedValueOnce(withoutDueDate)
   }
 
   test('Should provide expected stats', async () => {
@@ -45,7 +53,9 @@ describe('getStats', () => {
         { _id: 'pending', count: MOCK_PENDING_COUNT },
         { _id: 'submitted', count: MOCK_SUBMITTED_COUNT },
         { _id: 'cancelled', count: MOCK_CANCELLED_COUNT }
-      ]
+      ],
+      [{ count: 0 }],
+      [{ count: 1 }]
     )
 
     const result = await getStats()
@@ -55,7 +65,11 @@ describe('getStats', () => {
       grants: MOCK_GRANT_COUNT,
       payments: {
         total: MOCK_PENDING_COUNT + MOCK_SUBMITTED_COUNT + MOCK_CANCELLED_COUNT,
-        pending: MOCK_PENDING_COUNT,
+        pending: {
+          total: MOCK_PENDING_COUNT,
+          overdue: 0,
+          withoutDueDate: 1
+        },
         submitted: MOCK_SUBMITTED_COUNT,
         cancelled: MOCK_CANCELLED_COUNT,
         locked: 0,
@@ -68,7 +82,9 @@ describe('getStats', () => {
     setupMocks(
       MOCK_EMPTY_ACCOUNT_COUNT,
       [],
-      [{ _id: 'pending', count: MOCK_SINGLE_PAYMENT_COUNT }]
+      [{ _id: 'pending', count: MOCK_SINGLE_PAYMENT_COUNT }],
+      [{ count: 0 }],
+      [{ count: 1 }]
     )
 
     const result = await getStats()
@@ -78,7 +94,11 @@ describe('getStats', () => {
       grants: 0,
       payments: {
         total: MOCK_SINGLE_PAYMENT_COUNT,
-        pending: MOCK_SINGLE_PAYMENT_COUNT,
+        pending: {
+          total: MOCK_SINGLE_PAYMENT_COUNT,
+          overdue: 0,
+          withoutDueDate: 1
+        },
         submitted: 0,
         cancelled: 0,
         locked: 0,
@@ -91,7 +111,9 @@ describe('getStats', () => {
     setupMocks(
       MOCK_EMPTY_GRANT_COUNT,
       [{ _id: null, count: MOCK_EMPTY_GRANT_STATS_COUNT }],
-      []
+      [],
+      [{ count: 0 }],
+      [{ count: 0 }]
     )
 
     const result = await getStats()
@@ -101,7 +123,7 @@ describe('getStats', () => {
       grants: 7,
       payments: {
         total: 0,
-        pending: 0,
+        pending: { total: 0, overdue: 0, withoutDueDate: 0 },
         submitted: 0,
         cancelled: 0,
         locked: 0,
