@@ -155,6 +155,14 @@ const config = convict({
       env: 'CRON_STATS_SCHEDULE'
     }
   },
+  dataMigration: {
+    dueDate: {
+      doc: 'Due date string used by data migration (YYYY-MM-DD)',
+      format: String,
+      default: '2026-05-15',
+      env: 'DATA_MIGRATION_DUE_DATE'
+    }
+  },
   paymentProcessor: {
     minBatchSize: {
       doc: 'Minimum number of payments to process in a single batch',
