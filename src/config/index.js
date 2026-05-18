@@ -147,6 +147,12 @@ const config = convict({
       format: String,
       default: '20 0 * * *',
       env: 'CRON_STALE_LOCKED_PAYMENT_CLEANUP_SCHEDULE'
+    },
+    statsSchedule: {
+      doc: 'Cron time/schedule for outputting stats',
+      format: String,
+      default: '0 7 * * *',
+      env: 'CRON_STATS_SCHEDULE'
     }
   },
   paymentProcessor: {
