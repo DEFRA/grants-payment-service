@@ -37,7 +37,7 @@ const cron = {
           options,
           async () => {
             const stats = await getStats()
-            server.logger.info(stats, 'Stats')
+            server.logger.info(`Stats: ${JSON.stringify(stats, null, 2)}`)
           }
         )
       }
