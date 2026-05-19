@@ -147,6 +147,20 @@ const config = convict({
       format: String,
       default: '20 0 * * *',
       env: 'CRON_STALE_LOCKED_PAYMENT_CLEANUP_SCHEDULE'
+    },
+    statsSchedule: {
+      doc: 'Cron time/schedule for outputting stats',
+      format: String,
+      default: '0 7 * * *',
+      env: 'CRON_STATS_SCHEDULE'
+    }
+  },
+  dataMigration: {
+    dueDate: {
+      doc: 'Due date string used by data migration (YYYY-MM-DD)',
+      format: String,
+      default: '2026-05-15',
+      env: 'DATA_MIGRATION_DUE_DATE'
     }
   },
   paymentProcessor: {

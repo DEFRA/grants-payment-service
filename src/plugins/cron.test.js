@@ -6,6 +6,7 @@ import {
   processDailyPayments,
   processStaleLockedPayments
 } from '#~/common/helpers/payment-processor.js'
+import { getStats } from '#~/common/helpers/get-stats.js'
 import { cron } from './cron.js'
 
 vi.mock('croner', () => ({
@@ -15,6 +16,10 @@ vi.mock('croner', () => ({
 vi.mock('#~/common/helpers/payment-processor.js', () => ({
   processDailyPayments: vi.fn(),
   processStaleLockedPayments: vi.fn()
+}))
+
+vi.mock('#~/common/helpers/get-stats.js', () => ({
+  getStats: vi.fn().mockResolvedValue('test')
 }))
 
 describe('cron plugin', () => {
@@ -74,5 +79,16 @@ describe('cron plugin', () => {
     staleCleanupFn()
 
     expect(processStaleLockedPayments).toHaveBeenCalledWith(mockServer)
+  })
+
+  it('calls getStats when the stats callback runs', async () => {
+    cron.plugin.register(mockServer)
+
+    // capture the second callback
+    const statsFn = Cron.mock.calls[2][2]
+    await statsFn()
+
+    expect(getStats).toHaveBeenCalled()
+    expect(mockServer.logger.info).toHaveBeenCalledWith('test', 'Stats')
   })
 })
