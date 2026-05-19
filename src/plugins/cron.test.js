@@ -19,7 +19,7 @@ vi.mock('#~/common/helpers/payment-processor.js', () => ({
 }))
 
 vi.mock('#~/common/helpers/get-stats.js', () => ({
-  getStats: vi.fn().mockResolvedValue('test')
+  getStats: vi.fn().mockResolvedValue({ test: 'value' })
 }))
 
 describe('cron plugin', () => {
@@ -89,6 +89,8 @@ describe('cron plugin', () => {
     await statsFn()
 
     expect(getStats).toHaveBeenCalled()
-    expect(mockServer.logger.info).toHaveBeenCalledWith('test', 'Stats')
+    expect(mockServer.logger.info).toHaveBeenCalledWith(
+      `Stats: ${JSON.stringify({ test: 'value' }, null, 2)}`
+    )
   })
 })
