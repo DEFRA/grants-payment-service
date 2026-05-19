@@ -4,18 +4,15 @@ import { config } from '#~/config/index.js'
 
 vi.mock('mongoose', async () => await import('./__mocks__/mongoose.js'))
 
-vi.mock('#~/api/common/models/grant_payments.js', () => ({
-  default: {
-    countDocuments: vi.fn(),
-    aggregate: vi.fn()
-  }
+vi.mock('#~/common/helpers/get-stats.js', () => ({
+  getStats: vi.fn()
 }))
 
 describe('#healthController', () => {
   /** @type {Server} */
   let server
   let mongooseModule
-  let mockGrantPayments
+  let mockGetStats
 
   beforeAll(async () => {
     // import the mocked mongoose (manual mock default export)
@@ -33,8 +30,7 @@ describe('#healthController', () => {
     })
     await server.initialize()
 
-    mockGrantPayments = (await import('#~/api/common/models/grant_payments.js'))
-      .default
+    mockGetStats = (await import('#~/common/helpers/get-stats.js')).getStats
   })
 
   afterAll(async () => {
@@ -138,17 +134,18 @@ describe('#healthController', () => {
   })
   describe('GET /health/stats', () => {
     test('Should provide expected response', async () => {
-      mockGrantPayments.countDocuments.mockResolvedValue(10)
-
-      mockGrantPayments.aggregate.mockResolvedValueOnce([
-        { _id: null, count: 15 }
-      ])
-
-      mockGrantPayments.aggregate.mockResolvedValueOnce([
-        { _id: 'pending', count: 5 },
-        { _id: 'submitted', count: 3 },
-        { _id: 'cancelled', count: 2 }
-      ])
+      mockGetStats.mockResolvedValue({
+        accounts: 10,
+        grants: 15,
+        payments: {
+          total: 10,
+          pending: 5,
+          submitted: 3,
+          cancelled: 2,
+          locked: 0,
+          failed: 0
+        }
+      })
 
       const { result, statusCode } = await server.inject({
         method: 'GET',
@@ -173,7 +170,7 @@ describe('#healthController', () => {
     })
 
     test('Should handle database error', async () => {
-      mockGrantPayments.countDocuments.mockRejectedValue(new Error('DB error'))
+      mockGetStats.mockRejectedValue(new Error('DB error'))
 
       const { result, statusCode } = await server.inject({
         method: 'GET',

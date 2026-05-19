@@ -3,6 +3,7 @@ import {
   processDailyPayments,
   processStaleLockedPayments
 } from '#~/common/helpers/payment-processor.js'
+import { getStats } from '#~/common/helpers/get-stats.js'
 import { config } from '#~/config/index.js'
 
 const cron = {
@@ -30,6 +31,14 @@ const cron = {
           config.get('cron.staleLockedPaymentCleanupSchedule'),
           options,
           () => processStaleLockedPayments(server)
+        ),
+        statsSchedule: new Cron(
+          config.get('cron.statsSchedule'),
+          options,
+          async () => {
+            const stats = await getStats()
+            server.logger.info(stats, 'Stats')
+          }
         )
       }
     }
