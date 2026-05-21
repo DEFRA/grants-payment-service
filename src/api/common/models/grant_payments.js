@@ -64,6 +64,8 @@ const schema = new mongoose.Schema(
 schema.index({ _id: 1 })
 schema.index({ sbi: 1 })
 schema.index({ frn: 1 })
+schema.index({ 'grants.correlationId': 1 }, { unique: true })
+schema.index({ 'grants.payments.correlationId': 1 }, { unique: true })
 schema.index({ 'grants.payments.dueDate': 1 })
 schema.index({ 'grants.payments.status': 1 })
 schema.index({ 'grants.payments.invoiceLines.fundCode': 1 })
