@@ -16,7 +16,6 @@ import { metrics } from '@defra/cdp-metrics'
 import { createSqsConsumerPlugin } from '#~/common/helpers/sqs/sqs-consumer-plugin.js'
 import { handleCreatePaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-create-payment.js'
 import { handleCancelPaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-cancel-payment.js'
-import { dataMigration } from '#~/plugins/data-migration.js'
 import { removeDuplicateGrantPayments } from '#~/plugins/remove-duplicate-grant-payments.js'
 
 async function createServer(serverOptions = {}) {
@@ -93,8 +92,7 @@ async function createServer(serverOptions = {}) {
             handler: handleCancelPaymentEvent
           })
         ]),
-    router,
-    dataMigration
+    router
   ])
 
   return server
