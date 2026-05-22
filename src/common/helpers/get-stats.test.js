@@ -34,13 +34,15 @@ describe('getStats', () => {
     accounts,
     grantStats,
     paymentStats,
-    pendingOverdue = [{ count: 0 }]
+    pendingOverdue = [{ count: 0 }],
+    pendingByDueDate = []
   ) => {
     mockGrantPayments.countDocuments.mockResolvedValue(accounts)
     mockGrantPayments.aggregate
       .mockResolvedValueOnce(grantStats)
       .mockResolvedValueOnce(paymentStats)
       .mockResolvedValueOnce(pendingOverdue)
+      .mockResolvedValueOnce(pendingByDueDate)
   }
 
   test('Should provide expected stats', async () => {
@@ -53,7 +55,10 @@ describe('getStats', () => {
         { _id: 'cancelled', count: MOCK_CANCELLED_COUNT }
       ],
       [{ count: 0 }],
-      [{ count: 1 }]
+      [
+        { _id: '2026-05-01', count: 2 },
+        { _id: '2026-05-02', count: 3 }
+      ]
     )
 
     const result = await getStats()
@@ -65,7 +70,11 @@ describe('getStats', () => {
         total: MOCK_PENDING_COUNT + MOCK_SUBMITTED_COUNT + MOCK_CANCELLED_COUNT,
         pending: {
           total: MOCK_PENDING_COUNT,
-          overdue: 0
+          overdue: 0,
+          byDueDate: {
+            '2026-05-01': 2,
+            '2026-05-02': 3
+          }
         },
         submitted: MOCK_SUBMITTED_COUNT,
         cancelled: MOCK_CANCELLED_COUNT,
@@ -81,7 +90,7 @@ describe('getStats', () => {
       [],
       [{ _id: 'pending', count: MOCK_SINGLE_PAYMENT_COUNT }],
       [{ count: 0 }],
-      [{ count: 1 }]
+      []
     )
 
     const result = await getStats()
@@ -93,7 +102,8 @@ describe('getStats', () => {
         total: MOCK_SINGLE_PAYMENT_COUNT,
         pending: {
           total: MOCK_SINGLE_PAYMENT_COUNT,
-          overdue: 0
+          overdue: 0,
+          byDueDate: {}
         },
         submitted: 0,
         cancelled: 0,
@@ -109,7 +119,7 @@ describe('getStats', () => {
       [{ _id: null, count: MOCK_EMPTY_GRANT_STATS_COUNT }],
       [],
       [{ count: 0 }],
-      [{ count: 0 }]
+      []
     )
 
     const result = await getStats()
@@ -119,7 +129,7 @@ describe('getStats', () => {
       grants: 7,
       payments: {
         total: 0,
-        pending: { total: 0, overdue: 0 },
+        pending: { total: 0, overdue: 0, byDueDate: {} },
         submitted: 0,
         cancelled: 0,
         locked: 0,
@@ -139,7 +149,11 @@ describe('getStats', () => {
         { _id: 'locked', count: 1 },
         { _id: 'failed', count: 2 }
       ],
-      [{ count: 2 }]
+      [{ count: 2 }],
+      [
+        { _id: '2026-05-03', count: 4 },
+        { _id: '2026-05-04', count: 1 }
+      ]
     )
 
     const result = await getStats()
@@ -156,7 +170,11 @@ describe('getStats', () => {
           2,
         pending: {
           total: MOCK_PENDING_COUNT,
-          overdue: 2
+          overdue: 2,
+          byDueDate: {
+            '2026-05-03': 4,
+            '2026-05-04': 1
+          }
         },
         submitted: MOCK_SUBMITTED_COUNT,
         cancelled: MOCK_CANCELLED_COUNT,
