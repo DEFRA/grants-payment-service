@@ -128,6 +128,44 @@ describe('getStats', () => {
     })
   })
 
+  test('Should include locked and failed payment counts and overdue pending totals', async () => {
+    setupMocks(
+      MOCK_ACCOUNT_COUNT,
+      [{ _id: null, count: MOCK_GRANT_COUNT }],
+      [
+        { _id: 'pending', count: MOCK_PENDING_COUNT },
+        { _id: 'submitted', count: MOCK_SUBMITTED_COUNT },
+        { _id: 'cancelled', count: MOCK_CANCELLED_COUNT },
+        { _id: 'locked', count: 1 },
+        { _id: 'failed', count: 2 }
+      ],
+      [{ count: 2 }]
+    )
+
+    const result = await getStats()
+
+    expect(result).toEqual({
+      accounts: MOCK_ACCOUNT_COUNT,
+      grants: MOCK_GRANT_COUNT,
+      payments: {
+        total:
+          MOCK_PENDING_COUNT +
+          MOCK_SUBMITTED_COUNT +
+          MOCK_CANCELLED_COUNT +
+          1 +
+          2,
+        pending: {
+          total: MOCK_PENDING_COUNT,
+          overdue: 2
+        },
+        submitted: MOCK_SUBMITTED_COUNT,
+        cancelled: MOCK_CANCELLED_COUNT,
+        locked: 1,
+        failed: 2
+      }
+    })
+  })
+
   test('Should handle database error', async () => {
     mockGrantPayments.countDocuments.mockRejectedValue(new Error('DB error'))
 
