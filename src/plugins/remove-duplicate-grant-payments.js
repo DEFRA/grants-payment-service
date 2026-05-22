@@ -90,8 +90,7 @@ const runDeduplication = async (server) => {
     })
 
     server.logger.info(
-      { removedCount: result.deletedCount ?? duplicateIds.length },
-      'remove-duplicate-grant-payments: deleted duplicate documents'
+      `remove-duplicate-grant-payments: deleted duplicate documents: ${result.deletedCount}`
     )
   } else {
     server.logger.info(
