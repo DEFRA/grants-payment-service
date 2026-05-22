@@ -108,3 +108,50 @@ describe('grant_payments schema', () => {
     expect(doc.validateSync()).toBeUndefined()
   })
 })
+
+test('should fail validation when grant or payment correlationId is missing or empty', () => {
+  const base = {
+    sbi: '106284736',
+    frn: '12544567',
+    claimId: 'R00000004',
+    grants: [
+      {
+        sourceSystem: 'FPTT',
+        paymentRequestNumber: 1,
+        // correlationId intentionally missing
+        invoiceNumber: 'R00000004-V001Q2',
+        agreementNumber: 'FPTT264870631',
+        ledger: 'AP',
+        fesCode: 'FALS_FPTT',
+        deliveryBody: 'RP00',
+        totalAmountPence: '70285',
+        currency: 'GBP',
+        payments: [
+          {
+            dueDate: '2026-06-05',
+            totalAmountPence: '1263',
+            // payment correlationId intentionally missing
+            invoiceLines: [
+              {
+                schemeCode: 'CMOR1',
+                description: '2026-06-05: Parcel 8083',
+                amountPence: '1263',
+                accountCode: 'SOS710',
+                fundCode: 'DRD10',
+                deliveryBody: 'RP00'
+              }
+            ],
+            status: 'pending'
+          }
+        ]
+      }
+    ]
+  }
+
+  const doc = new GrantPaymentsModel(base)
+  const err = doc.validateSync()
+
+  expect(err).toBeTruthy()
+  expect(err.errors['grants.0.correlationId']).toBeTruthy()
+  expect(err.errors['grants.0.payments.0.correlationId']).toBeTruthy()
+})

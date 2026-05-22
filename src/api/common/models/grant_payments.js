@@ -14,7 +14,7 @@ const InvoiceLine = new mongoose.Schema({
 
 const Payment = new mongoose.Schema(
   {
-    dueDate: { type: String },
+    dueDate: { type: String, required: true },
     totalAmountPence: { type: Decimal128, required: true },
     correlationId: { type: String, required: true },
     invoiceLines: [{ type: InvoiceLine, required: true }],

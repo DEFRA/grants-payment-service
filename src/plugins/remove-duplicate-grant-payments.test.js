@@ -56,8 +56,7 @@ describe('remove-duplicate-grant-payments plugin', () => {
     expect(deleteManyMock).toHaveBeenCalledWith({ _id: { $in: ['2'] } })
     expect(syncIndexesMock).toHaveBeenCalled()
     expect(fakeServer.logger.info).toHaveBeenCalledWith(
-      { removedCount: 1 },
-      'remove-duplicate-grant-payments: deleted duplicate documents'
+      'remove-duplicate-grant-payments: deleted duplicate documents: 1'
     )
   })
 

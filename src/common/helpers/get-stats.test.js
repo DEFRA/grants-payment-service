@@ -34,15 +34,13 @@ describe('getStats', () => {
     accounts,
     grantStats,
     paymentStats,
-    pendingOverdue = [{ count: 0 }],
-    withoutDueDate = [{ count: 0 }]
+    pendingOverdue = [{ count: 0 }]
   ) => {
     mockGrantPayments.countDocuments.mockResolvedValue(accounts)
     mockGrantPayments.aggregate
       .mockResolvedValueOnce(grantStats)
       .mockResolvedValueOnce(paymentStats)
       .mockResolvedValueOnce(pendingOverdue)
-      .mockResolvedValueOnce(withoutDueDate)
   }
 
   test('Should provide expected stats', async () => {
@@ -67,8 +65,7 @@ describe('getStats', () => {
         total: MOCK_PENDING_COUNT + MOCK_SUBMITTED_COUNT + MOCK_CANCELLED_COUNT,
         pending: {
           total: MOCK_PENDING_COUNT,
-          overdue: 0,
-          withoutDueDate: 1
+          overdue: 0
         },
         submitted: MOCK_SUBMITTED_COUNT,
         cancelled: MOCK_CANCELLED_COUNT,
@@ -96,8 +93,7 @@ describe('getStats', () => {
         total: MOCK_SINGLE_PAYMENT_COUNT,
         pending: {
           total: MOCK_SINGLE_PAYMENT_COUNT,
-          overdue: 0,
-          withoutDueDate: 1
+          overdue: 0
         },
         submitted: 0,
         cancelled: 0,
@@ -123,7 +119,7 @@ describe('getStats', () => {
       grants: 7,
       payments: {
         total: 0,
-        pending: { total: 0, overdue: 0, withoutDueDate: 0 },
+        pending: { total: 0, overdue: 0 },
         submitted: 0,
         cancelled: 0,
         locked: 0,
