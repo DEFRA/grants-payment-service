@@ -63,7 +63,7 @@
   },
   "devDependencies": {
     "@babel/core": "7.29.0",
-    "@babel/preset-env": "7.29.0",
+    "@babel/preset-env": "7.29.5",
     "@commitlint/cli": "21.0.1",
     "@pact-foundation/pact": "16.4.0",
     "@vitest/coverage-v8": "4.0.18",
