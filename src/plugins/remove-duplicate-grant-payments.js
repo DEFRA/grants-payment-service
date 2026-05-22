@@ -17,17 +17,8 @@ const extractGrantCorrelationIds = (doc) => {
 }
 
 const buildSignature = (doc) => {
-  const grantCorrelationIds = extractGrantCorrelationIds(doc)
-  if (grantCorrelationIds.length === 0) {
-    return null
-  }
-
-  return [
-    `root:${doc.sbi ?? ''}`,
-    `frn:${doc.frn ?? ''}`,
-    `claimId:${doc.claimId ?? ''}`,
-    `grants:${sortStrings(grantCorrelationIds).join(',')}`
-  ].join('|')
+  const correlationIds = sortStrings(extractGrantCorrelationIds(doc)).join(',')
+  return correlationIds || 'no-correlation-id'
 }
 
 const getDuplicateIds = (docs) => {
@@ -36,9 +27,6 @@ const getDuplicateIds = (docs) => {
 
   for (const doc of docs) {
     const signature = buildSignature(doc)
-    if (!signature) {
-      continue
-    }
 
     const existing = seen.get(signature)
     if (existing) {

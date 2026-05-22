@@ -161,6 +161,41 @@ describe('remove-duplicate-grant-payments plugin', () => {
     )
   })
 
+  it('deletes duplicate documents without a correlationId even when they have different sbi, frn, or claimId', async () => {
+    findMock.mockReturnValue({
+      lean: () => ({
+        exec: async () => [
+          {
+            _id: '1',
+            createdAt: new Date('2025-01-01'),
+            sbi: '106284736',
+            frn: '12544567',
+            claimId: 'R00000004',
+            grants: [{}]
+          },
+          {
+            _id: '2',
+            createdAt: new Date('2025-01-02'),
+            sbi: '999999999',
+            frn: '88888888',
+            claimId: 'R00000005',
+            grants: [{}]
+          }
+        ]
+      })
+    })
+    deleteManyMock.mockResolvedValue({ deletedCount: 1 })
+
+    const fakeServer = { logger: { info: vi.fn(), error: vi.fn() } }
+    await plugin.plugin.register(fakeServer)
+
+    expect(deleteManyMock).toHaveBeenCalledWith({ _id: { $in: ['2'] } })
+    expect(syncIndexesMock).toHaveBeenCalled()
+    expect(fakeServer.logger.info).toHaveBeenCalledWith(
+      'remove-duplicate-grant-payments: deleted duplicate documents: 1'
+    )
+  })
+
   it('logs errors when deduplication fails', async () => {
     const error = new Error('dedupe failed')
     findMock.mockReturnValue({
