@@ -104,6 +104,63 @@ describe('remove-duplicate-grant-payments plugin', () => {
     expect(findMock).toHaveBeenCalled()
   })
 
+  it('deletes the earlier document when the later duplicate is kept', async () => {
+    findMock.mockReturnValue({
+      lean: () => ({
+        exec: async () => [
+          {
+            _id: '1',
+            createdAt: new Date('2025-01-02'),
+            grants: [{ correlationId: 'duplicate-a' }]
+          },
+          {
+            _id: '2',
+            createdAt: new Date('2025-01-01'),
+            grants: [{ correlationId: 'duplicate-a' }]
+          }
+        ]
+      })
+    })
+    deleteManyMock.mockResolvedValue({ deletedCount: 1 })
+
+    const fakeServer = { logger: { info: vi.fn(), error: vi.fn() } }
+    await plugin.plugin.register(fakeServer)
+
+    expect(deleteManyMock).toHaveBeenCalledWith({ _id: { $in: ['1'] } })
+    expect(syncIndexesMock).toHaveBeenCalled()
+    expect(fakeServer.logger.info).toHaveBeenCalledWith(
+      'remove-duplicate-grant-payments: deleted duplicate documents: 1'
+    )
+  })
+
+  it('skips documents without a deduplication signature', async () => {
+    findMock.mockReturnValue({
+      lean: () => ({
+        exec: async () => [
+          {
+            _id: '1',
+            createdAt: new Date('2025-01-01'),
+            grants: []
+          },
+          {
+            _id: '2',
+            createdAt: new Date('2025-01-02'),
+            grants: [{ correlationId: 'unique-a' }]
+          }
+        ]
+      })
+    })
+
+    const fakeServer = { logger: { info: vi.fn(), error: vi.fn() } }
+    await plugin.plugin.register(fakeServer)
+
+    expect(deleteManyMock).not.toHaveBeenCalled()
+    expect(syncIndexesMock).toHaveBeenCalled()
+    expect(fakeServer.logger.info).toHaveBeenCalledWith(
+      'remove-duplicate-grant-payments: no duplicate documents found'
+    )
+  })
+
   it('logs errors when deduplication fails', async () => {
     const error = new Error('dedupe failed')
     findMock.mockReturnValue({
