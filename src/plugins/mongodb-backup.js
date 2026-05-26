@@ -78,11 +78,9 @@ const cleanupOldBackups = async (db) => {
     const collectionName = collection.collectionName
     if (isBackupCollection(collectionName)) {
       const backupInfo = getBackupCollectionInfo(collectionName)
-      if (backupInfo) {
-        const backupDate = parseTimestamp(backupInfo.timestamp)
-        if (backupDate && backupDate.getTime() < cutoff) {
-          await db.dropCollection(collectionName)
-        }
+      const backupDate = backupInfo && parseTimestamp(backupInfo.timestamp)
+      if (backupDate && backupDate.getTime() < cutoff) {
+        await db.dropCollection(collectionName)
       }
     }
   }
