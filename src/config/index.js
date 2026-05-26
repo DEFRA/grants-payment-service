@@ -216,6 +216,12 @@ const config = convict({
       format: 'Boolean',
       default: false,
       env: 'ENABLE_PAYMENT_HUB'
+    },
+    removeDuplicateGrantPaymentsEnabled: {
+      doc: 'Enable or Disable remove-duplicate-grant-payments plugin',
+      format: 'Boolean',
+      default: false,
+      env: 'ENABLE_REMOVE_DUPLICATE_GRANT_PAYMENTS'
     }
   },
   paginationLimit: {
