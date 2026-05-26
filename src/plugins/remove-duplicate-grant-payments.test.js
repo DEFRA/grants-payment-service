@@ -4,6 +4,7 @@ const findMock = vi.fn()
 const deleteManyMock = vi.fn()
 const syncIndexesMock = vi.fn()
 const onceMock = vi.fn()
+const getMock = vi.fn()
 
 vi.mock('#~/api/common/models/grant_payments.js', () => ({
   default: {
@@ -18,6 +19,12 @@ const mongooseMock = {
 }
 vi.mock('mongoose', () => mongooseMock)
 
+vi.mock('#~/config/index.js', () => ({
+  config: {
+    get: getMock
+  }
+}))
+
 describe('remove-duplicate-grant-payments plugin', () => {
   let plugin
 
@@ -27,6 +34,13 @@ describe('remove-duplicate-grant-payments plugin', () => {
     onceMock.mockReset()
     findMock.mockReset()
     deleteManyMock.mockReset()
+    getMock.mockReset()
+    getMock.mockImplementation((key) => {
+      if (key === 'featureFlags.removeDuplicateGrantPaymentsEnabled') {
+        return true
+      }
+      return undefined
+    })
     const mod = await import('./remove-duplicate-grant-payments.js')
     plugin = mod.removeDuplicateGrantPayments
   })
@@ -212,6 +226,28 @@ describe('remove-duplicate-grant-payments plugin', () => {
     expect(fakeServer.logger.error).toHaveBeenCalledWith(
       error,
       'remove-duplicate-grant-payments: dedupe failed'
+    )
+  })
+
+  it('does not register hooks or run deduplication if the feature flag is disabled', async () => {
+    getMock.mockImplementation((key) => {
+      if (key === 'featureFlags.removeDuplicateGrantPaymentsEnabled') {
+        return false
+      }
+      return undefined
+    })
+
+    const fakeServer = { logger: { info: vi.fn(), error: vi.fn() } }
+    await plugin.plugin.register(fakeServer)
+
+    expect(onceMock).not.toHaveBeenCalled()
+    expect(findMock).not.toHaveBeenCalled()
+    expect(deleteManyMock).not.toHaveBeenCalled()
+    expect(fakeServer.logger.info).toHaveBeenCalledWith(
+      'Registering remove-duplicate-grant-payments plugin'
+    )
+    expect(fakeServer.logger.info).not.toHaveBeenCalledWith(
+      'remove-duplicate-grant-payments: no duplicate documents found'
     )
   })
 })

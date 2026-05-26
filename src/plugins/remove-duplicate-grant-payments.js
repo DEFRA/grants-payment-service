@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 import GrantPayments from '#~/api/common/models/grant_payments.js'
+import { config } from '#~/config/index.js'
 
 const sortStrings = (values) =>
   [...new Set(values)].sort((a, b) => a.localeCompare(b))
@@ -95,6 +96,12 @@ const removeDuplicateGrantPayments = {
     name: 'remove-duplicate-grant-payments',
     register: async (server) => {
       server.logger.info('Registering remove-duplicate-grant-payments plugin')
+
+      if (
+        config.get('featureFlags.removeDuplicateGrantPaymentsEnabled') !== true
+      ) {
+        return
+      }
 
       const execute = async () => {
         try {
