@@ -74,6 +74,49 @@ const runDeduplication = async (server) => {
   const duplicateIds = getDuplicateIds(docs)
 
   if (duplicateIds.length > 0) {
+    const duplicateIdSet = new Set(duplicateIds.map((id) => id.toString()))
+    const docsBySignature = new Map()
+
+    for (const doc of docs) {
+      const signature = buildSignature(doc)
+      if (!docsBySignature.has(signature)) {
+        docsBySignature.set(signature, [])
+      }
+      docsBySignature.get(signature).push(doc)
+    }
+
+    const formatDocForLog = (doc, signature) => {
+      const createdAtStr =
+        doc.createdAt && typeof doc.createdAt.toISOString === 'function'
+          ? doc.createdAt.toISOString()
+          : doc.createdAt
+      return `_id=${doc._id}, sbi=${doc.sbi || 'N/A'}, frn=${doc.frn || 'N/A'}, claimId=${doc.claimId || 'N/A'}, createdAt=${createdAtStr}, signature=${signature}`
+    }
+
+    for (const [signature, group] of docsBySignature.entries()) {
+      const deletedInGroup = group.filter((doc) =>
+        duplicateIdSet.has(doc._id.toString())
+      )
+
+      if (deletedInGroup.length > 0) {
+        const keptInGroup = group.filter(
+          (doc) => !duplicateIdSet.has(doc._id.toString())
+        )
+
+        for (const doc of deletedInGroup) {
+          server.logger.info(
+            `remove-duplicate-grant-payments: deleted duplicate document: ${formatDocForLog(doc, signature)}`
+          )
+        }
+
+        for (const doc of keptInGroup) {
+          server.logger.info(
+            `remove-duplicate-grant-payments: kept document: ${formatDocForLog(doc, signature)}`
+          )
+        }
+      }
+    }
+
     const result = await GrantPayments.deleteMany({
       _id: { $in: duplicateIds }
     })

@@ -70,6 +70,12 @@ describe('remove-duplicate-grant-payments plugin', () => {
     expect(deleteManyMock).toHaveBeenCalledWith({ _id: { $in: ['2'] } })
     expect(syncIndexesMock).toHaveBeenCalled()
     expect(fakeServer.logger.info).toHaveBeenCalledWith(
+      'remove-duplicate-grant-payments: deleted duplicate document: _id=2, sbi=N/A, frn=N/A, claimId=N/A, createdAt=2025-01-02T00:00:00.000Z, signature=duplicate-a'
+    )
+    expect(fakeServer.logger.info).toHaveBeenCalledWith(
+      'remove-duplicate-grant-payments: kept document: _id=1, sbi=N/A, frn=N/A, claimId=N/A, createdAt=2025-01-01T00:00:00.000Z, signature=duplicate-a'
+    )
+    expect(fakeServer.logger.info).toHaveBeenCalledWith(
       'remove-duplicate-grant-payments: deleted duplicate documents: 1'
     )
   })
@@ -143,6 +149,12 @@ describe('remove-duplicate-grant-payments plugin', () => {
     expect(deleteManyMock).toHaveBeenCalledWith({ _id: { $in: ['1'] } })
     expect(syncIndexesMock).toHaveBeenCalled()
     expect(fakeServer.logger.info).toHaveBeenCalledWith(
+      'remove-duplicate-grant-payments: deleted duplicate document: _id=1, sbi=N/A, frn=N/A, claimId=N/A, createdAt=2025-01-02T00:00:00.000Z, signature=duplicate-a'
+    )
+    expect(fakeServer.logger.info).toHaveBeenCalledWith(
+      'remove-duplicate-grant-payments: kept document: _id=2, sbi=N/A, frn=N/A, claimId=N/A, createdAt=2025-01-01T00:00:00.000Z, signature=duplicate-a'
+    )
+    expect(fakeServer.logger.info).toHaveBeenCalledWith(
       'remove-duplicate-grant-payments: deleted duplicate documents: 1'
     )
   })
@@ -205,6 +217,12 @@ describe('remove-duplicate-grant-payments plugin', () => {
 
     expect(deleteManyMock).toHaveBeenCalledWith({ _id: { $in: ['2'] } })
     expect(syncIndexesMock).toHaveBeenCalled()
+    expect(fakeServer.logger.info).toHaveBeenCalledWith(
+      'remove-duplicate-grant-payments: deleted duplicate document: _id=2, sbi=999999999, frn=88888888, claimId=R00000005, createdAt=2025-01-02T00:00:00.000Z, signature=no-correlation-id'
+    )
+    expect(fakeServer.logger.info).toHaveBeenCalledWith(
+      'remove-duplicate-grant-payments: kept document: _id=1, sbi=106284736, frn=12544567, claimId=R00000004, createdAt=2025-01-01T00:00:00.000Z, signature=no-correlation-id'
+    )
     expect(fakeServer.logger.info).toHaveBeenCalledWith(
       'remove-duplicate-grant-payments: deleted duplicate documents: 1'
     )
