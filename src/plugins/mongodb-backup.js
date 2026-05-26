@@ -9,10 +9,9 @@ const formatTimestamp = (date = new Date()) =>
   )}-${pad(date.getUTCMinutes())}-${pad(date.getUTCSeconds())}`
 
 const parseTimestamp = (timestamp) => {
-  const match =
-    /^([0-9]{4})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2})$/.exec(
-      timestamp
-    )
+  const match = /^(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})-(\d{2})$/.exec(
+    timestamp
+  )
   if (!match) {
     return null
   }
@@ -77,22 +76,14 @@ const cleanupOldBackups = async (db) => {
 
   for (const collection of collections) {
     const collectionName = collection.collectionName
-    if (!isBackupCollection(collectionName)) {
-      continue
-    }
-
-    const backupInfo = getBackupCollectionInfo(collectionName)
-    if (!backupInfo) {
-      continue
-    }
-
-    const backupDate = parseTimestamp(backupInfo.timestamp)
-    if (!backupDate) {
-      continue
-    }
-
-    if (backupDate.getTime() < cutoff) {
-      await db.dropCollection(collectionName)
+    if (isBackupCollection(collectionName)) {
+      const backupInfo = getBackupCollectionInfo(collectionName)
+      if (backupInfo) {
+        const backupDate = parseTimestamp(backupInfo.timestamp)
+        if (backupDate && backupDate.getTime() < cutoff) {
+          await db.dropCollection(collectionName)
+        }
+      }
     }
   }
 }
