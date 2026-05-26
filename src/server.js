@@ -16,6 +16,7 @@ import { metrics } from '@defra/cdp-metrics'
 import { createSqsConsumerPlugin } from '#~/common/helpers/sqs/sqs-consumer-plugin.js'
 import { handleCreatePaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-create-payment.js'
 import { handleCancelPaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-cancel-payment.js'
+import { mongodbBackup } from '#~/plugins/mongodb-backup.js'
 import { dataMigration } from '#~/plugins/data-migration.js'
 
 async function createServer(serverOptions = {}) {
@@ -76,6 +77,7 @@ async function createServer(serverOptions = {}) {
         databaseName: mongoDatabase
       }
     },
+    mongodbBackup,
     cron,
     ...(disableSQS
       ? []

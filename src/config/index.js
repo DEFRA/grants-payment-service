@@ -218,6 +218,21 @@ const config = convict({
       env: 'ENABLE_PAYMENT_HUB'
     }
   },
+  backup: {
+    retentionDays: {
+      doc: 'Number of days to keep MongoDB backup collections',
+      format: 'nat',
+      default: 30,
+      env: 'BACKUP_RETENTION_DAYS'
+    },
+    restoreTimestamp: {
+      doc: 'Timestamp of the backup to restore in YYYY-MM-DD-HH-MM-SS format',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'BACKUP_RESTORE_TIMESTAMP'
+    }
+  },
   paginationLimit: {
     doc: 'Max number of items per page for paginated queries',
     format: 'nat',
