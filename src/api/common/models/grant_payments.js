@@ -61,7 +61,6 @@ const schema = new mongoose.Schema(
 )
 
 // Single-field indexes
-schema.index({ _id: 1 })
 schema.index({ sbi: 1 })
 schema.index({ frn: 1 })
 schema.index({ 'grants.correlationId': 1 }, { unique: true })
