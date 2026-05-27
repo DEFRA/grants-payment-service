@@ -31,17 +31,18 @@ export const getStats = async () => {
     { $count: 'count' }
   ])
 
-  const withoutDueDateStats = await GrantPayments.aggregate([
+  const pendingByDueDateStats = await GrantPayments.aggregate([
     { $unwind: '$grants' },
     { $unwind: GRANTS_PAYMENTS },
-    {
-      $match: {
-        'grants.payments.status': 'pending',
-        'grants.payments.dueDate': { $exists: false }
-      }
-    },
-    { $count: 'count' }
+    { $match: { 'grants.payments.status': 'pending' } },
+    { $group: { _id: '$grants.payments.dueDate', count: { $sum: 1 } } },
+    { $sort: { _id: 1 } }
   ])
+
+  const pendingPaymentsByDueDate = pendingByDueDateStats.reduce(
+    (result, stat) => ({ ...result, [stat._id]: stat.count }),
+    {}
+  )
 
   let totalPayments = 0
   const statusCounts = {
@@ -67,8 +68,7 @@ export const getStats = async () => {
         total: statusCounts.pending,
         overdue:
           pendingOverdueStats.length > 0 ? pendingOverdueStats[0].count : 0,
-        withoutDueDate:
-          withoutDueDateStats.length > 0 ? withoutDueDateStats[0].count : 0
+        byDueDate: pendingPaymentsByDueDate
       }
     }
   }

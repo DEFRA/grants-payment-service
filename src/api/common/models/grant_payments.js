@@ -14,7 +14,7 @@ const InvoiceLine = new mongoose.Schema({
 
 const Payment = new mongoose.Schema(
   {
-    dueDate: { type: String },
+    dueDate: { type: String, required: true },
     totalAmountPence: { type: Decimal128, required: true },
     correlationId: { type: String, required: true },
     invoiceLines: [{ type: InvoiceLine, required: true }],
@@ -61,9 +61,10 @@ const schema = new mongoose.Schema(
 )
 
 // Single-field indexes
-schema.index({ _id: 1 })
 schema.index({ sbi: 1 })
 schema.index({ frn: 1 })
+schema.index({ 'grants.correlationId': 1 }, { unique: true })
+schema.index({ 'grants.payments.correlationId': 1 }, { unique: true })
 schema.index({ 'grants.payments.dueDate': 1 })
 schema.index({ 'grants.payments.status': 1 })
 schema.index({ 'grants.payments.invoiceLines.fundCode': 1 })
