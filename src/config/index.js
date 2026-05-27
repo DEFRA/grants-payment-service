@@ -222,13 +222,19 @@ const config = convict({
       format: 'Boolean',
       default: false,
       env: 'ENABLE_REMOVE_DUPLICATE_GRANT_PAYMENTS'
+    },
+    enableBackups: {
+      doc: 'Enable or Disable mongodb backups',
+      format: 'Boolean',
+      default: true,
+      env: 'ENABLE_BACKUPS'
     }
   },
   backup: {
     retentionDays: {
       doc: 'Number of days to keep MongoDB backup collections',
       format: 'nat',
-      default: 30,
+      default: 90,
       env: 'BACKUP_RETENTION_DAYS'
     },
     restoreTimestamp: {
