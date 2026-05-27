@@ -54,6 +54,27 @@ describe('postTestGrantPaymentController', () => {
     })
   })
 
+  test('returns 201 with ids when payload is an array', async () => {
+    const payloadArray = [validPayload, validPayload]
+    createGrantPayment.mockResolvedValueOnce({ _id: 'abc123' })
+    createGrantPayment.mockResolvedValueOnce({ _id: 'def456' })
+
+    const h = makeH()
+    const result = await postTestGrantPaymentController.handler(
+      { payload: payloadArray, logger: mockLogger },
+      h
+    )
+
+    expect(createGrantPayment).toHaveBeenCalledTimes(2)
+    expect(createGrantPayment).toHaveBeenNthCalledWith(1, validPayload)
+    expect(createGrantPayment).toHaveBeenNthCalledWith(2, validPayload)
+    expect(result.statusCode).toBe(statusCodes.created)
+    expect(result.source).toEqual({
+      ids: ['abc123', 'def456'],
+      message: 'Grant payments created'
+    })
+  })
+
   test('returns 400 for validation error (ValidationError)', async () => {
     const error = new Error('validation failed')
     error.name = 'ValidationError'
@@ -108,16 +129,6 @@ describe('postTestGrantPaymentController', () => {
       message: 'Internal Server Error',
       error: undefined
     })
-  })
-
-  test('handles missing _id in created document (using id property)', async () => {
-    createGrantPayment.mockResolvedValue({ id: 'id123' })
-
-    const h = makeH()
-    const result = await postTestGrantPaymentController.handler(mockReq, h)
-
-    expect(result.statusCode).toBe(statusCodes.created)
-    expect(result.source.id).toBe('id123')
   })
 
   test('handles missing _id and id in created document', async () => {

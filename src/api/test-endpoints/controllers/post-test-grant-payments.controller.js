@@ -14,9 +14,22 @@ const postTestGrantPaymentController = {
   },
   handler: async (req, res) => {
     try {
-      const created = await createGrantPayment(req.payload)
+      let created
+      if (Array.isArray(req.payload)) {
+        created = await Promise.all(
+          req.payload.map((payload) => createGrantPayment(payload))
+        )
+        const ids = created.map((c) => c?._id?.toString?.())
+        return res
+          .response({
+            ids,
+            message: 'Grant payments created'
+          })
+          .code(statusCodes.created)
+      }
 
-      const id = created?._id?.toString?.() || created?.id || created?._id
+      created = await createGrantPayment(req.payload)
+      const id = created?._id?.toString?.()
 
       return res
         .response({

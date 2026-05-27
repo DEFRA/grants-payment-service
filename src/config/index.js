@@ -216,6 +216,27 @@ const config = convict({
       format: 'Boolean',
       default: false,
       env: 'ENABLE_PAYMENT_HUB'
+    },
+    removeDuplicateGrantPaymentsEnabled: {
+      doc: 'Enable or Disable remove-duplicate-grant-payments plugin',
+      format: 'Boolean',
+      default: false,
+      env: 'ENABLE_REMOVE_DUPLICATE_GRANT_PAYMENTS'
+    }
+  },
+  backup: {
+    retentionDays: {
+      doc: 'Number of days to keep MongoDB backup collections',
+      format: 'nat',
+      default: 30,
+      env: 'BACKUP_RETENTION_DAYS'
+    },
+    restoreTimestamp: {
+      doc: 'Timestamp of the backup to restore in YYYY-MM-DD-HH-MM-SS format',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'BACKUP_RESTORE_TIMESTAMP'
     }
   },
   paginationLimit: {
