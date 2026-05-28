@@ -90,6 +90,7 @@ const cleanupOldBackups = async (db) => {
 }
 
 const restoreBackup = async (db, restoreTimestamp, server) => {
+  const dropBeforeRestore = config.get('backup.dropBeforeRestore')
   const collections = await db.collections()
   const matchingBackups = collections
     .map((collection) => collection.collectionName)
@@ -109,11 +110,13 @@ const restoreBackup = async (db, restoreTimestamp, server) => {
   for (const { collectionName, backupInfo } of matchingBackups) {
     const originalName = backupInfo.originalName
 
-    const originalExists = collections.some(
-      (c) => c.collectionName === originalName
-    )
-    if (originalExists) {
-      await db.dropCollection(originalName)
+    if (dropBeforeRestore) {
+      const originalExists = collections.some(
+        (c) => c.collectionName === originalName
+      )
+      if (originalExists) {
+        await db.dropCollection(originalName)
+      }
     }
 
     await copyCollection(db, collectionName, originalName)
@@ -144,11 +147,11 @@ const runBackupPlugin = async (server) => {
     return
   }
 
-  const removed = await cleanupOldBackups(db)
-  if (removed.length) {
+  const oldBackupsRemoved = await cleanupOldBackups(db)
+  if (oldBackupsRemoved.length) {
     server.logger.info(
       `mongodb-backup: cleaned up expired backup collections ${JSON.stringify(
-        removed
+        oldBackupsRemoved
       )}`
     )
   }

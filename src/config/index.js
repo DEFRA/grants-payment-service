@@ -243,6 +243,12 @@ const config = convict({
       nullable: true,
       default: null,
       env: 'BACKUP_RESTORE_TIMESTAMP'
+    },
+    dropBeforeRestore: {
+      doc: 'Drop the original collection before restoring the backup',
+      format: 'Boolean',
+      default: true,
+      env: 'BACKUP_DROP_BEFORE_RESTORE'
     }
   },
   paginationLimit: {

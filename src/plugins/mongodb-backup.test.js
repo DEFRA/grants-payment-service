@@ -158,6 +158,7 @@ describe('mongodb-backup plugin', () => {
       if (path === 'featureFlags.enableBackups') return true
       if (path === 'backup.retentionDays') return 1000
       if (path === 'backup.restoreTimestamp') return '2025-01-01-00-00-00'
+      if (path === 'backup.dropBeforeRestore') return true
       return null
     })
 
@@ -177,6 +178,33 @@ describe('mongodb-backup plugin', () => {
     )
   })
 
+  it('does not drop the original collection when dropBeforeRestore is false', async () => {
+    collectionsMap.set('grant_payments', { docs: [{ _id: '1', value: 1 }] })
+    collectionsMap.set('backup_grant_payments_2025-01-01-00-00-00', {
+      docs: [{ _id: '2', value: 2 }]
+    })
+
+    mockConfigGet.mockImplementation((path) => {
+      if (path === 'featureFlags.enableBackups') return true
+      if (path === 'backup.retentionDays') return 1000
+      if (path === 'backup.restoreTimestamp') return '2025-01-01-00-00-00'
+      if (path === 'backup.dropBeforeRestore') return false
+      return null
+    })
+
+    const mongodbBackup = await reloadPlugin()
+    const fakeServer = {
+      logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
+    }
+
+    await mongodbBackup.plugin.register(fakeServer)
+
+    expect(db.dropCollection).not.toHaveBeenCalledWith('grant_payments')
+    expect(collectionsMap.get('grant_payments').docs).toEqual([
+      { _id: '2', value: 2 }
+    ])
+  })
+
   it('does not attempt to drop the collection during restore if the collection does not exist', async () => {
     collectionsMap.set('backup_grant_payments_2025-01-01-00-00-00', {
       docs: [{ _id: '2', value: 2 }]
@@ -186,6 +214,7 @@ describe('mongodb-backup plugin', () => {
       if (path === 'featureFlags.enableBackups') return true
       if (path === 'backup.retentionDays') return 1000
       if (path === 'backup.restoreTimestamp') return '2025-01-01-00-00-00'
+      if (path === 'backup.dropBeforeRestore') return true
       return null
     })
 
@@ -215,6 +244,7 @@ describe('mongodb-backup plugin', () => {
       if (path === 'featureFlags.enableBackups') return true
       if (path === 'backup.retentionDays') return 30
       if (path === 'backup.restoreTimestamp') return '2025-01-01-00-00-00'
+      if (path === 'backup.dropBeforeRestore') return true
       return null
     })
 
