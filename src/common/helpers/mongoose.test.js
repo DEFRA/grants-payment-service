@@ -74,8 +74,7 @@ describe('mongooseDb', () => {
       // Assert
       expect(mockLogger.info).toHaveBeenCalledWith('Setting up Mongoose')
       expect(mockMongoose.connect).toHaveBeenCalledWith(mockOptions.mongoUrl, {
-        dbName: mockOptions.databaseName,
-        autoIndex: false
+        dbName: mockOptions.databaseName
       })
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Mongoose connected to MongoDB'
@@ -93,8 +92,7 @@ describe('mongooseDb', () => {
       expect(mockMongoose.connect).toHaveBeenCalledWith(
         configValues.mongo.uri,
         {
-          dbName: configValues.mongo.database,
-          autoIndex: false
+          dbName: configValues.mongo.database
         }
       )
     })
