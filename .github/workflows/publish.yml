@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
 
 concurrency:
   group: main-serial
@@ -21,11 +26,14 @@ env:
 jobs:
   build:
     name: CDP-build-workflow
+    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: main
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -55,7 +63,7 @@ jobs:
   pact:
     name: Pact Tests & Publish
     needs: build
-    if: github.event.repository.fork == false
+    if: (github.event_name != 'pull_request' || github.event.pull_request.merged == true) && github.event.repository.fork == false
     runs-on: self-hosted
 
     env:
@@ -70,6 +78,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Fetch latest tags
