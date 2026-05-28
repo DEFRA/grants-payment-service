@@ -22,18 +22,22 @@ jobs:
   build:
     name: CDP-build-workflow
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check out code
+      - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Test code and Create Test Coverage Reports
+      - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: |
-          npm ci
-          npm test
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
 
       - name: Build and Publish
         uses: DEFRA/cdp-build-action/build@main
@@ -49,10 +53,11 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   pact:
-    name: Run Pact Tests and Publish Pacts
-    if: github.event.repository.fork == false
+    name: Pact Tests & Publish
     needs: build
+    if: github.event.repository.fork == false
     runs-on: self-hosted
+
     env:
       PACT_BROKER_BASE_URL: https://ffc-pact-broker.azure.defra.cloud
 
