@@ -89,7 +89,7 @@ describe('mongodb-backup plugin', () => {
     })
 
     mockConfigGet.mockImplementation((path) => {
-      if (path === 'featureFlags.enableBackups') return true
+      if (path === 'featureFlags.disableBackups') return false
       if (path === 'backup.retentionDays') return 365
       if (path === 'backup.restoreTimestamp') return null
       return null
@@ -124,7 +124,7 @@ describe('mongodb-backup plugin', () => {
     })
 
     mockConfigGet.mockImplementation((path) => {
-      if (path === 'featureFlags.enableBackups') return true
+      if (path === 'featureFlags.disableBackups') return false
       if (path === 'backup.retentionDays') return 30
       if (path === 'backup.restoreTimestamp') return null
       return null
@@ -155,7 +155,7 @@ describe('mongodb-backup plugin', () => {
     })
 
     mockConfigGet.mockImplementation((path) => {
-      if (path === 'featureFlags.enableBackups') return true
+      if (path === 'featureFlags.disableBackups') return false
       if (path === 'backup.retentionDays') return 1000
       if (path === 'backup.restoreTimestamp') return '2025-01-01-00-00-00'
       if (path === 'backup.dropBeforeRestore') return true
@@ -185,7 +185,7 @@ describe('mongodb-backup plugin', () => {
     })
 
     mockConfigGet.mockImplementation((path) => {
-      if (path === 'featureFlags.enableBackups') return true
+      if (path === 'featureFlags.disableBackups') return false
       if (path === 'backup.retentionDays') return 1000
       if (path === 'backup.restoreTimestamp') return '2025-01-01-00-00-00'
       if (path === 'backup.dropBeforeRestore') return false
@@ -211,7 +211,7 @@ describe('mongodb-backup plugin', () => {
     })
 
     mockConfigGet.mockImplementation((path) => {
-      if (path === 'featureFlags.enableBackups') return true
+      if (path === 'featureFlags.disableBackups') return false
       if (path === 'backup.retentionDays') return 1000
       if (path === 'backup.restoreTimestamp') return '2025-01-01-00-00-00'
       if (path === 'backup.dropBeforeRestore') return true
@@ -241,7 +241,7 @@ describe('mongodb-backup plugin', () => {
     })
 
     mockConfigGet.mockImplementation((path) => {
-      if (path === 'featureFlags.enableBackups') return true
+      if (path === 'featureFlags.disableBackups') return false
       if (path === 'backup.retentionDays') return 30
       if (path === 'backup.restoreTimestamp') return '2025-01-01-00-00-00'
       if (path === 'backup.dropBeforeRestore') return true
@@ -263,9 +263,9 @@ describe('mongodb-backup plugin', () => {
     )
   })
 
-  it('logs a warning and returns early if feature flag enableBackups is false', async () => {
+  it('logs a warning and returns early if feature flag disableBackups is true', async () => {
     mockConfigGet.mockImplementation((path) => {
-      if (path === 'featureFlags.enableBackups') return false
+      if (path === 'featureFlags.disableBackups') return true
       return null
     })
 

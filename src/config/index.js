@@ -223,11 +223,11 @@ const config = convict({
       default: false,
       env: 'ENABLE_REMOVE_DUPLICATE_GRANT_PAYMENTS'
     },
-    enableBackups: {
-      doc: 'Enable or Disable mongodb backups',
+    disableBackups: {
+      doc: 'Disable MongoDB backups',
       format: 'Boolean',
-      default: true,
-      env: 'ENABLE_BACKUPS'
+      default: false,
+      env: 'DISABLE_BACKUPS'
     }
   },
   backup: {

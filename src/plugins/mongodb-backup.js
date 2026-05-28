@@ -73,7 +73,7 @@ const cleanupOldBackups = async (db) => {
   const retentionDays = config.get('backup.retentionDays')
   const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000
   const collections = await db.collections()
-  const removed = []
+  const oldBackupsRemoved = []
 
   for (const collection of collections) {
     const collectionName = collection.collectionName
@@ -82,11 +82,11 @@ const cleanupOldBackups = async (db) => {
       const backupDate = backupInfo && parseTimestamp(backupInfo.timestamp)
       if (backupDate && backupDate.getTime() < cutoff) {
         await db.dropCollection(collectionName)
-        removed.push(collectionName)
+        oldBackupsRemoved.push(collectionName)
       }
     }
   }
-  return removed
+  return oldBackupsRemoved
 }
 
 const restoreBackup = async (db, restoreTimestamp, server) => {
@@ -163,7 +163,7 @@ const mongodbBackup = {
     register: async (server) => {
       server.logger.info('Registering mongodb-backup plugin')
 
-      if (config.get('featureFlags.enableBackups') !== true) {
+      if (config.get('featureFlags.disableBackups') === true) {
         server.logger.warn('mongodb-backup: backups are disabled')
         return
       }
