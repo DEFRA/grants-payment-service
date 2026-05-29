@@ -22,6 +22,7 @@ describe('#healthController', () => {
     config.set('featureFlags.testEndpoints', true)
     config.set('featureFlags.isPaymentHubEnabled', false)
     config.set('featureFlags.removeDuplicateGrantPaymentsEnabled', false)
+    config.set('featureFlags.disableBackups', false)
 
     // import createServer after mongoose is mocked so controllers picks up the mock
     const { createServer } = await import('../../server.js')
@@ -56,7 +57,8 @@ describe('#healthController', () => {
         featureFlags: {
           testEndpoints: true,
           isPaymentHubEnabled: false,
-          removeDuplicateGrantPaymentsEnabled: false
+          removeDuplicateGrantPaymentsEnabled: false,
+          disableBackups: false
         }
       })
       expect(statusCode).toBe(statusCodes.ok)
@@ -116,7 +118,8 @@ describe('#healthController', () => {
         featureFlags: {
           testEndpoints: true,
           isPaymentHubEnabled: false,
-          removeDuplicateGrantPaymentsEnabled: false
+          removeDuplicateGrantPaymentsEnabled: false,
+          disableBackups: false
         }
       })
       expect(response.statusCode).toBe(statusCodes.ok)

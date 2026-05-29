@@ -222,13 +222,19 @@ const config = convict({
       format: 'Boolean',
       default: false,
       env: 'ENABLE_REMOVE_DUPLICATE_GRANT_PAYMENTS'
+    },
+    disableBackups: {
+      doc: 'Disable MongoDB backups',
+      format: 'Boolean',
+      default: false,
+      env: 'DISABLE_BACKUPS'
     }
   },
   backup: {
     retentionDays: {
       doc: 'Number of days to keep MongoDB backup collections',
       format: 'nat',
-      default: 30,
+      default: 90,
       env: 'BACKUP_RETENTION_DAYS'
     },
     restoreTimestamp: {
@@ -237,6 +243,12 @@ const config = convict({
       nullable: true,
       default: null,
       env: 'BACKUP_RESTORE_TIMESTAMP'
+    },
+    dropBeforeRestore: {
+      doc: 'Drop the original collection before restoring the backup',
+      format: 'Boolean',
+      default: true,
+      env: 'BACKUP_DROP_BEFORE_RESTORE'
     }
   },
   paginationLimit: {
