@@ -22,11 +22,11 @@ export async function handleCancelPaymentEvent(messageId, payload, logger) {
     if (grantPayment.length) {
       logger.info(
         { messageId, sbi },
-        `Managed to successfully cancel grantPayment entry ${JSON.stringify(grantPayment)}`
+        `Successfully cancelled grant payment entry ${JSON.stringify(grantPayment)}`
       )
     } else {
-      throw new Error(
-        `No grantPayment entry found to cancel for sbi ${sbi} and frn ${frn}`
+      logger.warn(
+        `No grant payment entry found to cancel for sbi ${sbi} and frn ${frn}`
       )
     }
   } catch (err) {
