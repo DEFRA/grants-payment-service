@@ -35,12 +35,26 @@ export const getStats = async () => {
     { $unwind: '$grants' },
     { $unwind: GRANTS_PAYMENTS },
     { $match: { 'grants.payments.status': 'pending' } },
-    { $group: { _id: '$grants.payments.dueDate', count: { $sum: 1 } } },
-    { $sort: { _id: 1 } }
+    {
+      $group: {
+        _id: {
+          dueDate: '$grants.payments.dueDate',
+          sourceSystem: '$grants.sourceSystem'
+        },
+        count: { $sum: 1 }
+      }
+    },
+    { $sort: { '_id.dueDate': 1 } }
   ])
 
   const pendingPaymentsByDueDate = pendingByDueDateStats.reduce(
-    (result, stat) => ({ ...result, [stat._id]: stat.count }),
+    (result, stat) => ({
+      ...result,
+      [stat._id.dueDate]: {
+        ...(result[stat._id.dueDate] ?? {}),
+        [stat._id.sourceSystem]: stat.count
+      }
+    }),
     {}
   )
 
