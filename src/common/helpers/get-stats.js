@@ -51,7 +51,7 @@ export const getStats = async () => {
     (result, stat) => ({
       ...result,
       [stat._id.dueDate]: {
-        ...(result[stat._id.dueDate] ?? {}),
+        ...result[stat._id.dueDate],
         [stat._id.sourceSystem]: stat.count
       }
     }),
