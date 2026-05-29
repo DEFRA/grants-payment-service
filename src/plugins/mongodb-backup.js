@@ -73,6 +73,7 @@ const cleanupOldBackups = async (db) => {
   const retentionDays = config.get('backup.retentionDays')
   const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000
   const collections = await db.collections()
+  const oldBackupsRemoved = []
 
   for (const collection of collections) {
     const collectionName = collection.collectionName
@@ -81,12 +82,15 @@ const cleanupOldBackups = async (db) => {
       const backupDate = backupInfo && parseTimestamp(backupInfo.timestamp)
       if (backupDate && backupDate.getTime() < cutoff) {
         await db.dropCollection(collectionName)
+        oldBackupsRemoved.push(collectionName)
       }
     }
   }
+  return oldBackupsRemoved
 }
 
 const restoreBackup = async (db, restoreTimestamp, server) => {
+  const dropBeforeRestore = config.get('backup.dropBeforeRestore')
   const collections = await db.collections()
   const matchingBackups = collections
     .map((collection) => collection.collectionName)
@@ -106,6 +110,15 @@ const restoreBackup = async (db, restoreTimestamp, server) => {
   for (const { collectionName, backupInfo } of matchingBackups) {
     const originalName = backupInfo.originalName
 
+    if (dropBeforeRestore) {
+      const originalExists = collections.some(
+        (c) => c.collectionName === originalName
+      )
+      if (originalExists) {
+        await db.dropCollection(originalName)
+      }
+    }
+
     await copyCollection(db, collectionName, originalName)
 
     server.logger.info(
@@ -124,8 +137,6 @@ const runBackupPlugin = async (server) => {
   server.logger.info(
     `mongodb-backup: created full backup at ${backupTimestamp}`
   )
-  await cleanupOldBackups(db)
-  server.logger.info('mongodb-backup: cleaned up expired backup collections')
 
   const restoreTimestamp = config.get('backup.restoreTimestamp')
   if (restoreTimestamp) {
@@ -133,6 +144,16 @@ const runBackupPlugin = async (server) => {
       `mongodb-backup: restoring backup for timestamp ${restoreTimestamp}`
     )
     await restoreBackup(db, restoreTimestamp, server)
+    return
+  }
+
+  const oldBackupsRemoved = await cleanupOldBackups(db)
+  if (oldBackupsRemoved.length) {
+    server.logger.info(
+      `mongodb-backup: cleaned up expired backup collections ${JSON.stringify(
+        oldBackupsRemoved
+      )}`
+    )
   }
 }
 
@@ -141,6 +162,11 @@ const mongodbBackup = {
     name: 'mongodb-backup',
     register: async (server) => {
       server.logger.info('Registering mongodb-backup plugin')
+
+      if (config.get('featureFlags.disableBackups') === true) {
+        server.logger.warn('mongodb-backup: backups are disabled')
+        return
+      }
 
       const execute = async () => {
         try {
