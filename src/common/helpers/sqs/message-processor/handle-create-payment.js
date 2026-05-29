@@ -41,8 +41,10 @@ export async function handleCreatePaymentEvent(messageId, payload, logger) {
       }
     }
   } catch (err) {
+    const mongoDuplicateKeyErrorCode = 11000
     const isDuplicateKeyError =
-      err?.name === 'MongoServerError' && err?.code === 11000
+      err?.name === 'MongoServerError' &&
+      err?.code === mongoDuplicateKeyErrorCode
 
     if (isDuplicateKeyError) {
       logger.warn(err, 'Duplicate grant payment entry received')
