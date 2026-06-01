@@ -43,6 +43,8 @@ const buildInvoiceLines = (grant, payment) =>
     marketingYear: grant.marketingYear
   }))
 
+const paymentId = (id) => id?.toString?.() ?? ''
+
 /**
  * Calculates the quarter suffix for an invoice number based on the payment index
  * @param {string} invoiceNumber
@@ -52,10 +54,14 @@ const buildInvoiceLines = (grant, payment) =>
  */
 const updateQuarter = (invoiceNumber, payments, currentPayment) => {
   const invoiceWithoutQuarter = invoiceNumber.replace(/Q[1-4X]$/i, '')
+  const currentPaymentId = paymentId(currentPayment?._id)
 
-  // Find the index of the current payment based on its _id
+  if (!currentPaymentId) {
+    throw new Error('Payment _id is required for quarter calculation')
+  }
+
   const paymentIndex = (payments || []).findIndex(
-    (p) => p._id.toString() === currentPayment._id.toString()
+    (p) => paymentId(p._id) === currentPaymentId
   )
 
   if (paymentIndex === -1) {
