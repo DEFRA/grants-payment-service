@@ -286,6 +286,56 @@ describe('processDailyPayments', () => {
     )
   })
 
+  it('marks payment as failed when transform throws after lock', async () => {
+    const fakeDate = '2026-02-20'
+    const fakeDocs = [
+      {
+        _id: '1',
+        grants: [
+          {
+            _id: 'g1',
+            sourceSystem: 'FPTT',
+            invoiceNumber: 'INV1',
+            agreementNumber: 'AGR1',
+            ledger: 'AP',
+            fesCode: 'FALS_FPTT',
+            deliveryBody: 'RP00',
+            payments: [
+              {
+                _id: 'p1',
+                dueDate: '2026-01-01',
+                correlationId: 'corr-1',
+                invoiceLines: []
+              }
+            ],
+            matchedPayments: [
+              {
+                _id: 'p-other',
+                dueDate: '2026-01-01',
+                correlationId: 'corr-other',
+                invoiceLines: []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
+    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
+
+    const result = await processDailyPayments(server, fakeDate)
+
+    expect(sendPaymentHubRequest).not.toHaveBeenCalled()
+    expect(updatePaymentStatus).toHaveBeenCalledWith('1', 'p-other', 'failed')
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.any(Error),
+      'Payment Hub data transform failed for payment p-other in record 1'
+    )
+    expect(result.results[0]).toMatchObject({
+      message: 'Payment not found in the payments array'
+    })
+  })
+
   it('skips and marks as failed payments with an unsupported sourceSystem', async () => {
     const fakeDate = '2026-02-20'
     const fakeDocs = [
