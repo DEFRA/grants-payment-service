@@ -3,7 +3,33 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { SQSClient } from '@aws-sdk/client-sqs'
 import { Consumer } from 'sqs-consumer'
 
+import { config } from '#~/config/index.js'
+
 import { createSqsConsumerPlugin } from './sqs-consumer-plugin.js'
+import { runWithSqsMessageDeduplication } from './sqs-message-deduplication.js'
+
+const mockConfigGet = (key) => {
+  switch (key) {
+    case 'aws.region':
+      return 'eu-west-2'
+    case 'sqs.endpoint':
+      return 'http://localhost:4566'
+    case 'sqs.maxMessages':
+      return 1
+    case 'sqs.waitTime':
+      return 20
+    case 'sqs.visibilityTimeout':
+      return 60
+    case 'sqs.messageDeduplicationEnabled':
+      return false
+    default:
+      return undefined
+  }
+}
+
+vi.mock('./sqs-message-deduplication.js', () => ({
+  runWithSqsMessageDeduplication: vi.fn(async ({ run }) => run())
+}))
 
 vi.mock('@aws-sdk/client-sqs')
 
@@ -15,22 +41,7 @@ vi.mock('sqs-consumer', () => ({
 
 vi.mock('#~/config/index.js', () => ({
   config: {
-    get: vi.fn((key) => {
-      switch (key) {
-        case 'aws.region':
-          return 'eu-west-2'
-        case 'sqs.endpoint':
-          return 'http://localhost:4566'
-        case 'sqs.maxMessages':
-          return 1
-        case 'sqs.waitTime':
-          return 20
-        case 'sqs.visibilityTimeout':
-          return 60
-        default:
-          return undefined
-      }
-    })
+    get: vi.fn()
   }
 }))
 
@@ -44,6 +55,7 @@ describe('createSqsConsumerPlugin', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    config.get.mockImplementation(mockConfigGet)
 
     server = {
       logger: {
@@ -167,6 +179,42 @@ describe('createSqsConsumerPlugin', () => {
     )
   })
 
+  it('wraps message handling with transport deduplication when enabled', async () => {
+    config.get.mockImplementation((key) => {
+      if (key === 'sqs.messageDeduplicationEnabled') return true
+      return mockConfigGet(key)
+    })
+
+    const handler = vi.fn()
+    const { plugin } = createSqsConsumerPlugin({
+      tag: 'cancel-payment',
+      queueUrl,
+      handler
+    })
+    await plugin.register(server)
+    const handleMessage = Consumer.create.mock.calls[0][0].handleMessage
+
+    await handleMessage({
+      MessageId: 'dedup-msg',
+      Body: JSON.stringify({ type: 'test' })
+    })
+
+    expect(runWithSqsMessageDeduplication).toHaveBeenCalledWith(
+      expect.objectContaining({
+        enabled: true,
+        queueTag: 'cancel-payment',
+        messageId: 'dedup-msg',
+        logger: server.logger,
+        run: expect.any(Function)
+      })
+    )
+    expect(handler).toHaveBeenCalledWith(
+      'dedup-msg',
+      { type: 'test' },
+      server.logger
+    )
+  })
+
   it('uses fallback message id when MessageId is missing', async () => {
     const handler = vi.fn()
     const { plugin } = createSqsConsumerPlugin({
@@ -205,6 +253,7 @@ describe('processMessage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    config.get.mockImplementation(mockConfigGet)
 
     server = {
       logger,
