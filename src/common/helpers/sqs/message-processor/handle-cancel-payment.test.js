@@ -61,7 +61,7 @@ describe('handleCancelPaymentEvent', () => {
 
     expect(cancelGrantPayments).toHaveBeenCalledWith(sbi, frn)
     expect(logger.warn).toHaveBeenCalledWith(
-      `No grant payment entry found to cancel for sbi ${sbi} and frn ${frn}`
+      `Warning: No grant payment entry found to cancel for sbi ${sbi} and frn ${frn}`
     )
   })
 
