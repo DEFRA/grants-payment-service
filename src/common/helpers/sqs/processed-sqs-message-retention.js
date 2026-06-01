@@ -1,8 +1,8 @@
 /** AWS SQS maximum message retention period (14 days). */
-export const AWS_SQS_MAX_MESSAGE_RETENTION_SECONDS = 1_209_600
+const AWS_SQS_MAX_MESSAGE_RETENTION_SECONDS = 1_209_600
 
 /** Buffer after max retention before dedup records may be removed. */
-export const PROCESSED_SQS_MESSAGE_TTL_BUFFER_SECONDS = 3_600
+const PROCESSED_SQS_MESSAGE_TTL_BUFFER_SECONDS = 3_600
 
 /**
  * TTL for processed SQS message dedup records.
