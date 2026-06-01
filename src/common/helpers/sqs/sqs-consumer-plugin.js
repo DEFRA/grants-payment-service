@@ -4,14 +4,22 @@ import { Consumer } from 'sqs-consumer'
 
 import { config } from '#~/config/index.js'
 
+import { runWithSqsMessageDeduplication } from './sqs-message-deduplication.js'
+
 /**
  * Parse and process a single SQS message.
  *
  * @param {(messageId: string, payload: any, logger: import('pino').Logger) => Promise<void>} handler
  * @param {import('@aws-sdk/client-sqs').Message} message
  * @param {import('pino').Logger} logger
+ * @param {{ queueTag: string, messageDeduplicationEnabled: boolean }} options
  */
-const processMessage = async (handler, message, logger) => {
+const processMessage = async (
+  handler,
+  message,
+  logger,
+  { queueTag, messageDeduplicationEnabled }
+) => {
   if (!message?.Body) {
     throw Boom.badData('SQS message missing Body')
   }
@@ -25,7 +33,15 @@ const processMessage = async (handler, message, logger) => {
       payload = JSON.parse(messageBody.Message)
     }
 
-    await handler(message.MessageId ?? 'unknown-message-id', payload, logger)
+    const messageId = message.MessageId ?? 'unknown-message-id'
+
+    await runWithSqsMessageDeduplication({
+      enabled: messageDeduplicationEnabled,
+      queueTag,
+      messageId,
+      logger,
+      run: async () => handler(messageId, payload, logger)
+    })
   } catch (error) {
     if (error?.name === 'SyntaxError') {
       throw Boom.badData(`Invalid message format: ${message.Body}`, error)
@@ -71,7 +87,12 @@ export const createSqsConsumerPlugin = ({ tag, queueUrl, handler }) => ({
         attributeNames: ['All'],
         messageAttributeNames: ['All'],
         handleMessage: async (message) => {
-          await processMessage(handler, message, server.logger)
+          await processMessage(handler, message, server.logger, {
+            queueTag: tag,
+            messageDeduplicationEnabled: config.get(
+              'sqs.messageDeduplicationEnabled'
+            )
+          })
         }
       })
 
