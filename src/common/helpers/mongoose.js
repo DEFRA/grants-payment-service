@@ -22,8 +22,7 @@ export const mongooseDb = {
       const databaseName = options.databaseName ?? config.get('mongo.database')
 
       await mongoose.connect(mongoUrl, {
-        dbName: databaseName,
-        autoIndex: false
+        dbName: databaseName
       })
 
       server.logger.info('Mongoose connected to MongoDB')

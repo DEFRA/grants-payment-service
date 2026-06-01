@@ -19,7 +19,7 @@ export async function handleCreatePaymentEvent(messageId, payload, logger) {
     const grantPayment = await createGrantPayment(payload.data)
 
     logger.info(
-      `Managed to successfully create grantPayment entry ${JSON.stringify(grantPayment)}`
+      `Successfully created grant payment entry ${JSON.stringify(grantPayment)}`
     )
 
     const identifiers = {
@@ -41,6 +41,15 @@ export async function handleCreatePaymentEvent(messageId, payload, logger) {
       }
     }
   } catch (err) {
-    logger.error(err, grafanaLogMessages.error.createPayment)
+    const mongoDuplicateKeyErrorCode = 11000
+    const isDuplicateKeyError =
+      err?.name === 'MongoServerError' &&
+      err?.code === mongoDuplicateKeyErrorCode
+
+    if (isDuplicateKeyError) {
+      logger.warn(err, 'Duplicate grant payment entry received')
+    } else {
+      logger.error(err, grafanaLogMessages.error.createPayment)
+    }
   }
 }

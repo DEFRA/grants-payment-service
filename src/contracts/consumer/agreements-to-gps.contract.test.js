@@ -87,7 +87,7 @@ describe('receive a SFI grant payment event', () => {
           )
 
           expect(mockLogger.info.mock.calls[1][0]).toContain(
-            'Managed to successfully create grantPayment entry {"sbi":"'
+            'Successfully created grant payment entry {"sbi":"'
           )
         })
       )
@@ -132,7 +132,7 @@ describe('receive a SFI grant payment event', () => {
           )
 
           expect(mockLogger.info.mock.calls[1][1]).toContain(
-            'Managed to successfully cancel grantPayment entry'
+            'Successfully cancelled grant payment entry'
           )
         })
       )

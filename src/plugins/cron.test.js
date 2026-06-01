@@ -50,6 +50,21 @@ describe('cron plugin', () => {
       { timezone: 'UTC' },
       expect.any(Function)
     )
+
+    expect(mockServer.logger.info).toHaveBeenCalledWith(
+      `Cron jobs scheduled: ${JSON.stringify(
+        {
+          dailyPaymentScheduleCron: '10 0 * * *',
+          staleLockedPaymentCleanupScheduleCron: '20 0 * * *',
+          statsScheduleCron: '0 7 * * *',
+          options: {
+            timezone: 'UTC'
+          }
+        },
+        null,
+        2
+      )}`
+    )
   })
 
   it('calls processDailyPayments when the scheduled callback runs', async () => {
