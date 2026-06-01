@@ -374,9 +374,14 @@ describe('processDailyPayments', () => {
     expect(sendPaymentHubRequest).not.toHaveBeenCalled()
     expect(updatePaymentStatus).toHaveBeenCalledWith('1', 'p1', 'failed')
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Unsupported grant sourceSystem UNKNOWN')
+      expect.objectContaining({
+        message: 'Unsupported grant sourceSystem UNKNOWN for payment p1'
+      }),
+      'Payment Hub data transform failed for payment p1 in record 1'
     )
-    expect(result.results).toEqual([null])
+    expect(result.results[0]).toMatchObject({
+      message: 'Unsupported grant sourceSystem UNKNOWN for payment p1'
+    })
   })
 
   it('logs individual hub failures and continues, updating status appropriately', async () => {

@@ -42,11 +42,9 @@ const processSinglePayment = async (
         payment
       )
     } else {
-      logger.error(
+      throw new Error(
         `Unsupported grant sourceSystem ${grant.sourceSystem} for payment ${payment._id}`
       )
-      await updatePaymentStatus(docId, payment._id, 'failed')
-      return { result: null, backgroundTask: null }
     }
   } catch (err) {
     logger.error(
