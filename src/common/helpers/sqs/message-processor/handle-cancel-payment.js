@@ -26,7 +26,7 @@ export async function handleCancelPaymentEvent(messageId, payload, logger) {
       )
     } else {
       logger.warn(
-        `No grant payment entry found to cancel for sbi ${sbi} and frn ${frn}`
+        `${grafanaLogMessages.warning.noGrantPaymentEntryFound} to cancel for sbi ${sbi} and frn ${frn}`
       )
     }
   } catch (err) {
