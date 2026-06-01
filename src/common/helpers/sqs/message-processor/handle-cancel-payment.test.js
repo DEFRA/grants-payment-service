@@ -47,12 +47,12 @@ describe('handleCancelPaymentEvent', () => {
     )
     expect(logger.info).toHaveBeenCalledWith(
       { messageId: 'msg-1', sbi },
-      `Managed to successfully cancel grantPayment entry ${JSON.stringify([sampleData.grants[0]])}`
+      `Successfully cancelled grant payment entry ${JSON.stringify([sampleData.grants[0]])}`
     )
   })
 
-  it('logs an error if no grantPayment entry is found to cancel', async () => {
-    const logger = { info: vi.fn(), error: vi.fn() }
+  it('logs a warning if no grant payment entry is found to cancel', async () => {
+    const logger = { info: vi.fn(), warn: vi.fn() }
     const { sbi, frn } = sampleData.grants[0]
 
     cancelGrantPayments.mockResolvedValue([])
@@ -60,10 +60,23 @@ describe('handleCancelPaymentEvent', () => {
     await handleCancelPaymentEvent('msg-1', validPayload, logger)
 
     expect(cancelGrantPayments).toHaveBeenCalledWith(sbi, frn)
+    expect(logger.warn).toHaveBeenCalledWith(
+      `Warning: No grant payment entry found to cancel for sbi ${sbi} and frn ${frn}`
+    )
+  })
+
+  it('logs an error if cancelGrantPayments fails', async () => {
+    const logger = { info: vi.fn(), error: vi.fn() }
+    const { sbi, frn } = sampleData.grants[0]
+
+    const error = new Error('Database error')
+    cancelGrantPayments.mockRejectedValue(error)
+
+    await handleCancelPaymentEvent('msg-1', validPayload, logger)
+
+    expect(cancelGrantPayments).toHaveBeenCalledWith(sbi, frn)
     expect(logger.error).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: `No grantPayment entry found to cancel for sbi ${sbi} and frn ${frn}`
-      }),
+      error,
       'Error cancelling grant payment'
     )
   })

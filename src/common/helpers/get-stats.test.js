@@ -56,8 +56,14 @@ describe('getStats', () => {
       ],
       [{ count: 0 }],
       [
-        { _id: '2026-05-01', count: 2 },
-        { _id: '2026-05-02', count: 3 }
+        {
+          _id: { dueDate: '2026-05-01', sourceSystem: 'WMP' },
+          count: 2
+        },
+        {
+          _id: { dueDate: '2026-05-02', sourceSystem: 'WMP' },
+          count: 3
+        }
       ]
     )
 
@@ -72,8 +78,8 @@ describe('getStats', () => {
           total: MOCK_PENDING_COUNT,
           overdue: 0,
           byDueDate: {
-            '2026-05-01': 2,
-            '2026-05-02': 3
+            '2026-05-01': { WMP: 2 },
+            '2026-05-02': { WMP: 3 }
           }
         },
         submitted: MOCK_SUBMITTED_COUNT,
@@ -151,8 +157,18 @@ describe('getStats', () => {
       ],
       [{ count: 2 }],
       [
-        { _id: '2026-05-03', count: 4 },
-        { _id: '2026-05-04', count: 1 }
+        {
+          _id: { dueDate: '2026-05-03', sourceSystem: 'WMP' },
+          count: 3
+        },
+        {
+          _id: { dueDate: '2026-05-03', sourceSystem: 'SFI' },
+          count: 1
+        },
+        {
+          _id: { dueDate: '2026-05-04', sourceSystem: 'WMP' },
+          count: 1
+        }
       ]
     )
 
@@ -172,8 +188,8 @@ describe('getStats', () => {
           total: MOCK_PENDING_COUNT,
           overdue: 2,
           byDueDate: {
-            '2026-05-03': 4,
-            '2026-05-04': 1
+            '2026-05-03': { WMP: 3, SFI: 1 },
+            '2026-05-04': { WMP: 1 }
           }
         },
         submitted: MOCK_SUBMITTED_COUNT,
