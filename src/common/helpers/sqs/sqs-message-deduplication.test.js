@@ -8,21 +8,12 @@ vi.mock('#~/api/common/models/processed_sqs_messages.js', () => ({
 }))
 
 import ProcessedSqsMessagesModel from '#~/api/common/models/processed_sqs_messages.js'
-import {
-  AWS_SQS_MAX_MESSAGE_RETENTION_SECONDS,
-  PROCESSED_SQS_MESSAGE_TTL_BUFFER_SECONDS,
-  PROCESSED_SQS_MESSAGE_TTL_SECONDS
-} from './processed-sqs-message-retention.js'
+import { PROCESSED_SQS_MESSAGE_TTL_SECONDS } from './processed-sqs-message-retention.js'
 import { runWithSqsMessageDeduplication } from './sqs-message-deduplication.js'
 
 describe('processed-sqs-message-retention', () => {
   it('uses AWS SQS maximum message retention (14 days) plus a one-hour buffer', () => {
-    expect(AWS_SQS_MAX_MESSAGE_RETENTION_SECONDS).toBe(14 * 24 * 60 * 60)
-    expect(PROCESSED_SQS_MESSAGE_TTL_BUFFER_SECONDS).toBe(60 * 60)
-    expect(PROCESSED_SQS_MESSAGE_TTL_SECONDS).toBe(
-      AWS_SQS_MAX_MESSAGE_RETENTION_SECONDS +
-        PROCESSED_SQS_MESSAGE_TTL_BUFFER_SECONDS
-    )
+    expect(PROCESSED_SQS_MESSAGE_TTL_SECONDS).toBe(1_209_600 + 3_600)
   })
 })
 
