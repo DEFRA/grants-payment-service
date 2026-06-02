@@ -90,7 +90,6 @@ const cleanupOldBackups = async (db) => {
 }
 
 const restoreBackup = async (db, restoreTimestamp, server) => {
-  const dropBeforeRestore = config.get('backup.dropBeforeRestore')
   const collections = await db.collections()
   const matchingBackups = collections
     .map((collection) => collection.collectionName)
@@ -110,13 +109,11 @@ const restoreBackup = async (db, restoreTimestamp, server) => {
   for (const { collectionName, backupInfo } of matchingBackups) {
     const originalName = backupInfo.originalName
 
-    if (dropBeforeRestore) {
-      const originalExists = collections.some(
-        (c) => c.collectionName === originalName
-      )
-      if (originalExists) {
-        await db.dropCollection(originalName)
-      }
+    const originalExists = collections.some(
+      (c) => c.collectionName === originalName
+    )
+    if (originalExists) {
+      await db.dropCollection(originalName)
     }
 
     await copyCollection(db, collectionName, originalName)
@@ -163,7 +160,7 @@ const mongodbBackup = {
     register: async (server) => {
       server.logger.info('Registering mongodb-backup plugin')
 
-      if (config.get('featureFlags.disableBackups') === true) {
+      if (config.get('featureFlags.enableBackups') !== true) {
         server.logger.warn('mongodb-backup: backups are disabled')
         return
       }

@@ -21,7 +21,7 @@ describe('#healthController', () => {
     config.set('serviceVersion', 'versionMock')
     config.set('featureFlags.testEndpoints', true)
     config.set('featureFlags.isPaymentHubEnabled', false)
-    config.set('featureFlags.disableBackups', false)
+    config.set('featureFlags.enableBackups', false)
 
     // import createServer after mongoose is mocked so controllers picks up the mock
     const { createServer } = await import('../../server.js')
@@ -56,7 +56,7 @@ describe('#healthController', () => {
         featureFlags: {
           testEndpoints: true,
           isPaymentHubEnabled: false,
-          disableBackups: false
+          enableBackups: false
         }
       })
       expect(statusCode).toBe(statusCodes.ok)
@@ -116,7 +116,7 @@ describe('#healthController', () => {
         featureFlags: {
           testEndpoints: true,
           isPaymentHubEnabled: false,
-          disableBackups: false
+          enableBackups: false
         }
       })
       expect(response.statusCode).toBe(statusCodes.ok)

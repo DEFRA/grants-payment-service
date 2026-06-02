@@ -217,11 +217,11 @@ const config = convict({
       default: false,
       env: 'ENABLE_PAYMENT_HUB'
     },
-    disableBackups: {
-      doc: 'Disable MongoDB backups',
+    enableBackups: {
+      doc: 'Enable MongoDB backups',
       format: 'Boolean',
       default: false,
-      env: 'DISABLE_BACKUPS'
+      env: 'ENABLE_BACKUPS'
     }
   },
   backup: {
@@ -237,12 +237,6 @@ const config = convict({
       nullable: true,
       default: null,
       env: 'BACKUP_RESTORE_TIMESTAMP'
-    },
-    dropBeforeRestore: {
-      doc: 'Drop the original collection before restoring the backup',
-      format: 'Boolean',
-      default: true,
-      env: 'BACKUP_DROP_BEFORE_RESTORE'
     }
   },
   paginationLimit: {
