@@ -4,6 +4,7 @@ import {
   getTestGrantPaymentController,
   getTestPaymentsBySbiController,
   postTestProcessPaymentsController,
+  postTestProcessPaymentsBySbiController,
   getTestDailyPaymentsController,
   getTestGrantPaymentsBySbiAndFundCodeController,
   postTestPopulateGrantPaymentController,
@@ -58,6 +59,11 @@ const testEndpoints = {
           method: 'POST',
           path: '/process-payments/{date?}',
           ...postTestProcessPaymentsController
+        },
+        {
+          method: 'POST',
+          path: '/process-payments-by-sbi/{sbi}',
+          ...postTestProcessPaymentsBySbiController
         },
         {
           method: 'GET',

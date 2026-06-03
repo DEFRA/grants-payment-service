@@ -4,6 +4,7 @@ export { getTestGrantPaymentController } from './get-test-grant-payments.control
 export { getTestPaymentsBySbiController } from './get-test-payments-by-sbi.controller.js'
 export { getTestDailyPaymentsController } from './get-test-daily-payments.controller.js'
 export { postTestProcessPaymentsController } from './post-test-process-payments.controller.js'
+export { postTestProcessPaymentsBySbiController } from './post-test-process-payments-by-sbi.controller.js'
 export { postTestPopulateGrantPaymentController } from './post-test-populate-grant-payments.controller.js'
 export { getTestGrantPaymentsBySbiAndFundCodeController } from './get-test-grant-payments-by-sbi-and-fund-code.controller.js'
 export { deleteTestPaymentsBySbiController } from './delete-test-payments-by-sbi.controller.js'

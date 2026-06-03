@@ -24,7 +24,7 @@ const postTestProcessPaymentsController = {
         fetchDuration: fetchDur,
         processDuration: procDur,
         sendDuration: sendDur
-      } = await processDailyPayments(request.server, paginationLimit, date)
+      } = await processDailyPayments(request.server, paginationLimit, { date })
 
       // Await background tasks to get full payment hub responses for firstXPayments
       const firstXPaymentResponses = await Promise.all(
@@ -37,7 +37,7 @@ const postTestProcessPaymentsController = {
         db: payment
       }))
 
-      processDailyPayments(request.server, undefined, date).then(
+      processDailyPayments(request.server, undefined, { date }).then(
         ({ results, fetchDuration, processDuration, sendDuration }) => {
           const totalFetch = (
             Number.parseFloat(fetchDur) + Number.parseFloat(fetchDuration)

@@ -1,7 +1,10 @@
 import { performance } from 'node:perf_hooks'
 import { config } from '#~/config/index.js'
 import { getTodaysDate, getNextDay } from '#~/common/helpers/date.js'
-import { streamGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
+import {
+  streamGrantPaymentsByDate,
+  streamGrantPaymentsByPaymentIds
+} from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
 import {
   updatePaymentStatus,
@@ -118,18 +121,40 @@ const processAccountPayments = async (server, account, backgroundTasks) => {
 export const processDailyPayments = async (
   server,
   limit,
-  date = getTodaysDate()
+  { date, paymentIds } = {}
 ) => {
   const { logger } = server
-  const nextDay = getNextDay(date)
-  const logLimitedTo = limit ? ` (limited to ${limit} payments)` : ''
-  logger.info(
-    `Processing payments for dates: ${date} - ${nextDay}${logLimitedTo}`
-  )
+
+  if (date && paymentIds) {
+    throw new Error(
+      'Cannot provide both date and paymentIds. Provide one or the other.'
+    )
+  }
+
+  const useDate = date || (!paymentIds && getTodaysDate())
+  const usePaymentIds = paymentIds || null
+
+  let logMessage
+
+  if (usePaymentIds) {
+    const logLimitedTo = limit ? ` (limited to ${limit} payments)` : ''
+    logMessage = `Processing payments by IDs: ${usePaymentIds.length} payment(s)${logLimitedTo}`
+    logger.info(logMessage)
+  } else {
+    const nextDay = getNextDay(useDate)
+    const logLimitedTo = limit ? ` (limited to ${limit} payments)` : ''
+    logMessage = `Processing payments for dates: ${useDate} - ${nextDay}${logLimitedTo}`
+    logger.info(logMessage)
+  }
 
   try {
     const fetchStart = performance.now()
-    const cursor = streamGrantPaymentsByDate(date, 'pending', limit)
+    let cursor
+    if (usePaymentIds) {
+      cursor = streamGrantPaymentsByPaymentIds(usePaymentIds, 'pending')
+    } else {
+      cursor = streamGrantPaymentsByDate(useDate, 'pending', limit)
+    }
     const fetchDuration = (performance.now() - fetchStart).toFixed(2)
 
     const results = []
@@ -163,7 +188,7 @@ export const processDailyPayments = async (
   } catch (err) {
     logger.error(
       err,
-      `Failed to process payments for dates: ${date} - ${nextDay}${logLimitedTo}`
+      `Failed to process payments for dates: ${useDate} - ${getNextDay(useDate)}`
     )
     throw err
   }
