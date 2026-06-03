@@ -52,7 +52,9 @@ describe('postTestProcessPaymentsController', () => {
 
     const response = await postTestProcessPaymentsController.handler(req, h)
 
-    expect(processDailyPayments).toHaveBeenCalledWith(req.server, 10, fakeDate)
+    expect(processDailyPayments).toHaveBeenCalledWith(req.server, 10, {
+      date: fakeDate
+    })
     expect(response.statusCode).toBe(statusCodes.ok)
     expect(response.source).toEqual({
       message: `Triggered daily payment processing for ${fakeDate} - ${getNextDay(fakeDate)}, showing first 10 payments with full details, check logs for more details`,
@@ -79,7 +81,9 @@ describe('postTestProcessPaymentsController', () => {
 
     const response = await postTestProcessPaymentsController.handler(req, h)
 
-    expect(processDailyPayments).toHaveBeenCalledWith(req.server, 10, undefined)
+    expect(processDailyPayments).toHaveBeenCalledWith(req.server, 10, {
+      date: undefined
+    })
     expect(response.source).toEqual({
       message: `Triggered daily payment processing for ${getTodaysDate()} - ${getTomorrowsDate()}, showing first 10 payments with full details, check logs for more details`,
       result: fakeResults.map((r) => ({ db: r }))
