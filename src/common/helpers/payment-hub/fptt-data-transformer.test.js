@@ -232,13 +232,58 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     expect(out.currency).toBe('GBP')
   })
 
-  it('throws when date fields are invalid', () => {
+  it('throws when payment _id is missing', () => {
     expect(() =>
-      transformFpttPaymentDataToPaymentHubFormat(baseIdentifiers, baseGrant, {
-        dueDate: 123,
-        invoiceLines: []
-      })
-    ).toThrow(/Payment not found in the payments array/)
+      transformFpttPaymentDataToPaymentHubFormat(
+        baseIdentifiers,
+        { ...baseGrant, payments: [] },
+        { dueDate: '2026-06-05', invoiceLines: [] }
+      )
+    ).toThrow(/Payment _id is required for quarter calculation/)
+  })
+
+  it('matches payment _id when grant uses ObjectId and payment uses string', () => {
+    const objectId = new mongoose.Types.ObjectId()
+    const grantPayment = {
+      _id: objectId.toString(),
+      dueDate: '2026-06-05',
+      invoiceLines: []
+    }
+    const grant = {
+      ...baseGrant,
+      invoiceNumber: 'INV1QX',
+      payments: [{ _id: objectId, dueDate: '2026-06-05', invoiceLines: [] }]
+    }
+
+    const result = transformFpttPaymentDataToPaymentHubFormat(
+      baseIdentifiers,
+      grant,
+      grantPayment
+    )
+
+    expect(result.invoiceNumber).toBe('INV1Q1')
+  })
+
+  it('ignores payments without _id when locating quarter index', () => {
+    const validPaymentId = new mongoose.Types.ObjectId()
+    const validPayment = {
+      _id: validPaymentId,
+      dueDate: '2026-06-05',
+      invoiceLines: []
+    }
+    const grant = {
+      ...baseGrant,
+      invoiceNumber: 'INV1QX',
+      payments: [{ dueDate: '2026-03-01', invoiceLines: [] }, validPayment]
+    }
+
+    const result = transformFpttPaymentDataToPaymentHubFormat(
+      baseIdentifiers,
+      grant,
+      validPayment
+    )
+
+    expect(result.invoiceNumber).toBe('INV1Q2')
   })
 
   it('defaults marketingYear to the current year when not provided in grant', () => {
