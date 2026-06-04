@@ -6,10 +6,8 @@ import {
   postTestProcessPaymentsController,
   postTestProcessPaymentsBySbiController,
   getTestDailyPaymentsController,
-  getTestGrantPaymentsBySbiAndFundCodeController,
   postTestPopulateGrantPaymentController,
-  deleteTestPaymentsBySbiController,
-  deleteTestGrantPaymentsBySbiAndFundCodeController
+  deleteTestPaymentsBySbiController
 } from './controllers/index.js'
 
 /**
@@ -37,23 +35,13 @@ const testEndpoints = {
         },
         {
           method: 'GET',
-          path: '/grant-payments/{sbi}',
+          path: '/grant-payments/{sbi}/{fundCode?}',
           ...getTestPaymentsBySbiController
         },
         {
-          method: 'GET',
-          path: '/grant-payments/{sbi}/{fundCode}',
-          ...getTestGrantPaymentsBySbiAndFundCodeController
-        },
-        {
           method: 'DELETE',
-          path: '/grant-payments/{sbi}',
+          path: '/grant-payments/{sbi}/{fundCode?}',
           ...deleteTestPaymentsBySbiController
-        },
-        {
-          method: 'DELETE',
-          path: '/grant-payments/{sbi}/{fundCode}',
-          ...deleteTestGrantPaymentsBySbiAndFundCodeController
         },
         {
           method: 'POST',

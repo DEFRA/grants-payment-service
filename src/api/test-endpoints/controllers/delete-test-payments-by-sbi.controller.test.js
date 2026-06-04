@@ -29,7 +29,7 @@ describe('deleteTestPaymentsBySbiController', () => {
     vi.restoreAllMocks()
   })
 
-  test('returns 200 and deletedCount for a given sbi when delete succeeds', async () => {
+  test('returns 200 and deletedCount for a given sbi when no fundCode is provided', async () => {
     const sbi = '123456789'
     const deletedCount = 2
     deleteGrantPaymentsBySbi.mockResolvedValue({ deletedCount })
@@ -38,9 +38,24 @@ describe('deleteTestPaymentsBySbiController', () => {
     const h = makeH()
     const result = await deleteTestPaymentsBySbiController.handler(req, h)
 
-    expect(deleteGrantPaymentsBySbi).toHaveBeenCalledWith(sbi)
+    expect(deleteGrantPaymentsBySbi).toHaveBeenCalledWith(sbi, undefined)
     expect(result.statusCode).toBe(statusCodes.ok)
     expect(result.source).toEqual({ sbi, deletedCount })
+  })
+
+  test('returns 200 and deletedCount for a given sbi and fundCode when fundCode is provided', async () => {
+    const sbi = '123456789'
+    const fundCode = 'DRD10'
+    const deletedCount = 2
+    deleteGrantPaymentsBySbi.mockResolvedValue({ deletedCount })
+
+    const req = { params: { sbi, fundCode } }
+    const h = makeH()
+    const result = await deleteTestPaymentsBySbiController.handler(req, h)
+
+    expect(deleteGrantPaymentsBySbi).toHaveBeenCalledWith(sbi, fundCode)
+    expect(result.statusCode).toBe(statusCodes.ok)
+    expect(result.source).toEqual({ sbi, fundCode, deletedCount })
   })
 
   test('returns 200 and deletedCount 0 when no payments found for sbi', async () => {
@@ -53,6 +68,22 @@ describe('deleteTestPaymentsBySbiController', () => {
 
     expect(result.statusCode).toBe(statusCodes.ok)
     expect(result.source).toEqual({ sbi: '999999999', deletedCount: 0 })
+  })
+
+  test('returns 200 and deletedCount 0 when no payments found for sbi and fundCode', async () => {
+    const deletedCount = 0
+    deleteGrantPaymentsBySbi.mockResolvedValue({ deletedCount })
+
+    const req = { params: { sbi: '999999999', fundCode: 'UNKNOWN' } }
+    const h = makeH()
+    const result = await deleteTestPaymentsBySbiController.handler(req, h)
+
+    expect(result.statusCode).toBe(statusCodes.ok)
+    expect(result.source).toEqual({
+      sbi: '999999999',
+      fundCode: 'UNKNOWN',
+      deletedCount: 0
+    })
   })
 
   test('returns 500 for unexpected error', async () => {
