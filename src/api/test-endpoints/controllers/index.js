@@ -9,3 +9,4 @@ export {
 } from './post-test-process-payments.controller.js'
 export { postTestPopulateGrantPaymentController } from './post-test-populate-grant-payments.controller.js'
 export { deleteTestPaymentsBySbiController } from './delete-test-payments-by-sbi.controller.js'
+export { postSyncDbIndexesController } from './post-sync-db-indexes.controller.js'
