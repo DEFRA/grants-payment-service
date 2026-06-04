@@ -7,7 +7,8 @@ import {
   postTestProcessPaymentsBySbiController,
   getTestDailyPaymentsController,
   postTestPopulateGrantPaymentController,
-  deleteTestPaymentsBySbiController
+  deleteTestPaymentsBySbiController,
+  postSyncDbIndexesController
 } from './controllers/index.js'
 
 /**
@@ -62,6 +63,11 @@ const testEndpoints = {
           method: 'POST',
           path: '/populate-grant-payments',
           ...postTestPopulateGrantPaymentController
+        },
+        {
+          method: 'POST',
+          path: '/sync-db-indexes',
+          ...postSyncDbIndexesController
         }
       ])
     }
