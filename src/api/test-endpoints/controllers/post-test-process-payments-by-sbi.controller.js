@@ -17,14 +17,22 @@ const postTestProcessPaymentsBySbiController = {
       // Fetch all grant payments for the given SBI
       const accounts = await GrantPaymentsModel.find({ sbi }).lean()
 
-      // Extract all payment IDs from the accounts
-      const paymentIds = accounts.flatMap((account) =>
-        account.grants.flatMap((grant) =>
-          grant.payments.map((payment) => payment._id.toString())
+      request.logger.info(`Found ${accounts.length} accounts for SBI: ${sbi}`)
+
+      // Extract all payment correlationIds from the accounts
+      const correlationIds = accounts
+        .flatMap((account) =>
+          account.grants.flatMap((grant) =>
+            grant.payments.map((payment) => payment.correlationId)
+          )
         )
+        .filter(Boolean) // Filter out any undefined/null IDs
+
+      request.logger.info(
+        `Extracted ${correlationIds.length} correlation IDs for SBI: ${sbi}`
       )
 
-      if (paymentIds.length === 0) {
+      if (correlationIds.length === 0) {
         return h
           .response({
             message: `No payments found for SBI: ${sbi}`,
@@ -41,7 +49,7 @@ const postTestProcessPaymentsBySbiController = {
         processDuration: procDur,
         sendDuration: sendDur
       } = await processDailyPayments(request.server, paginationLimit, {
-        paymentIds
+        correlationIds
       })
 
       // Await background tasks to get full payment hub responses for firstXPayments
@@ -55,7 +63,7 @@ const postTestProcessPaymentsBySbiController = {
         db: payment
       }))
 
-      processDailyPayments(request.server, undefined, { paymentIds }).then(
+      processDailyPayments(request.server, undefined, { correlationIds }).then(
         ({ results, fetchDuration, processDuration, sendDuration }) => {
           const totalFetch = (
             Number.parseFloat(fetchDur) + Number.parseFloat(fetchDuration)

@@ -3,7 +3,7 @@ import { config } from '#~/config/index.js'
 import { getTodaysDate, getNextDay } from '#~/common/helpers/date.js'
 import {
   streamGrantPaymentsByDate,
-  streamGrantPaymentsByPaymentIds
+  streamGrantPaymentsByCorrelationIds
 } from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
 import {
@@ -121,24 +121,24 @@ const processAccountPayments = async (server, account, backgroundTasks) => {
 export const processDailyPayments = async (
   server,
   limit,
-  { date, paymentIds } = {}
+  { date, correlationIds } = {}
 ) => {
   const { logger } = server
 
-  if (date && paymentIds) {
+  if (date && correlationIds) {
     throw new Error(
-      'Cannot provide both date and paymentIds. Provide one or the other.'
+      'Cannot provide both date and correlationIds. Provide one or the other.'
     )
   }
 
-  const useDate = date || (!paymentIds && getTodaysDate())
-  const usePaymentIds = paymentIds || null
+  const useDate = date || (!correlationIds && getTodaysDate())
+  const useCorrelationIds = correlationIds || null
 
   let logMessage
 
-  if (usePaymentIds) {
+  if (useCorrelationIds) {
     const logLimitedTo = limit ? ` (limited to ${limit} payments)` : ''
-    logMessage = `Processing payments by IDs: ${usePaymentIds.length} payment(s)${logLimitedTo}`
+    logMessage = `Processing payments by correlation IDs: ${useCorrelationIds.length} payment(s)${logLimitedTo}`
     logger.info(logMessage)
   } else {
     const nextDay = getNextDay(useDate)
@@ -150,8 +150,8 @@ export const processDailyPayments = async (
   try {
     const fetchStart = performance.now()
     let cursor
-    if (usePaymentIds) {
-      cursor = streamGrantPaymentsByPaymentIds(usePaymentIds, 'pending')
+    if (useCorrelationIds) {
+      cursor = streamGrantPaymentsByCorrelationIds(useCorrelationIds, 'pending')
     } else {
       cursor = streamGrantPaymentsByDate(useDate, 'pending', limit)
     }
@@ -186,10 +186,7 @@ export const processDailyPayments = async (
       sendDuration
     }
   } catch (err) {
-    logger.error(
-      err,
-      `Failed to process payments for dates: ${useDate} - ${getNextDay(useDate)}`
-    )
+    logger.error(err, `Failed to process payments while ${logMessage}`)
     throw err
   }
 }
