@@ -104,8 +104,8 @@ export const streamGrantPaymentsByDate = (date, status, limit, page) => {
   return GrantPaymentsModel.aggregate(pipeline).cursor()
 }
 
-export const streamGrantPaymentsByPaymentIds = (paymentIds, status) => {
-  const paymentMatch = { _id: { $in: paymentIds } }
+export const streamGrantPaymentsByCorrelationIds = (correlationIds, status) => {
+  const paymentMatch = { correlationId: { $in: correlationIds } }
 
   if (status) {
     paymentMatch.status = status
@@ -142,7 +142,7 @@ export const streamGrantPaymentsByPaymentIds = (paymentIds, status) => {
                       as: 'p',
                       cond: {
                         $and: [
-                          { $in: ['$$p._id', paymentIds] },
+                          { $in: ['$$p.correlationId', correlationIds] },
                           status ? { $eq: ['$$p.status', status] } : true
                         ]
                       }

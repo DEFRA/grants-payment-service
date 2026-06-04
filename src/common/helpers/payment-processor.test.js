@@ -3,10 +3,7 @@ import {
   processDailyPayments,
   processStaleLockedPayments
 } from './payment-processor.js'
-import {
-  streamGrantPaymentsByDate,
-  streamGrantPaymentsByPaymentIds
-} from '#~/common/helpers/fetch-grants-by-date.js'
+import { streamGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
 import {
   updatePaymentStatus,
@@ -17,7 +14,7 @@ import { getTodaysDate, getNextDay } from './date.js'
 vi.mock('#~/common/helpers/fetch-grants-by-date.js', () => ({
   fetchGrantPaymentsByDate: vi.fn(),
   streamGrantPaymentsByDate: vi.fn(),
-  streamGrantPaymentsByPaymentIds: vi.fn()
+  streamGrantPaymentsByCorrelationIds: vi.fn()
 }))
 vi.mock('#~/common/helpers/payment-hub/index.js', () => ({
   sendPaymentHubRequest: vi.fn()
@@ -292,7 +289,7 @@ describe('processDailyPayments', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       error,
-      `Failed to process payments for dates: ${fakeDate} - ${getNextDay(fakeDate)}`
+      `Failed to process payments while Processing payments for dates: ${fakeDate} - ${getNextDay(fakeDate)}`
     )
   })
 
@@ -475,8 +472,8 @@ describe('processDailyPayments', () => {
     )
   })
 
-  it('uses provided paymentIds and processes payments by IDs', async () => {
-    const fakePaymentIds = ['payment1', 'payment2', 'payment3']
+  it('uses provided correlationIds and processes payments by correlation IDs', async () => {
+    const fakeCorrelationIds = ['corr1', 'corr2', 'corr3']
     const fakeDocs = [
       {
         _id: '1',
@@ -489,6 +486,7 @@ describe('processDailyPayments', () => {
             payments: [
               {
                 _id: 'payment1',
+                correlationId: 'corr1',
                 amountPence: 1000,
                 sourceSystem: 'FPTT',
                 dueDate: '2026-01-01',
@@ -498,6 +496,7 @@ describe('processDailyPayments', () => {
             matchedPayments: [
               {
                 _id: 'payment1',
+                correlationId: 'corr1',
                 amountPence: 1000,
                 sourceSystem: 'FPTT',
                 dueDate: '2026-01-01',
@@ -518,6 +517,7 @@ describe('processDailyPayments', () => {
             payments: [
               {
                 _id: 'payment2',
+                correlationId: 'corr2',
                 amountPence: 2000,
                 sourceSystem: 'FPTT',
                 dueDate: '2026-01-01',
@@ -527,6 +527,7 @@ describe('processDailyPayments', () => {
             matchedPayments: [
               {
                 _id: 'payment2',
+                correlationId: 'corr2',
                 amountPence: 2000,
                 sourceSystem: 'FPTT',
                 dueDate: '2026-01-01',
@@ -538,7 +539,9 @@ describe('processDailyPayments', () => {
       }
     ]
 
-    streamGrantPaymentsByPaymentIds.mockReturnValue(mockCursor(fakeDocs))
+    const { streamGrantPaymentsByCorrelationIds } =
+      await import('#~/common/helpers/fetch-grants-by-date.js')
+    streamGrantPaymentsByCorrelationIds.mockReturnValue(mockCursor(fakeDocs))
     const responses = ['a', 'b']
     sendPaymentHubRequest
       .mockResolvedValueOnce(responses[0])
@@ -547,15 +550,15 @@ describe('processDailyPayments', () => {
     updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
 
     const result = await processDailyPayments(server, undefined, {
-      paymentIds: fakePaymentIds
+      correlationIds: fakeCorrelationIds
     })
 
-    expect(streamGrantPaymentsByPaymentIds).toHaveBeenCalledWith(
-      fakePaymentIds,
+    expect(streamGrantPaymentsByCorrelationIds).toHaveBeenCalledWith(
+      fakeCorrelationIds,
       'pending'
     )
     expect(logger.info).toHaveBeenCalledWith(
-      `Processing payments by IDs: ${fakePaymentIds.length} payment(s)`
+      `Processing payments by correlation IDs: ${fakeCorrelationIds.length} payment(s)`
     )
 
     expect(sendPaymentHubRequest).toHaveBeenCalledTimes(2)
@@ -585,17 +588,17 @@ describe('processDailyPayments', () => {
     })
   })
 
-  it('throws error when both date and paymentIds are provided', async () => {
+  it('throws error when both date and correlationIds are provided', async () => {
     const fakeDate = '2026-02-20'
-    const fakePaymentIds = ['payment1', 'payment2']
+    const fakeCorrelationIds = ['corr1', 'corr2']
 
     await expect(
       processDailyPayments(server, undefined, {
         date: fakeDate,
-        paymentIds: fakePaymentIds
+        correlationIds: fakeCorrelationIds
       })
     ).rejects.toThrow(
-      'Cannot provide both date and paymentIds. Provide one or the other.'
+      'Cannot provide both date and correlationIds. Provide one or the other.'
     )
   })
 })
