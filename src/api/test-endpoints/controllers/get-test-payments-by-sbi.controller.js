@@ -4,7 +4,8 @@ import { statusCodes } from '#~/common/constants/status-codes.js'
 
 const getTestPaymentsBySbiController = {
   options: {
-    description: 'Fetch all grant-payments for a given SBI',
+    description:
+      'Fetch all grant-payments for a given SBI, optionally filtered by fund code',
     tags: ['api', 'test'],
     auth: false,
     timeout: {
@@ -14,11 +15,17 @@ const getTestPaymentsBySbiController = {
   },
   handler: async (req, res) => {
     try {
-      const { sbi } = req.params
+      const { sbi, fundCode } = req.params
       const page = Number.parseInt(req.query?.page) || 1
-      const { docs, pagination } = await fetchGrantPaymentsBySbi(sbi, page)
+      const { docs, pagination } = await fetchGrantPaymentsBySbi(
+        sbi,
+        fundCode,
+        page
+      )
 
-      return res.response({ sbi, docs, pagination }).code(statusCodes.ok)
+      return res
+        .response({ sbi, ...(fundCode && { fundCode }), docs, pagination })
+        .code(statusCodes.ok)
     } catch (err) {
       req.log(['error'], err)
       return res
