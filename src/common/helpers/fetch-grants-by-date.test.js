@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
-import { fetchGrantPaymentsByDate } from './fetch-grants-by-date.js'
+import {
+  fetchGrantPaymentsByDate,
+  streamGrantPaymentsByDate,
+  streamGrantPaymentsByCorrelationIds
+} from './fetch-grants-by-date.js'
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 
 vi.mock('#~/api/common/models/grant_payments.js')
@@ -182,5 +186,291 @@ describe('fetchGrantPaymentsByDate', () => {
     expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith(
       expect.arrayContaining([{ $limit: 10 }, { $sort: { createdAt: -1 } }])
     )
+  })
+})
+
+describe('streamGrantPaymentsByDate', () => {
+  let date
+
+  beforeEach(() => {
+    date = '2026-02-20'
+    const mockCursor = {
+      next: vi.fn()
+    }
+    GrantPaymentsModel.aggregate.mockReturnValue({
+      cursor: vi.fn().mockReturnValue(mockCursor)
+    })
+  })
+
+  it('builds pipeline with date only', () => {
+    const nextDay = '2026-02-21'
+
+    streamGrantPaymentsByDate(date)
+
+    const expectedMatch = {
+      grants: {
+        $elemMatch: {
+          payments: {
+            $elemMatch: { dueDate: { $in: [date, nextDay] } }
+          }
+        }
+      }
+    }
+
+    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
+      { $match: expectedMatch },
+      {
+        $project: {
+          sbi: 1,
+          frn: 1,
+          claimId: 1,
+          grants: {
+            $map: {
+              input: '$grants',
+              as: 'g',
+              in: {
+                $mergeObjects: [
+                  '$$g',
+                  {
+                    matchedPayments: {
+                      $filter: {
+                        input: '$$g.payments',
+                        as: 'p',
+                        cond: {
+                          $and: [{ $in: ['$$p.dueDate', [date, nextDay]] }]
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          grants: {
+            $elemMatch: { 'matchedPayments.0': { $exists: true } }
+          }
+        }
+      }
+    ])
+  })
+
+  it('builds pipeline with status', () => {
+    const status = 'pending'
+    const nextDay = '2026-02-21'
+
+    streamGrantPaymentsByDate(date, status)
+
+    const expectedMatch = {
+      grants: {
+        $elemMatch: {
+          payments: {
+            $elemMatch: {
+              dueDate: { $in: [date, nextDay] },
+              status: 'pending'
+            }
+          }
+        }
+      }
+    }
+
+    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
+      { $match: expectedMatch },
+      {
+        $project: {
+          sbi: 1,
+          frn: 1,
+          claimId: 1,
+          grants: {
+            $map: {
+              input: '$grants',
+              as: 'g',
+              in: {
+                $mergeObjects: [
+                  '$$g',
+                  {
+                    matchedPayments: {
+                      $filter: {
+                        input: '$$g.payments',
+                        as: 'p',
+                        cond: {
+                          $and: [
+                            { $in: ['$$p.dueDate', [date, nextDay]] },
+                            { $eq: ['$$p.status', 'pending'] }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          grants: {
+            $elemMatch: { 'matchedPayments.0': { $exists: true } }
+          }
+        }
+      }
+    ])
+  })
+
+  it('builds pipeline with limit and page', () => {
+    streamGrantPaymentsByDate(date, null, 10, 2)
+
+    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        { $skip: 10 },
+        { $limit: 10 },
+        { $sort: { createdAt: -1 } }
+      ])
+    )
+  })
+
+  it('builds pipeline with limit only', () => {
+    streamGrantPaymentsByDate(date, null, 10)
+
+    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith(
+      expect.arrayContaining([{ $limit: 10 }, { $sort: { createdAt: -1 } }])
+    )
+  })
+})
+
+describe('streamGrantPaymentsByCorrelationIds', () => {
+  let correlationIds
+
+  beforeEach(() => {
+    correlationIds = ['corr1', 'corr2']
+    const mockCursor = {
+      next: vi.fn()
+    }
+    GrantPaymentsModel.aggregate.mockReturnValue({
+      cursor: vi.fn().mockReturnValue(mockCursor)
+    })
+  })
+
+  it('builds pipeline with correlationIds only', () => {
+    streamGrantPaymentsByCorrelationIds(correlationIds)
+
+    const expectedMatch = {
+      grants: {
+        $elemMatch: {
+          payments: {
+            $elemMatch: { correlationId: { $in: correlationIds } }
+          }
+        }
+      }
+    }
+
+    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
+      { $match: expectedMatch },
+      {
+        $project: {
+          sbi: 1,
+          frn: 1,
+          claimId: 1,
+          grants: {
+            $map: {
+              input: '$grants',
+              as: 'g',
+              in: {
+                $mergeObjects: [
+                  '$$g',
+                  {
+                    matchedPayments: {
+                      $filter: {
+                        input: '$$g.payments',
+                        as: 'p',
+                        cond: {
+                          $and: [
+                            { $in: ['$$p.correlationId', correlationIds] },
+                            true
+                          ]
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          grants: {
+            $elemMatch: { 'matchedPayments.0': { $exists: true } }
+          }
+        }
+      }
+    ])
+  })
+
+  it('builds pipeline with status', () => {
+    const status = 'pending'
+
+    streamGrantPaymentsByCorrelationIds(correlationIds, status)
+
+    const expectedMatch = {
+      grants: {
+        $elemMatch: {
+          payments: {
+            $elemMatch: {
+              correlationId: { $in: correlationIds },
+              status: 'pending'
+            }
+          }
+        }
+      }
+    }
+
+    expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
+      { $match: expectedMatch },
+      {
+        $project: {
+          sbi: 1,
+          frn: 1,
+          claimId: 1,
+          grants: {
+            $map: {
+              input: '$grants',
+              as: 'g',
+              in: {
+                $mergeObjects: [
+                  '$$g',
+                  {
+                    matchedPayments: {
+                      $filter: {
+                        input: '$$g.payments',
+                        as: 'p',
+                        cond: {
+                          $and: [
+                            { $in: ['$$p.correlationId', correlationIds] },
+                            { $eq: ['$$p.status', 'pending'] }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          grants: {
+            $elemMatch: { 'matchedPayments.0': { $exists: true } }
+          }
+        }
+      }
+    ])
   })
 })

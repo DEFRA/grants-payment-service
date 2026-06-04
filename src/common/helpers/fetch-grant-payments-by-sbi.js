@@ -3,9 +3,10 @@ import { config } from '#~/config/index.js'
 import { wrapWithPagination } from './pagination.js'
 
 export const fetchGrantPaymentsBySbi = async (sbi, fundCode, page) => {
-  const match = fundCode
-    ? { sbi, 'grants.payments.invoiceLines.fundCode': fundCode }
-    : { sbi }
+  const match = {
+    sbi,
+    ...(fundCode ? { 'grants.payments.invoiceLines.fundCode': fundCode } : {})
+  }
   const limit = config.get('paginationLimit')
   const query = GrantPaymentsModel.find(match).sort({ createdAt: -1 })
 
