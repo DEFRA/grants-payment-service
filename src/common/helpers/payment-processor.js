@@ -137,8 +137,8 @@ export const processDailyPayments = async (
   let logMessage
 
   if (useCorrelationIds) {
-    const logLimitedTo = limit ? ` (limited to ${limit} payments)` : ''
-    logMessage = `Processing payments by correlation IDs: ${useCorrelationIds.length} payment(s)${logLimitedTo}`
+    const logLimitedTo = limit ? ` (limited to ${limit} grants)` : ''
+    logMessage = `Processing payments by correlation IDs: ${useCorrelationIds.length} grant(s)${logLimitedTo}`
     logger.info(logMessage)
   } else {
     const nextDay = getNextDay(useDate)
@@ -151,7 +151,11 @@ export const processDailyPayments = async (
     const fetchStart = performance.now()
     let cursor
     if (useCorrelationIds) {
-      cursor = streamGrantPaymentsByCorrelationIds(useCorrelationIds, 'pending')
+      cursor = streamGrantPaymentsByCorrelationIds(
+        useCorrelationIds,
+        'pending',
+        limit
+      )
     } else {
       cursor = streamGrantPaymentsByDate(useDate, 'pending', limit)
     }

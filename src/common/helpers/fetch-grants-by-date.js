@@ -104,7 +104,11 @@ export const streamGrantPaymentsByDate = (date, status, limit, page) => {
   return GrantPaymentsModel.aggregate(pipeline).cursor()
 }
 
-export const streamGrantPaymentsByCorrelationIds = (correlationIds, status) => {
+export const streamGrantPaymentsByCorrelationIds = (
+  correlationIds,
+  status,
+  limit
+) => {
   const paymentMatch = { correlationId: { $in: correlationIds } }
 
   if (status) {
@@ -165,6 +169,10 @@ export const streamGrantPaymentsByCorrelationIds = (correlationIds, status) => {
       }
     }
   ]
+
+  if (limit) {
+    pipeline.push({ $limit: limit }, { $sort: { createdAt: -1 } })
+  }
 
   return GrantPaymentsModel.aggregate(pipeline).cursor()
 }
