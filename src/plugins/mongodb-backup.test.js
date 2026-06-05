@@ -20,7 +20,26 @@ const mongooseMock = {
         return db
       },
       once: onceMock
-    }
+    },
+    Types: {
+      Decimal128: class Decimal128 {
+        constructor(value) {
+          this.value = value
+        }
+      }
+    },
+    Schema: class Schema {
+      constructor(definition, options) {
+        this.definition = definition
+        this.options = options
+        this.indexes = []
+      }
+      index(fields, options) {
+        this.indexes.push({ fields, options })
+        return this
+      }
+    },
+    model: vi.fn()
   }
 }
 

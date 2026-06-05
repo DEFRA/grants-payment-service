@@ -103,3 +103,76 @@ export const streamGrantPaymentsByDate = (date, status, limit, page) => {
 
   return GrantPaymentsModel.aggregate(pipeline).cursor()
 }
+
+export const streamGrantPaymentsByCorrelationIds = (
+  correlationIds,
+  status,
+  limit
+) => {
+  const paymentMatch = { correlationId: { $in: correlationIds } }
+
+  if (status) {
+    paymentMatch.status = status
+  }
+
+  const pipeline = [
+    {
+      $match: {
+        grants: {
+          $elemMatch: {
+            payments: {
+              $elemMatch: paymentMatch
+            }
+          }
+        }
+      }
+    },
+    {
+      $project: {
+        sbi: 1,
+        frn: 1,
+        claimId: 1,
+        grants: {
+          $map: {
+            input: '$grants',
+            as: 'g',
+            in: {
+              $mergeObjects: [
+                '$$g',
+                {
+                  matchedPayments: {
+                    $filter: {
+                      input: '$$g.payments',
+                      as: 'p',
+                      cond: {
+                        $and: [
+                          { $in: ['$$p.correlationId', correlationIds] },
+                          status ? { $eq: ['$$p.status', status] } : true
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      $match: {
+        grants: {
+          $elemMatch: {
+            'matchedPayments.0': { $exists: true }
+          }
+        }
+      }
+    }
+  ]
+
+  if (limit) {
+    pipeline.push({ $limit: limit }, { $sort: { createdAt: -1 } })
+  }
+
+  return GrantPaymentsModel.aggregate(pipeline).cursor()
+}

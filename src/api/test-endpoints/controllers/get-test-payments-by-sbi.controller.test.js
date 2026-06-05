@@ -29,7 +29,7 @@ describe('getTestPaymentsBySbiController', () => {
     vi.restoreAllMocks()
   })
 
-  test('returns 200 and payments for a given sbi when fetch succeeds', async () => {
+  test('returns 200 and payments for a given sbi when no fundCode is provided', async () => {
     const sbi = '123456789'
     const mockPayments = [
       { id: '1', sbi },
@@ -45,9 +45,36 @@ describe('getTestPaymentsBySbiController', () => {
     const h = makeH()
     const result = await getTestPaymentsBySbiController.handler(req, h)
 
-    expect(fetchGrantPaymentsBySbi).toHaveBeenCalledWith(sbi, 1)
+    expect(fetchGrantPaymentsBySbi).toHaveBeenCalledWith(sbi, undefined, 1)
     expect(result.statusCode).toBe(statusCodes.ok)
     expect(result.source).toEqual({ sbi, docs: mockPayments, pagination })
+  })
+
+  test('returns 200 and payments for a given sbi and fundCode when fundCode is provided', async () => {
+    const sbi = '123456789'
+    const fundCode = 'DRD10'
+    const mockPayments = [
+      { id: '1', sbi },
+      { id: '2', sbi }
+    ]
+    const pagination = { page: 1, total: 1 }
+    fetchGrantPaymentsBySbi.mockResolvedValue({
+      docs: mockPayments,
+      pagination
+    })
+
+    const req = { params: { sbi, fundCode } }
+    const h = makeH()
+    const result = await getTestPaymentsBySbiController.handler(req, h)
+
+    expect(fetchGrantPaymentsBySbi).toHaveBeenCalledWith(sbi, fundCode, 1)
+    expect(result.statusCode).toBe(statusCodes.ok)
+    expect(result.source).toEqual({
+      sbi,
+      fundCode,
+      docs: mockPayments,
+      pagination
+    })
   })
 
   test('returns 200 and empty array when no payments found for sbi', async () => {
@@ -60,6 +87,23 @@ describe('getTestPaymentsBySbiController', () => {
 
     expect(result.statusCode).toBe(statusCodes.ok)
     expect(result.source).toEqual({ sbi: '999999999', docs: [], pagination })
+  })
+
+  test('returns 200 and empty array when no payments found for sbi and fundCode', async () => {
+    const pagination = { page: 1, total: 0 }
+    fetchGrantPaymentsBySbi.mockResolvedValue({ docs: [], pagination })
+
+    const req = { params: { sbi: '999999999', fundCode: 'UNKNOWN' } }
+    const h = makeH()
+    const result = await getTestPaymentsBySbiController.handler(req, h)
+
+    expect(result.statusCode).toBe(statusCodes.ok)
+    expect(result.source).toEqual({
+      sbi: '999999999',
+      fundCode: 'UNKNOWN',
+      docs: [],
+      pagination
+    })
   })
 
   test('returns 500 for unexpected error', async () => {
