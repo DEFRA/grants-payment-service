@@ -9,6 +9,7 @@ import { getLogger } from '#~/common/helpers/logging/logger.js'
  */
 export const syncModelIndexes = async (logPrefix = 'sync-model-indexes') => {
   const logger = getLogger()
+  logger.info(`${logPrefix}: syncing MongoDB indexes`)
 
   for (const [modelName, model] of Object.entries(models)) {
     try {
@@ -19,6 +20,11 @@ export const syncModelIndexes = async (logPrefix = 'sync-model-indexes') => {
         error,
         `${logPrefix}: failed to sync MongoDB indexes for ${modelName}`
       )
+
+      return error
     }
   }
+  logger.info(`${logPrefix}: all indexes synced successfully`)
+
+  return true
 }

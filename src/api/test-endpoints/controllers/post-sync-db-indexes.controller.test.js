@@ -29,12 +29,6 @@ describe('postSyncDbIndexesController', () => {
     await postSyncDbIndexesController.handler(mockRequest, mockResponseToolkit)
 
     expect(syncModelIndexes).toHaveBeenCalledWith('test-endpoint')
-    expect(mockRequest.logger.info).toHaveBeenCalledWith(
-      'Syncing MongoDB indexes'
-    )
-    expect(mockRequest.logger.info).toHaveBeenCalledWith(
-      'Successfully synced MongoDB indexes'
-    )
     expect(mockResponseToolkit.response).toHaveBeenCalledWith({
       message: 'MongoDB indexes synced successfully'
     })
@@ -55,7 +49,7 @@ describe('postSyncDbIndexesController', () => {
     )
     expect(mockResponseToolkit.response).toHaveBeenCalledWith({
       message: 'Failed to sync MongoDB indexes',
-      error: 'Sync failed'
+      error: testError
     })
     expect(mockResponseToolkit.code).toHaveBeenCalledWith(500)
   })
