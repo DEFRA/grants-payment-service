@@ -8,11 +8,11 @@ import { syncModelIndexes } from '#~/common/helpers/sync-model-indexes.js'
 const postSyncDbIndexesController = {
   handler: async (request, h) => {
     try {
-      request.logger.info('Syncing MongoDB indexes')
+      const result = await syncModelIndexes('test-endpoint')
 
-      await syncModelIndexes('test-endpoint')
-
-      request.logger.info('Successfully synced MongoDB indexes')
+      if (result instanceof Error) {
+        throw result
+      }
 
       return h
         .response({
@@ -25,7 +25,7 @@ const postSyncDbIndexesController = {
       return h
         .response({
           message: 'Failed to sync MongoDB indexes',
-          error: error.message
+          error
         })
         .code(statusCodes.internalServerError)
     }
