@@ -315,7 +315,7 @@ describe('postTestProcessPaymentsBySbiController', () => {
     })
     expect(response.statusCode).toBe(statusCodes.ok)
     expect(response.source).toEqual({
-      message: `Triggered payment processing for SBI: ${fakeSbi}, showing first 10 payments with full details, check logs for more details`,
+      message: `Triggered payment processing for SBI: ${fakeSbi}, showing first 10 grants with full details, check logs for more details`,
       result: fakeResults.map((r) => ({ db: r }))
     })
   })

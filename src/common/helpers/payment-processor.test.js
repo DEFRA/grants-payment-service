@@ -555,10 +555,11 @@ describe('processDailyPayments', () => {
 
     expect(streamGrantPaymentsByCorrelationIds).toHaveBeenCalledWith(
       fakeCorrelationIds,
-      'pending'
+      'pending',
+      undefined
     )
     expect(logger.info).toHaveBeenCalledWith(
-      `Processing payments by correlation IDs: ${fakeCorrelationIds.length} payment(s)`
+      `Processing payments by correlation IDs: ${fakeCorrelationIds.length} grant(s)`
     )
 
     expect(sendPaymentHubRequest).toHaveBeenCalledTimes(2)
@@ -599,6 +600,28 @@ describe('processDailyPayments', () => {
       })
     ).rejects.toThrow(
       'Cannot provide both date and correlationIds. Provide one or the other.'
+    )
+  })
+
+  it('passes limit to streamGrantPaymentsByCorrelationIds and includes it in logs', async () => {
+    const fakeCorrelationIds = ['corr1', 'corr2', 'corr3']
+    const limit = 5
+    const { streamGrantPaymentsByCorrelationIds } =
+      await import('#~/common/helpers/fetch-grants-by-date.js')
+    streamGrantPaymentsByCorrelationIds.mockReturnValue(mockCursor([]))
+
+    await processDailyPayments(server, limit, {
+      correlationIds: fakeCorrelationIds
+    })
+
+    expect(streamGrantPaymentsByCorrelationIds).toHaveBeenCalledWith(
+      fakeCorrelationIds,
+      'pending',
+      limit
+    )
+
+    expect(logger.info).toHaveBeenCalledWith(
+      `Processing payments by correlation IDs: ${fakeCorrelationIds.length} grant(s) (limited to ${limit} grants)`
     )
   })
 })

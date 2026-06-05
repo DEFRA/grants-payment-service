@@ -156,7 +156,7 @@ const postTestProcessPaymentsBySbiController = {
 
       return h
         .response({
-          message: `Triggered payment processing for SBI: ${sbi}, showing first ${paginationLimit} payments with full details, check logs for more details`,
+          message: `Triggered payment processing for SBI: ${sbi}, showing first ${paginationLimit} grants with full details, check logs for more details`,
           result: paymentsWithResponses
         })
         .code(statusCodes.ok)
