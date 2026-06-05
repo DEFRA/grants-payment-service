@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 import { config } from '#~/config/index.js'
+import { syncModelIndexes } from '#~/common/helpers/sync-model-indexes.js'
 
 const pad = (value) => String(value).padStart(2, '0')
 
@@ -122,6 +123,8 @@ const restoreBackup = async (db, restoreTimestamp, server) => {
       `mongodb-backup: restored ${originalName} from ${collectionName}`
     )
   }
+
+  await syncModelIndexes('mongodb-backup')
 }
 
 const runBackupPlugin = async (server) => {

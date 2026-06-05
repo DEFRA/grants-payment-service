@@ -4,9 +4,11 @@ import {
   getTestGrantPaymentController,
   getTestPaymentsBySbiController,
   postTestProcessPaymentsController,
+  postTestProcessPaymentsBySbiController,
   getTestDailyPaymentsController,
-  getTestGrantPaymentsBySbiAndFundCodeController,
-  postTestPopulateGrantPaymentController
+  postTestPopulateGrantPaymentController,
+  deleteTestPaymentsBySbiController,
+  postSyncDbIndexesController
 } from './controllers/index.js'
 
 /**
@@ -34,18 +36,23 @@ const testEndpoints = {
         },
         {
           method: 'GET',
-          path: '/grant-payments/{sbi}',
+          path: '/grant-payments/{sbi}/{fundCode?}',
           ...getTestPaymentsBySbiController
         },
         {
-          method: 'GET',
-          path: '/grant-payments/{sbi}/{fundCode}',
-          ...getTestGrantPaymentsBySbiAndFundCodeController
+          method: 'DELETE',
+          path: '/grant-payments/{sbi}/{fundCode?}',
+          ...deleteTestPaymentsBySbiController
         },
         {
           method: 'POST',
           path: '/process-payments/{date?}',
           ...postTestProcessPaymentsController
+        },
+        {
+          method: 'POST',
+          path: '/process-payments-by-sbi/{sbi}',
+          ...postTestProcessPaymentsBySbiController
         },
         {
           method: 'GET',
@@ -56,6 +63,11 @@ const testEndpoints = {
           method: 'POST',
           path: '/populate-grant-payments',
           ...postTestPopulateGrantPaymentController
+        },
+        {
+          method: 'POST',
+          path: '/sync-db-indexes',
+          ...postSyncDbIndexesController
         }
       ])
     }
