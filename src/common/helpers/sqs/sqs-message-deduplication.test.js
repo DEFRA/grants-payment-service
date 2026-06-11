@@ -26,6 +26,7 @@ describe('runWithSqsMessageDeduplication', () => {
     enabled: true,
     queueTag: 'create-payment',
     messageId: 'sqs-msg-1',
+    messageBody: { test: 'data' },
     logger,
     run: vi.fn()
   }
@@ -67,8 +68,7 @@ describe('runWithSqsMessageDeduplication', () => {
     expect(baseOptions.run).not.toHaveBeenCalled()
     expect(ProcessedSqsMessagesModel.create).not.toHaveBeenCalled()
     expect(logger.info).toHaveBeenCalledWith(
-      { queueTag: 'create-payment', messageId: 'sqs-msg-1' },
-      'Skipping already processed SQS message'
+      'Skipping already processed SQS message "create-payment" (sqs-msg-1): {\n  "test": "data"\n}'
     )
   })
 
