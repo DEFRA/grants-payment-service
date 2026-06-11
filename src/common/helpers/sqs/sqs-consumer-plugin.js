@@ -39,6 +39,7 @@ const processMessage = async (
       enabled: messageDeduplicationEnabled,
       queueTag,
       messageId,
+      messageBody: message.Body,
       logger,
       run: async () => handler(messageId, payload, logger)
     })

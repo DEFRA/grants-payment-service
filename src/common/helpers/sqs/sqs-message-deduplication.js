@@ -14,6 +14,7 @@ const mongoDuplicateKeyErrorCode = 11000
  *   enabled: boolean,
  *   queueTag: string,
  *   messageId: string,
+ *   messageBody: string,
  *   logger: import('pino').Logger,
  *   run: () => Promise<void>
  * }} options
@@ -22,6 +23,7 @@ export async function runWithSqsMessageDeduplication({
   enabled,
   queueTag,
   messageId,
+  messageBody,
   logger,
   run
 }) {
@@ -37,8 +39,7 @@ export async function runWithSqsMessageDeduplication({
 
   if (alreadyProcessed) {
     logger.info(
-      { queueTag, messageId },
-      'Skipping already processed SQS message'
+      `Skipping already processed SQS message "${queueTag}" (${messageId}): ${JSON.stringify(messageBody, null, 2)}`
     )
     return
   }
