@@ -129,7 +129,7 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
     expect(getPublishedPayload()).toMatchObject({
       correlationid: 'corr-xyz',
       datetime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
-      environment: 'test',
+      environment: 'cdp-test',
       application: 'Grants',
       component: 'grants-payment-service'
     })
