@@ -129,7 +129,7 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
     expect(getPublishedPayload()).toMatchObject({
       correlationid: 'corr-xyz',
       datetime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
-      environment: 'test',
+      environment: 'cdp-test',
       application: 'Grants',
       component: 'grants-payment-service'
     })
@@ -169,7 +169,9 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
 
     expect(getPublishedPayload().audit).toMatchObject({
       eventtype: 'GrantsPaymentHubRequest',
-      entities: [{ entity: 'payment', action: 'submitted', id: 'INV-001' }],
+      entities: [
+        { entity: 'payment', action: 'submitted', entityId: 'INV-001' }
+      ],
       status: 'success',
       details: context,
       accounts: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
@@ -268,7 +270,7 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
     const payload = getPublishedPayload()
     expect(payload.correlationid).toBeUndefined()
     expect(payload.audit.entities).toEqual([
-      { entity: 'payment', action: 'submitted', id: undefined }
+      { entity: 'payment', action: 'submitted', entityId: undefined }
     ])
   })
 
