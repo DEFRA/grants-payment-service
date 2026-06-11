@@ -135,11 +135,14 @@ describe('mongodb-backup plugin', () => {
   })
 
   it('drops backup collections older than retentionDays', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2025-01-01T00:00:00Z'))
+
     collectionsMap.set('backup_grant_payments_2020-01-01-00-00-00', {
-      docs: [{ _id: 'old' }]
+      docs: [{ _id: 'delete-me' }]
     })
-    collectionsMap.set('backup_grant_payments_2026-05-10-00-00-00', {
-      docs: [{ _id: 'new' }]
+    collectionsMap.set('backup_grant_payments_2024-12-15-00-00-00', {
+      docs: [{ _id: 'keep-me' }]
     })
 
     mockConfigGet.mockImplementation((path) => {
@@ -156,11 +159,13 @@ describe('mongodb-backup plugin', () => {
 
     await mongodbBackup.plugin.register(fakeServer)
 
+    vi.useRealTimers()
+
     expect(db.dropCollection).toHaveBeenCalledWith(
       'backup_grant_payments_2020-01-01-00-00-00'
     )
     expect(
-      collectionsMap.has('backup_grant_payments_2026-05-10-00-00-00')
+      collectionsMap.has('backup_grant_payments_2024-12-15-00-00-00')
     ).toBe(true)
     expect(fakeServer.logger.info).toHaveBeenCalledWith(
       'mongodb-backup: cleaned up expired backup collections ["backup_grant_payments_2020-01-01-00-00-00"]'

@@ -108,7 +108,9 @@ describe('cron job schedule sending a POST request to payment hub', () => {
         config.set('paymentHub.keyName', 'test-key-name')
 
         // Use the date that matches the seeded payment data (2026-06-05)
-        const actual = await processDailyPayments(server, null, '2026-06-05')
+        const actual = await processDailyPayments(server, null, {
+          date: '2026-06-05'
+        })
 
         expect(actual).toEqual(
           expect.objectContaining({
