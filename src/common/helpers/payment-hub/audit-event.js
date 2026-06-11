@@ -51,7 +51,7 @@ const eventTypes = {
 // action must be one of: created, read, updated, deleted, submitted, accepted, rejected, withdrawn
 const eventEntities = {
   [AuditEvent.PAYMENT_HUB_REQUEST_SENT]: (context) => [
-    { entity: 'payment', action: 'submitted', id: context.invoiceNumber }
+    { entity: 'payment', action: 'submitted', entityId: context.invoiceNumber }
   ]
 }
 
