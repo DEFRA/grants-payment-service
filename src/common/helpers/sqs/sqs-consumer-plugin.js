@@ -88,12 +88,28 @@ export const createSqsConsumerPlugin = ({ tag, queueUrl, handler }) => ({
         attributeNames: ['All'],
         messageAttributeNames: ['All'],
         handleMessage: async (message) => {
-          await processMessage(handler, message, server.logger, {
-            queueTag: tag,
-            messageDeduplicationEnabled: config.get(
-              'sqs.messageDeduplicationEnabled'
+          try {
+            server.logger.info(
+              `Received SQS message "${tag}": ${message.MessageId}`
             )
-          })
+
+            await processMessage(handler, message, server.logger, {
+              queueTag: tag,
+              messageDeduplicationEnabled: config.get(
+                'sqs.messageDeduplicationEnabled'
+              )
+            })
+
+            server.logger.info(
+              `Finished processing SQS message "${tag}": ${message.MessageId}`
+            )
+          } catch (error) {
+            server.logger.error(
+              error,
+              `Error processing SQS message "${tag}": ${message.MessageId}`
+            )
+            throw error
+          }
         }
       })
 
