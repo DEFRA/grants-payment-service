@@ -109,11 +109,19 @@ const config = convict({
     default: null,
     env: 'HTTP_PROXY'
   },
-  fetchTimeout: {
-    doc: 'Fetch timeout in milliseconds',
-    format: Number,
-    default: 30000,
-    env: 'FETCH_TIMEOUT'
+  fetch: {
+    timeout: {
+      doc: 'Fetch timeout in milliseconds',
+      format: Number,
+      default: 30000,
+      env: 'FETCH_TIMEOUT'
+    },
+    maxAttempts: {
+      doc: 'Maximum number of retry attempts for fetch requests',
+      format: 'nat',
+      default: 3,
+      env: 'FETCH_MAX_ATTEMPTS'
+    }
   },
   tracing: {
     header: {
