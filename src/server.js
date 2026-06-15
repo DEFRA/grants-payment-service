@@ -18,6 +18,7 @@ import { handleCreatePaymentEvent } from '#~/common/helpers/sqs/message-processo
 import { handleCancelPaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-cancel-payment.js'
 import { mongodbBackup } from '#~/plugins/mongodb-backup.js'
 import { removeDuplicateGrantPayments } from '#~/plugins/remove-duplicate-grant-payments.js'
+import { resendFailedPayments } from '#~/plugins/resend-failed-payments.js'
 
 async function createServer(serverOptions = {}) {
   const { mongoUrl, mongoDatabase, disableSQS = false } = serverOptions
@@ -79,6 +80,7 @@ async function createServer(serverOptions = {}) {
     },
     mongodbBackup,
     removeDuplicateGrantPayments,
+    resendFailedPayments,
     cron,
     ...(disableSQS
       ? []

@@ -222,6 +222,12 @@ const config = convict({
       format: 'Boolean',
       default: false,
       env: 'ENABLE_REMOVE_DUPLICATE_GRANT_PAYMENTS'
+    },
+    resendFailedPaymentsEnabled: {
+      doc: 'Enable or Disable resend-failed-payments plugin',
+      format: 'Boolean',
+      default: false,
+      env: 'ENABLE_RESEND_FAILED_PAYMENTS'
     }
   },
   backup: {
