@@ -217,11 +217,11 @@ const config = convict({
       default: false,
       env: 'ENABLE_PAYMENT_HUB'
     },
-    removeDuplicateGrantPaymentsEnabled: {
-      doc: 'Enable or Disable remove-duplicate-grant-payments plugin',
+    enableBackups: {
+      doc: 'Enable MongoDB backups',
       format: 'Boolean',
       default: false,
-      env: 'ENABLE_REMOVE_DUPLICATE_GRANT_PAYMENTS'
+      env: 'ENABLE_BACKUPS'
     },
     resendFailedPaymentsEnabled: {
       doc: 'Enable or Disable resend-failed-payments plugin',
@@ -234,7 +234,7 @@ const config = convict({
     retentionDays: {
       doc: 'Number of days to keep MongoDB backup collections',
       format: 'nat',
-      default: 30,
+      default: 90,
       env: 'BACKUP_RETENTION_DAYS'
     },
     restoreTimestamp: {
@@ -312,6 +312,12 @@ const config = convict({
       format: 'nat',
       default: 20,
       env: 'WAIT_TIME_SECONDS'
+    },
+    messageDeduplicationEnabled: {
+      doc: 'Skip SQS messages already recorded in processed_sqs_messages (by queue tag and MessageId)',
+      format: Boolean,
+      default: true,
+      env: 'SQS_MESSAGE_DEDUPLICATION_ENABLED'
     }
   }
 })

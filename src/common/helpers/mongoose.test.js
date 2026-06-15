@@ -13,6 +13,18 @@ vi.mock('mongoose', () => ({
   }
 }))
 
+vi.mock('#~/api/common/models/index.js', () => ({
+  __esModule: true,
+  default: {
+    grantPayments: {
+      syncIndexes: vi.fn().mockResolvedValue(undefined)
+    },
+    processedSqsMessages: {
+      syncIndexes: vi.fn().mockResolvedValue(undefined)
+    }
+  }
+}))
+
 // Get the mocked functions with proper typing
 const mockMongoose = vi.mocked(mongoose)
 const mockConfig = config
@@ -74,8 +86,7 @@ describe('mongooseDb', () => {
       // Assert
       expect(mockLogger.info).toHaveBeenCalledWith('Setting up Mongoose')
       expect(mockMongoose.connect).toHaveBeenCalledWith(mockOptions.mongoUrl, {
-        dbName: mockOptions.databaseName,
-        autoIndex: false
+        dbName: mockOptions.databaseName
       })
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Mongoose connected to MongoDB'
@@ -93,8 +104,7 @@ describe('mongooseDb', () => {
       expect(mockMongoose.connect).toHaveBeenCalledWith(
         configValues.mongo.uri,
         {
-          dbName: configValues.mongo.database,
-          autoIndex: false
+          dbName: configValues.mongo.database
         }
       )
     })

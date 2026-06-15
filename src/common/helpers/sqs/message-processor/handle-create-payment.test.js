@@ -43,7 +43,7 @@ describe('handleCreatePaymentEvent', () => {
       `Received create_payment payload is  ${JSON.stringify(validPayload, null, 2)}`
     )
     expect(logger.info).toHaveBeenCalledWith(
-      `Managed to successfully create grantPayment entry ${JSON.stringify(validPayload)}`
+      `Successfully created grant payment entry ${JSON.stringify(validPayload)}`
     )
   })
 
@@ -113,7 +113,7 @@ describe('handleCreatePaymentEvent', () => {
   })
 
   it('logs an error if createGrantPayment fails', async () => {
-    const logger = { info: vi.fn(), error: vi.fn() }
+    const logger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() }
     const error = new Error('Create failed')
 
     createGrantPayment.mockRejectedValue(error)
@@ -124,5 +124,25 @@ describe('handleCreatePaymentEvent', () => {
       error,
       'Error creating grant payment'
     )
+    expect(logger.warn).not.toHaveBeenCalled()
+  })
+
+  it('logs a warning if createGrantPayment fails with a duplicate key error', async () => {
+    const logger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() }
+    const error = new Error(
+      'E11000 duplicate key error collection: grants.payments index: sbi_1 dup key: { sbi: "123456789" }'
+    )
+    error.name = 'MongoServerError'
+    error.code = 11000
+
+    createGrantPayment.mockRejectedValue(error)
+
+    await handleCreatePaymentEvent('msg-1', validPayload, logger)
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      error,
+      'Duplicate grant payment entry received'
+    )
+    expect(logger.error).not.toHaveBeenCalled()
   })
 })

@@ -9,13 +9,15 @@ export default [
         sourceSystem: 'FPTT',
         paymentRequestNumber: 1,
         correlationId: 'grant-correlation-id',
-        invoiceNumber: 'R00000004-V001Q2',
+        invoiceNumber: 'R00000004-V001',
         originalInvoiceNumber: '',
         agreementNumber: 'FPTT264870631',
         totalAmountPence: '70285',
         deliveryBody: 'RP00',
         currency: 'GBP',
         marketingYear: '2026',
+        ledger: 'AP',
+        fesCode: 'FALS_FPTT',
         payments: [
           {
             dueDate: '2026-06-05',
@@ -25,9 +27,13 @@ export default [
             invoiceLines: [
               {
                 schemeCode: 'CMOR1',
+                accountCode: 'SOS710',
+                fundCode: 'DRD10',
                 description:
                   'Parcel 8083 - Assess moorland and produce a written record',
-                amountPence: '1263'
+                amountPence: '1263',
+                deliveryBody: 'RP00',
+                marketingYear: '2026'
               }
             ]
             // status will default to 'pending'

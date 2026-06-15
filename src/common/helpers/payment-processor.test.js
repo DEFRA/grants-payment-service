@@ -13,7 +13,8 @@ import { getTodaysDate, getNextDay } from './date.js'
 
 vi.mock('#~/common/helpers/fetch-grants-by-date.js', () => ({
   fetchGrantPaymentsByDate: vi.fn(),
-  streamGrantPaymentsByDate: vi.fn()
+  streamGrantPaymentsByDate: vi.fn(),
+  streamGrantPaymentsByCorrelationIds: vi.fn()
 }))
 vi.mock('#~/common/helpers/payment-hub/index.js', () => ({
   sendPaymentHubRequest: vi.fn()
@@ -127,7 +128,9 @@ describe('processDailyPayments', () => {
 
     updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
 
-    const result = await processDailyPayments(server, undefined, fakeDate)
+    const result = await processDailyPayments(server, undefined, {
+      date: fakeDate
+    })
 
     expect(streamGrantPaymentsByDate).toHaveBeenCalledWith(
       fakeDate,
@@ -223,7 +226,9 @@ describe('processDailyPayments', () => {
 
     sendPaymentHubRequest.mockResolvedValue('ok')
 
-    const result = await processDailyPayments(server, fakeDate)
+    const result = await processDailyPayments(server, undefined, {
+      date: fakeDate
+    })
 
     expect(sendPaymentHubRequest).toHaveBeenCalledTimes(1)
     expect(result.results).toEqual([{ paymentId: 'x', docId: '1' }, null])
@@ -236,7 +241,7 @@ describe('processDailyPayments', () => {
     const today = getTodaysDate()
     streamGrantPaymentsByDate.mockReturnValue(mockCursor([]))
 
-    const result = await processDailyPayments(server, undefined)
+    const result = await processDailyPayments(server, undefined, {})
 
     expect(streamGrantPaymentsByDate).toHaveBeenCalledWith(
       today,
@@ -263,7 +268,9 @@ describe('processDailyPayments', () => {
     ]
     streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
 
-    const result = await processDailyPayments(server, undefined, fakeDate)
+    const result = await processDailyPayments(server, undefined, {
+      date: fakeDate
+    })
 
     expect(sendPaymentHubRequest).not.toHaveBeenCalled()
     expect(result.results).toEqual([])
@@ -277,13 +284,65 @@ describe('processDailyPayments', () => {
     })
 
     await expect(
-      processDailyPayments(server, undefined, fakeDate)
+      processDailyPayments(server, undefined, { date: fakeDate })
     ).rejects.toThrow(error)
 
     expect(logger.error).toHaveBeenCalledWith(
       error,
-      `Failed to process payments for dates: ${fakeDate} - ${getNextDay(fakeDate)}`
+      `Failed to process payments while Processing payments for dates: ${fakeDate} - ${getNextDay(fakeDate)}`
     )
+  })
+
+  it('marks payment as failed when transform throws after lock', async () => {
+    const fakeDate = '2026-02-20'
+    const fakeDocs = [
+      {
+        _id: '1',
+        grants: [
+          {
+            _id: 'g1',
+            sourceSystem: 'FPTT',
+            invoiceNumber: 'INV1',
+            agreementNumber: 'AGR1',
+            ledger: 'AP',
+            fesCode: 'FALS_FPTT',
+            deliveryBody: 'RP00',
+            payments: [
+              {
+                _id: 'p1',
+                dueDate: '2026-01-01',
+                correlationId: 'corr-1',
+                invoiceLines: []
+              }
+            ],
+            matchedPayments: [
+              {
+                _id: 'p-other',
+                dueDate: '2026-01-01',
+                correlationId: 'corr-other',
+                invoiceLines: []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
+    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
+
+    const result = await processDailyPayments(server, undefined, {
+      date: fakeDate
+    })
+
+    expect(sendPaymentHubRequest).not.toHaveBeenCalled()
+    expect(updatePaymentStatus).toHaveBeenCalledWith('1', 'p-other', 'failed')
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.any(Error),
+      'Payment Hub data transform failed for payment p-other in record 1'
+    )
+    expect(result.results[0]).toMatchObject({
+      message: 'Payment not found in the payments array'
+    })
   })
 
   it('skips and marks as failed payments with an unsupported sourceSystem', async () => {
@@ -319,14 +378,21 @@ describe('processDailyPayments', () => {
     streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
     updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
 
-    const result = await processDailyPayments(server, fakeDate)
+    const result = await processDailyPayments(server, undefined, {
+      date: fakeDate
+    })
 
     expect(sendPaymentHubRequest).not.toHaveBeenCalled()
     expect(updatePaymentStatus).toHaveBeenCalledWith('1', 'p1', 'failed')
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Unsupported grant sourceSystem UNKNOWN')
+      expect.objectContaining({
+        message: 'Unsupported grant sourceSystem UNKNOWN for payment p1'
+      }),
+      'Payment Hub data transform failed for payment p1 in record 1'
     )
-    expect(result.results).toEqual([null])
+    expect(result.results[0]).toMatchObject({
+      message: 'Unsupported grant sourceSystem UNKNOWN for payment p1'
+    })
   })
 
   it('logs individual hub failures and continues, updating status appropriately', async () => {
@@ -371,7 +437,9 @@ describe('processDailyPayments', () => {
 
     updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
 
-    const result = await processDailyPayments(server, fakeDate)
+    const result = await processDailyPayments(server, undefined, {
+      date: fakeDate
+    })
 
     expect(result.results).toEqual([
       { paymentId: 'a', docId: '1' },
@@ -391,7 +459,7 @@ describe('processDailyPayments', () => {
     const limit = 5
     streamGrantPaymentsByDate.mockReturnValue(mockCursor([]))
 
-    await processDailyPayments(server, limit, fakeDate)
+    await processDailyPayments(server, limit, { date: fakeDate })
 
     expect(streamGrantPaymentsByDate).toHaveBeenCalledWith(
       fakeDate,
@@ -401,6 +469,159 @@ describe('processDailyPayments', () => {
 
     expect(logger.info).toHaveBeenCalledWith(
       `Processing payments for dates: ${fakeDate} - ${getNextDay(fakeDate)} (limited to ${limit} payments)`
+    )
+  })
+
+  it('uses provided correlationIds and processes payments by correlation IDs', async () => {
+    const fakeCorrelationIds = ['corr1', 'corr2', 'corr3']
+    const fakeDocs = [
+      {
+        _id: '1',
+        grants: [
+          {
+            _id: 'g1',
+            sourceSystem: 'FPTT',
+            invoiceNumber: 'INV1',
+            agreementNumber: 'AGR1',
+            payments: [
+              {
+                _id: 'payment1',
+                correlationId: 'corr1',
+                amountPence: 1000,
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ],
+            matchedPayments: [
+              {
+                _id: 'payment1',
+                correlationId: 'corr1',
+                amountPence: 1000,
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        _id: '2',
+        grants: [
+          {
+            _id: 'g2',
+            sourceSystem: 'FPTT',
+            invoiceNumber: 'INV2',
+            agreementNumber: 'AGR2',
+            payments: [
+              {
+                _id: 'payment2',
+                correlationId: 'corr2',
+                amountPence: 2000,
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ],
+            matchedPayments: [
+              {
+                _id: 'payment2',
+                correlationId: 'corr2',
+                amountPence: 2000,
+                sourceSystem: 'FPTT',
+                dueDate: '2026-01-01',
+                invoiceLines: []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+
+    const { streamGrantPaymentsByCorrelationIds } =
+      await import('#~/common/helpers/fetch-grants-by-date.js')
+    streamGrantPaymentsByCorrelationIds.mockReturnValue(mockCursor(fakeDocs))
+    const responses = ['a', 'b']
+    sendPaymentHubRequest
+      .mockResolvedValueOnce(responses[0])
+      .mockResolvedValueOnce(responses[1])
+
+    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
+
+    const result = await processDailyPayments(server, undefined, {
+      correlationIds: fakeCorrelationIds
+    })
+
+    expect(streamGrantPaymentsByCorrelationIds).toHaveBeenCalledWith(
+      fakeCorrelationIds,
+      'pending',
+      undefined
+    )
+    expect(logger.info).toHaveBeenCalledWith(
+      `Processing payments by correlation IDs: ${fakeCorrelationIds.length} grant(s)`
+    )
+
+    expect(sendPaymentHubRequest).toHaveBeenCalledTimes(2)
+    expect(result).toEqual({
+      results: [
+        { paymentId: 'payment1', docId: '1' },
+        { paymentId: 'payment2', docId: '2' }
+      ],
+      backgroundTasks: expect.any(Array),
+      fetchDuration: expect.any(String),
+      processDuration: expect.any(String),
+      sendDuration: expect.any(String)
+    })
+
+    // Wait for background tasks to complete
+    await vi.waitFor(() => {
+      expect(updatePaymentStatus).toHaveBeenCalledWith(
+        '1',
+        'payment1',
+        'submitted'
+      )
+      expect(updatePaymentStatus).toHaveBeenCalledWith(
+        '2',
+        'payment2',
+        'submitted'
+      )
+    })
+  })
+
+  it('throws error when both date and correlationIds are provided', async () => {
+    const fakeDate = '2026-02-20'
+    const fakeCorrelationIds = ['corr1', 'corr2']
+
+    await expect(
+      processDailyPayments(server, undefined, {
+        date: fakeDate,
+        correlationIds: fakeCorrelationIds
+      })
+    ).rejects.toThrow(
+      'Cannot provide both date and correlationIds. Provide one or the other.'
+    )
+  })
+
+  it('passes limit to streamGrantPaymentsByCorrelationIds and includes it in logs', async () => {
+    const fakeCorrelationIds = ['corr1', 'corr2', 'corr3']
+    const limit = 5
+    const { streamGrantPaymentsByCorrelationIds } =
+      await import('#~/common/helpers/fetch-grants-by-date.js')
+    streamGrantPaymentsByCorrelationIds.mockReturnValue(mockCursor([]))
+
+    await processDailyPayments(server, limit, {
+      correlationIds: fakeCorrelationIds
+    })
+
+    expect(streamGrantPaymentsByCorrelationIds).toHaveBeenCalledWith(
+      fakeCorrelationIds,
+      'pending',
+      limit
+    )
+
+    expect(logger.info).toHaveBeenCalledWith(
+      `Processing payments by correlation IDs: ${fakeCorrelationIds.length} grant(s) (limited to ${limit} grants)`
     )
   })
 })

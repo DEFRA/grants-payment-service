@@ -1,7 +1,10 @@
 import { performance } from 'node:perf_hooks'
 import { config } from '#~/config/index.js'
 import { getTodaysDate, getNextDay } from '#~/common/helpers/date.js'
-import { streamGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
+import {
+  streamGrantPaymentsByDate,
+  streamGrantPaymentsByCorrelationIds
+} from '#~/common/helpers/fetch-grants-by-date.js'
 import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
 import {
   updatePaymentStatus,
@@ -34,18 +37,25 @@ const processSinglePayment = async (
   }
 
   let paymentHubData
-  if (grant.sourceSystem === 'FPTT') {
-    paymentHubData = transformFpttPaymentDataToPaymentHubFormat(
-      identifiers,
-      grant,
-      payment
-    )
-  } else {
+  try {
+    if (grant.sourceSystem === 'FPTT') {
+      paymentHubData = transformFpttPaymentDataToPaymentHubFormat(
+        identifiers,
+        grant,
+        payment
+      )
+    } else {
+      throw new Error(
+        `Unsupported grant sourceSystem ${grant.sourceSystem} for payment ${payment._id}`
+      )
+    }
+  } catch (err) {
     logger.error(
-      `Unsupported grant sourceSystem ${grant.sourceSystem} for payment ${payment._id}`
+      err,
+      `${grafanaLogMessages.error.transformPaymentHubData} for payment ${payment._id} in record ${docId}`
     )
     await updatePaymentStatus(docId, payment._id, 'failed')
-    return { result: null, backgroundTask: null }
+    return { result: serializeError(err), backgroundTask: null }
   }
 
   try {
@@ -111,18 +121,44 @@ const processAccountPayments = async (server, account, backgroundTasks) => {
 export const processDailyPayments = async (
   server,
   limit,
-  date = getTodaysDate()
+  { date, correlationIds } = {}
 ) => {
   const { logger } = server
-  const nextDay = getNextDay(date)
-  const logLimitedTo = limit ? ` (limited to ${limit} payments)` : ''
-  logger.info(
-    `Processing payments for dates: ${date} - ${nextDay}${logLimitedTo}`
-  )
+
+  if (date && correlationIds) {
+    throw new Error(
+      'Cannot provide both date and correlationIds. Provide one or the other.'
+    )
+  }
+
+  const useDate = date || (!correlationIds && getTodaysDate())
+  const useCorrelationIds = correlationIds || null
+
+  let logMessage
+
+  if (useCorrelationIds) {
+    const logLimitedTo = limit ? ` (limited to ${limit} grants)` : ''
+    logMessage = `Processing payments by correlation IDs: ${useCorrelationIds.length} grant(s)${logLimitedTo}`
+    logger.info(logMessage)
+  } else {
+    const nextDay = getNextDay(useDate)
+    const logLimitedTo = limit ? ` (limited to ${limit} payments)` : ''
+    logMessage = `Processing payments for dates: ${useDate} - ${nextDay}${logLimitedTo}`
+    logger.info(logMessage)
+  }
 
   try {
     const fetchStart = performance.now()
-    const cursor = streamGrantPaymentsByDate(date, 'pending', limit)
+    let cursor
+    if (useCorrelationIds) {
+      cursor = streamGrantPaymentsByCorrelationIds(
+        useCorrelationIds,
+        'pending',
+        limit
+      )
+    } else {
+      cursor = streamGrantPaymentsByDate(useDate, 'pending', limit)
+    }
     const fetchDuration = (performance.now() - fetchStart).toFixed(2)
 
     const results = []
@@ -154,10 +190,7 @@ export const processDailyPayments = async (
       sendDuration
     }
   } catch (err) {
-    logger.error(
-      err,
-      `Failed to process payments for dates: ${date} - ${nextDay}${logLimitedTo}`
-    )
+    logger.error(err, `Failed to process payments while ${logMessage}`)
     throw err
   }
 }

@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 import { config } from '#~/config/index.js'
+import { syncModelIndexes } from '#~/common/helpers/sync-model-indexes.js'
 
 /**
  * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<*> }
@@ -22,13 +23,14 @@ export const mongooseDb = {
       const databaseName = options.databaseName ?? config.get('mongo.database')
 
       await mongoose.connect(mongoUrl, {
-        dbName: databaseName,
-        autoIndex: false
+        dbName: databaseName
       })
 
       server.logger.info('Mongoose connected to MongoDB')
 
       server.decorate('server', 'mongooseDb', mongoose.connection)
+
+      await syncModelIndexes('mongoose')
 
       server.events.on('stop', async () => {
         server.logger.info('Closing Mongoose client')
