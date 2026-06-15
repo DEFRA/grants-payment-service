@@ -4,8 +4,8 @@ import { wrapWithPagination } from './pagination.js'
 
 const buildGrantPaymentsAggregationPipeline = (date, status, limit, page) => {
   const nextDay = getNextDay(date)
-  const paymentMatch = { dueDate: { $in: [date, nextDay] } }
-  const filters = [{ $in: ['$$p.dueDate', [date, nextDay]] }]
+  const paymentMatch = { dueDate: { $lte: nextDay } }
+  const filters = [{ $lte: ['$$p.dueDate', nextDay] }]
 
   if (status) {
     paymentMatch.status = status
