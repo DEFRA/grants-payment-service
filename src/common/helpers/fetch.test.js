@@ -1,11 +1,6 @@
 import { vi } from 'vitest'
-import { ProxyAgent } from 'undici'
 import { config } from '#~/config/index.js'
-import { proxyFetch } from '#~/common/helpers/fetch.js'
-
-vi.mock('undici', () => ({
-  ProxyAgent: vi.fn()
-}))
+import { fetchWithRetry } from '#~/common/helpers/fetch.js'
 
 vi.mock('#~/config/index.js', () => ({
   config: {
@@ -42,7 +37,7 @@ describe('fetch helpers', () => {
     })
 
     it('should call fetch with the correct arguments and signal', async () => {
-      await proxyFetch(mockUrl, mockOptions, mockLogger)
+      await fetchWithRetry(mockUrl, mockOptions, mockLogger)
 
       expect(fetch).toHaveBeenCalledWith(
         mockUrl,
@@ -67,7 +62,7 @@ describe('fetch helpers', () => {
         })
       })
 
-      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      const fetchPromise = fetchWithRetry(mockUrl, mockOptions, mockLogger)
 
       vi.advanceTimersByTime(6000)
 
@@ -83,7 +78,7 @@ describe('fetch helpers', () => {
     it('should clear the timeout on success', async () => {
       const abortSpy = vi.spyOn(AbortController.prototype, 'abort')
 
-      await proxyFetch(mockUrl, mockOptions, mockLogger)
+      await fetchWithRetry(mockUrl, mockOptions, mockLogger)
 
       // Advance time past the timeout
       vi.advanceTimersByTime(6000)
@@ -99,7 +94,7 @@ describe('fetch helpers', () => {
       fetch.mockRejectedValueOnce(fetchError)
 
       await expect(
-        proxyFetch(mockUrl, mockOptions, mockLogger)
+        fetchWithRetry(mockUrl, mockOptions, mockLogger)
       ).rejects.toThrow(fetchError)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -142,7 +137,7 @@ describe('fetch helpers', () => {
       fetch.mockRejectedValueOnce(fetchError)
 
       await expect(
-        proxyFetch(mockUrl, mockOptions, mockLogger)
+        fetchWithRetry(mockUrl, mockOptions, mockLogger)
       ).rejects.toThrow(fetchError)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -186,7 +181,7 @@ describe('fetch helpers', () => {
       fetch.mockRejectedValueOnce(networkError)
       fetch.mockResponseOnce(JSON.stringify({ ok: true }))
 
-      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      const fetchPromise = fetchWithRetry(mockUrl, mockOptions, mockLogger)
       await vi.runOnlyPendingTimersAsync()
       await fetchPromise
 
@@ -206,7 +201,7 @@ describe('fetch helpers', () => {
       fetch.mockRejectedValueOnce(nonRetryableError)
 
       await expect(
-        proxyFetch(mockUrl, mockOptions, mockLogger)
+        fetchWithRetry(mockUrl, mockOptions, mockLogger)
       ).rejects.toThrow(nonRetryableError)
 
       expect(fetch).toHaveBeenCalledTimes(1)
@@ -218,7 +213,7 @@ describe('fetch helpers', () => {
 
       fetch.mockRejectedValue(networkError)
 
-      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      const fetchPromise = fetchWithRetry(mockUrl, mockOptions, mockLogger)
       const assertionPromise =
         expect(fetchPromise).rejects.toThrow(networkError)
       await vi.runOnlyPendingTimersAsync()
@@ -237,7 +232,7 @@ describe('fetch helpers', () => {
       fetch.mockRejectedValueOnce(networkError)
       fetch.mockResponseOnce(JSON.stringify({ ok: true }))
 
-      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      const fetchPromise = fetchWithRetry(mockUrl, mockOptions, mockLogger)
       await vi.runOnlyPendingTimersAsync()
       await vi.runOnlyPendingTimersAsync()
       await fetchPromise
@@ -252,7 +247,7 @@ describe('fetch helpers', () => {
       fetch.mockRejectedValueOnce(timeoutError)
       fetch.mockResponseOnce(JSON.stringify({ ok: true }))
 
-      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      const fetchPromise = fetchWithRetry(mockUrl, mockOptions, mockLogger)
       await vi.runOnlyPendingTimersAsync()
       await fetchPromise
 
@@ -266,7 +261,7 @@ describe('fetch helpers', () => {
       fetch.mockRejectedValueOnce(connResetError)
       fetch.mockResponseOnce(JSON.stringify({ ok: true }))
 
-      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      const fetchPromise = fetchWithRetry(mockUrl, mockOptions, mockLogger)
       await vi.runOnlyPendingTimersAsync()
       await fetchPromise
 
@@ -280,7 +275,7 @@ describe('fetch helpers', () => {
       fetch.mockRejectedValueOnce(connRefusedError)
       fetch.mockResponseOnce(JSON.stringify({ ok: true }))
 
-      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      const fetchPromise = fetchWithRetry(mockUrl, mockOptions, mockLogger)
       await vi.runOnlyPendingTimersAsync()
       await fetchPromise
 
@@ -294,7 +289,7 @@ describe('fetch helpers', () => {
       fetch.mockRejectedValueOnce(dnsError)
       fetch.mockResponseOnce(JSON.stringify({ ok: true }))
 
-      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      const fetchPromise = fetchWithRetry(mockUrl, mockOptions, mockLogger)
       await vi.runOnlyPendingTimersAsync()
       await fetchPromise
 
@@ -314,7 +309,7 @@ describe('fetch helpers', () => {
 
       fetch.mockRejectedValue(networkError)
 
-      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      const fetchPromise = fetchWithRetry(mockUrl, mockOptions, mockLogger)
       const assertionPromise =
         expect(fetchPromise).rejects.toThrow(networkError)
       // Run timers multiple times to handle all 5 retry attempts (4 retries)
@@ -324,56 +319,6 @@ describe('fetch helpers', () => {
       await assertionPromise
 
       expect(fetch).toHaveBeenCalledTimes(5)
-    })
-  })
-
-  describe('proxyFetch', () => {
-    it('should call fetchWithRetry without proxy agent when no proxy is configured', async () => {
-      config.get.mockImplementation((key) => {
-        if (key === 'httpProxy') return null
-        if (key === 'fetch.timeout') return 5000
-        if (key === 'fetch.maxAttempts') return 3
-        return null
-      })
-
-      await proxyFetch(mockUrl, mockOptions, mockLogger)
-
-      expect(fetch).toHaveBeenCalledWith(
-        mockUrl,
-        expect.objectContaining({
-          ...mockOptions
-        })
-      )
-
-      // Ensure no dispatcher was added (undici ProxyAgent)
-      const fetchCallArgs = fetch.mock.calls[0][1]
-      expect(fetchCallArgs.dispatcher).toBeUndefined()
-    })
-
-    it('should call fetchWithRetry with proxy agent when proxy is configured', async () => {
-      const mockProxyUrl = 'http://proxy.example.com'
-      config.get.mockImplementation((key) => {
-        if (key === 'httpProxy') return mockProxyUrl
-        if (key === 'fetch.timeout') return 5000
-        if (key === 'fetch.maxAttempts') return 3
-        return null
-      })
-
-      await proxyFetch(mockUrl, mockOptions, mockLogger)
-
-      expect(ProxyAgent).toHaveBeenCalledWith({
-        uri: mockProxyUrl,
-        keepAliveTimeout: 10,
-        keepAliveMaxTimeout: 10
-      })
-
-      expect(fetch).toHaveBeenCalledWith(
-        mockUrl,
-        expect.objectContaining({
-          ...mockOptions,
-          dispatcher: expect.any(ProxyAgent)
-        })
-      )
     })
   })
 })
