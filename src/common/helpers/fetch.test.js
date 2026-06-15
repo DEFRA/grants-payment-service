@@ -25,7 +25,8 @@ describe('fetch helpers', () => {
     fetch.mockResponse(JSON.stringify({ ok: true }))
 
     config.get.mockImplementation((key) => {
-      if (key === 'fetchTimeout') return 5000
+      if (key === 'fetch.timeout') return 5000
+      if (key === 'fetch.maxAttempts') return 3
       if (key === 'httpProxy') return null
       return null
     })
@@ -102,15 +103,26 @@ describe('fetch helpers', () => {
       ).rejects.toThrow(fetchError)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        fetchError,
+        expect.objectContaining({
+          attempt: 1,
+          maxAttempts: 3,
+          error: fetchError.message,
+          code: fetchError.name
+        }),
         expect.stringContaining(`"url":"${mockUrl}"`)
       )
       expect(mockLogger.error).toHaveBeenCalledWith(
-        fetchError,
+        expect.objectContaining({
+          attempt: 1,
+          maxAttempts: 3
+        }),
         expect.stringContaining(`"signal":{"aborted":false`)
       )
       expect(mockLogger.error).toHaveBeenCalledWith(
-        fetchError,
+        expect.objectContaining({
+          attempt: 1,
+          maxAttempts: 3
+        }),
         expect.stringContaining(
           `"error":{"name":"Error","message":"Network failure"`
         )
@@ -120,7 +132,8 @@ describe('fetch helpers', () => {
     it('should log the error and options when fetch fails when test endpoints are enabled', async () => {
       config.get.mockImplementation((key) => {
         if (key === 'featureFlags.testEndpoints') return true
-        if (key === 'fetchTimeout') return 5000
+        if (key === 'fetch.timeout') return 5000
+        if (key === 'fetch.maxAttempts') return 3
         return null
       })
 
@@ -133,29 +146,195 @@ describe('fetch helpers', () => {
       ).rejects.toThrow(fetchError)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        fetchError,
+        expect.objectContaining({
+          attempt: 1,
+          maxAttempts: 3,
+          error: fetchError.message,
+          code: fetchError.name
+        }),
         expect.stringContaining(`"url":"${mockUrl}"`)
       )
       expect(mockLogger.error).toHaveBeenCalledWith(
-        fetchError,
+        expect.objectContaining({
+          attempt: 1,
+          maxAttempts: 3
+        }),
         expect.stringContaining(`"signal":{"aborted":false`)
       )
       expect(mockLogger.error).toHaveBeenCalledWith(
-        fetchError,
+        expect.objectContaining({
+          attempt: 1,
+          maxAttempts: 3
+        }),
         expect.stringContaining(
           `"error":{"name":"Error","message":"Network failure"`
         )
       )
       expect(mockLogger.error).toHaveBeenCalledWith(
-        fetchError,
+        expect.objectContaining({
+          attempt: 1,
+          maxAttempts: 3
+        }),
         expect.stringContaining(`"options":{"method":"GET"}`)
       )
+    })
+
+    it('should retry on retryable network errors', async () => {
+      const networkError = new Error('network error')
+      networkError.name = 'NetworkingError'
+
+      fetch.mockRejectedValueOnce(networkError)
+      fetch.mockResponseOnce(JSON.stringify({ ok: true }))
+
+      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      await vi.runOnlyPendingTimersAsync()
+      await fetchPromise
+
+      expect(fetch).toHaveBeenCalledTimes(2)
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          attempt: 1,
+          maxAttempts: 3
+        }),
+        expect.any(String)
+      )
+    })
+
+    it('should not retry on non-retryable errors', async () => {
+      const nonRetryableError = new Error('Invalid request')
+
+      fetch.mockRejectedValueOnce(nonRetryableError)
+
+      await expect(
+        proxyFetch(mockUrl, mockOptions, mockLogger)
+      ).rejects.toThrow(nonRetryableError)
+
+      expect(fetch).toHaveBeenCalledTimes(1)
+    })
+
+    it('should exhaust max attempts and throw last error', async () => {
+      const networkError = new Error('network error')
+      networkError.name = 'NetworkingError'
+
+      fetch.mockRejectedValue(networkError)
+
+      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      const assertionPromise =
+        expect(fetchPromise).rejects.toThrow(networkError)
+      await vi.runOnlyPendingTimersAsync()
+      await vi.runOnlyPendingTimersAsync()
+      await assertionPromise
+
+      expect(fetch).toHaveBeenCalledTimes(3)
+      expect(mockLogger.error).toHaveBeenCalledTimes(3)
+    })
+
+    it('should use exponential backoff between retries', async () => {
+      const networkError = new Error('network error')
+      networkError.name = 'NetworkingError'
+
+      fetch.mockRejectedValueOnce(networkError)
+      fetch.mockRejectedValueOnce(networkError)
+      fetch.mockResponseOnce(JSON.stringify({ ok: true }))
+
+      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      await vi.runOnlyPendingTimersAsync()
+      await vi.runOnlyPendingTimersAsync()
+      await fetchPromise
+
+      expect(fetch).toHaveBeenCalledTimes(3)
+    })
+
+    it('should retry on timeout errors', async () => {
+      const timeoutError = new Error('timeout')
+      timeoutError.name = 'TimeoutError'
+
+      fetch.mockRejectedValueOnce(timeoutError)
+      fetch.mockResponseOnce(JSON.stringify({ ok: true }))
+
+      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      await vi.runOnlyPendingTimersAsync()
+      await fetchPromise
+
+      expect(fetch).toHaveBeenCalledTimes(2)
+    })
+
+    it('should retry on connection reset errors', async () => {
+      const connResetError = new Error('Connection reset')
+      connResetError.name = 'ECONNRESET'
+
+      fetch.mockRejectedValueOnce(connResetError)
+      fetch.mockResponseOnce(JSON.stringify({ ok: true }))
+
+      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      await vi.runOnlyPendingTimersAsync()
+      await fetchPromise
+
+      expect(fetch).toHaveBeenCalledTimes(2)
+    })
+
+    it('should retry on connection refused errors', async () => {
+      const connRefusedError = new Error('Connection refused')
+      connRefusedError.name = 'ECONNREFUSED'
+
+      fetch.mockRejectedValueOnce(connRefusedError)
+      fetch.mockResponseOnce(JSON.stringify({ ok: true }))
+
+      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      await vi.runOnlyPendingTimersAsync()
+      await fetchPromise
+
+      expect(fetch).toHaveBeenCalledTimes(2)
+    })
+
+    it('should retry on DNS lookup errors', async () => {
+      const dnsError = new Error('DNS lookup failed')
+      dnsError.name = 'ENOTFOUND'
+
+      fetch.mockRejectedValueOnce(dnsError)
+      fetch.mockResponseOnce(JSON.stringify({ ok: true }))
+
+      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      await vi.runOnlyPendingTimersAsync()
+      await fetchPromise
+
+      expect(fetch).toHaveBeenCalledTimes(2)
+    })
+
+    it('should respect custom maxAttempts from config', async () => {
+      config.get.mockImplementation((key) => {
+        if (key === 'fetch.timeout') return 5000
+        if (key === 'fetch.maxAttempts') return 5
+        if (key === 'httpProxy') return null
+        return null
+      })
+
+      const networkError = new Error('network error')
+      networkError.name = 'NetworkingError'
+
+      fetch.mockRejectedValue(networkError)
+
+      const fetchPromise = proxyFetch(mockUrl, mockOptions, mockLogger)
+      const assertionPromise =
+        expect(fetchPromise).rejects.toThrow(networkError)
+      // Run timers multiple times to handle all 5 retry attempts (4 retries)
+      for (let i = 0; i < 4; i++) {
+        await vi.runOnlyPendingTimersAsync()
+      }
+      await assertionPromise
+
+      expect(fetch).toHaveBeenCalledTimes(5)
     })
   })
 
   describe('proxyFetch', () => {
     it('should call fetchWithTimeout without proxy agent when no proxy is configured', async () => {
-      config.get.mockReturnValue(null) // No proxy
+      config.get.mockImplementation((key) => {
+        if (key === 'httpProxy') return null
+        if (key === 'fetch.timeout') return 5000
+        if (key === 'fetch.maxAttempts') return 3
+        return null
+      })
 
       await proxyFetch(mockUrl, mockOptions, mockLogger)
 
@@ -175,7 +354,8 @@ describe('fetch helpers', () => {
       const mockProxyUrl = 'http://proxy.example.com'
       config.get.mockImplementation((key) => {
         if (key === 'httpProxy') return mockProxyUrl
-        if (key === 'fetchTimeout') return 5000
+        if (key === 'fetch.timeout') return 5000
+        if (key === 'fetch.maxAttempts') return 3
         return null
       })
 
