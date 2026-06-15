@@ -56,7 +56,8 @@ describe('#healthController', () => {
         featureFlags: {
           testEndpoints: true,
           isPaymentHubEnabled: false,
-          enableBackups: false
+          enableBackups: false,
+          resendFailedPaymentsEnabled: false
         }
       })
       expect(statusCode).toBe(statusCodes.ok)
@@ -116,7 +117,8 @@ describe('#healthController', () => {
         featureFlags: {
           testEndpoints: true,
           isPaymentHubEnabled: false,
-          enableBackups: false
+          enableBackups: false,
+          resendFailedPaymentsEnabled: false
         }
       })
       expect(response.statusCode).toBe(statusCodes.ok)

@@ -111,7 +111,12 @@ describe('Payment Hub Helper', () => {
 
   describe('sendPaymentHubRequest', () => {
     it('should send a request to payment hub with correct parameters', async () => {
-      const payload = { data: 'test-data' }
+      const payload = {
+        sbi: 'mock-sbi',
+        frn: 'mock-frn',
+        correlationId: 'mock-correlationId',
+        data: 'test-data'
+      }
       const result = await sendPaymentHubRequest(server, payload)
 
       expect(mockCache.get).toHaveBeenCalledWith('token')
@@ -126,6 +131,10 @@ describe('Payment Hub Helper', () => {
           }),
           body: JSON.stringify(payload)
         })
+      )
+
+      expect(logger.info).toHaveBeenCalledWith(
+        'Request successfully sent to Payment Hub for SBI: mock-sbi FRN: mock-frn (correlation ID: mock-correlationId)'
       )
 
       expect(result).toEqual(
