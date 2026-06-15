@@ -1,8 +1,7 @@
-import { ProxyAgent } from 'undici'
 import { config } from '#~/config/index.js'
 
 /**
- * Make fetch requests with timeout support
+ * Make fetch requests with exponential back-off and timeout support
  * @param {string} url - The URL to fetch
  * @param {object} options - The fetch options
  * @param {string} options.method - The HTTP method (GET, POST, etc.)
@@ -11,7 +10,7 @@ import { config } from '#~/config/index.js'
  * @param {object} logger - The logger to use
  * @returns {Promise<Response>} The fetch response
  */
-const fetchWithTimeout = async (url, options, logger) => {
+export const fetchWithRetry = async (url, options, logger) => {
   const urlStr = url instanceof URL ? url.toString() : url
   const maxAttempts = config.get('fetch.maxAttempts')
   let attempt = 0
@@ -90,35 +89,4 @@ const fetchWithTimeout = async (url, options, logger) => {
   }
 
   throw lastError
-}
-
-/**
- * Make fetch requests with proxy support
- * @param {string} url - The URL to fetch
- * @param {object} options - The fetch options
- * @param {string} options.method - The HTTP method (GET, POST, etc.)
- * @param {object} options.headers - The request headers
- * @param {object} options.body - The request body
- * @param {object} logger - The logger to use
- * @returns {Promise<Response>} The fetch response
- */
-export const proxyFetch = async (url, options, logger) => {
-  const proxyUrlConfig = config.get('httpProxy') // bound to HTTP_PROXY
-
-  if (!proxyUrlConfig) {
-    return fetchWithTimeout(url, options, logger)
-  }
-
-  return fetchWithTimeout(
-    url,
-    {
-      ...options,
-      dispatcher: new ProxyAgent({
-        uri: proxyUrlConfig,
-        keepAliveTimeout: 10,
-        keepAliveMaxTimeout: 10
-      })
-    },
-    logger
-  )
 }
