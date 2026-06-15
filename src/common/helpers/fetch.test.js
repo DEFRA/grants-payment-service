@@ -103,9 +103,17 @@ describe('fetch helpers', () => {
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         fetchError,
-        `Fetch failed ${JSON.stringify({
-          url: mockUrl
-        })}`
+        expect.stringContaining(`"url":"${mockUrl}"`)
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        fetchError,
+        expect.stringContaining(`"signal":{"aborted":false`)
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        fetchError,
+        expect.stringContaining(
+          `"error":{"name":"Error","message":"Network failure"`
+        )
       )
     })
 
@@ -126,10 +134,21 @@ describe('fetch helpers', () => {
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         fetchError,
-        `Fetch failed ${JSON.stringify({
-          url: mockUrl,
-          options: mockOptions
-        })}`
+        expect.stringContaining(`"url":"${mockUrl}"`)
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        fetchError,
+        expect.stringContaining(`"signal":{"aborted":false`)
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        fetchError,
+        expect.stringContaining(
+          `"error":{"name":"Error","message":"Network failure"`
+        )
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        fetchError,
+        expect.stringContaining(`"options":{"method":"GET"}`)
       )
     })
   })
