@@ -2,6 +2,9 @@ import mongoose from 'mongoose'
 import GrantPayments from '#~/api/common/models/grant_payments.js'
 import { config } from '#~/config/index.js'
 import { processDailyPayments } from '#~/common/helpers/payment-processor.js'
+import { getStats } from '#~/common/helpers/get-stats.js'
+
+const pluginName = 'resend-failed-payments'
 
 const updateFailedPaymentsToPending = async (server) => {
   const result = await GrantPayments.updateMany(
@@ -32,7 +35,7 @@ const updateFailedPaymentsToPending = async (server) => {
   )
 
   server.logger.info(
-    `resend-failed-payments: updated ${result.modifiedCount} failed payment(s) to pending`
+    `${pluginName}: updated ${result.modifiedCount} failed payment(s) to pending`
   )
 
   return result.modifiedCount
@@ -43,25 +46,28 @@ const runResendFailedPayments = async (server) => {
 
   if (updatedCount > 0) {
     server.logger.info(
-      'resend-failed-payments: triggering processDailyPayments to process updated payments'
+      `${pluginName}: triggering processDailyPayments to process updated payments`
     )
     await processDailyPayments(server)
-  } else {
+
+    const stats = await getStats()
     server.logger.info(
-      'resend-failed-payments: no failed payments found to resend'
+      `${pluginName}: Stats: ${JSON.stringify(stats, null, 2)}`
     )
+  } else {
+    server.logger.info(`${pluginName}: no failed payments found to resend`)
   }
 }
 
 const resendFailedPayments = {
   plugin: {
-    name: 'resend-failed-payments',
+    name: pluginName,
     register: async (server) => {
       if (config.get('featureFlags.resendFailedPaymentsEnabled') !== true) {
         return
       }
 
-      server.logger.info('Registering resend-failed-payments plugin')
+      server.logger.info(`${pluginName}: Registering plugin`)
 
       const execute = async () => {
         try {
@@ -69,7 +75,7 @@ const resendFailedPayments = {
         } catch (error) {
           server.logger.error(
             error,
-            'resend-failed-payments: resend failed payments failed'
+            `${pluginName}: resend failed payments failed`
           )
         }
       }

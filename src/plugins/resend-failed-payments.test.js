@@ -4,6 +4,7 @@ const updateManyMock = vi.fn()
 const onceMock = vi.fn()
 const getMock = vi.fn()
 const processDailyPaymentsMock = vi.fn()
+const getStatsMock = vi.fn()
 
 vi.mock('#~/api/common/models/grant_payments.js', () => ({
   default: {
@@ -26,6 +27,10 @@ vi.mock('#~/common/helpers/payment-processor.js', () => ({
   processDailyPayments: processDailyPaymentsMock
 }))
 
+vi.mock('#~/common/helpers/get-stats.js', () => ({
+  getStats: getStatsMock
+}))
+
 describe('resend-failed-payments plugin', () => {
   let plugin
 
@@ -35,6 +40,7 @@ describe('resend-failed-payments plugin', () => {
     onceMock.mockReset()
     updateManyMock.mockReset()
     processDailyPaymentsMock.mockReset()
+    getStatsMock.mockReset()
     getMock.mockReset()
     getMock.mockImplementation((key) => {
       if (key === 'featureFlags.resendFailedPaymentsEnabled') {
@@ -54,6 +60,19 @@ describe('resend-failed-payments plugin', () => {
       processDuration: 200,
       sendDuration: 300
     })
+    const mockStats = {
+      accounts: 10,
+      grants: 15,
+      payments: {
+        total: 20,
+        pending: 5,
+        submitted: 10,
+        cancelled: 3,
+        locked: 1,
+        failed: 1
+      }
+    }
+    getStatsMock.mockResolvedValue(mockStats)
 
     const fakeServer = { logger: { info: vi.fn(), error: vi.fn() } }
     await plugin.plugin.register(fakeServer)
@@ -85,11 +104,15 @@ describe('resend-failed-payments plugin', () => {
       }
     )
     expect(processDailyPaymentsMock).toHaveBeenCalledWith(fakeServer)
+    expect(getStatsMock).toHaveBeenCalled()
     expect(fakeServer.logger.info).toHaveBeenCalledWith(
       'resend-failed-payments: updated 5 failed payment(s) to pending'
     )
     expect(fakeServer.logger.info).toHaveBeenCalledWith(
       'resend-failed-payments: triggering processDailyPayments to process updated payments'
+    )
+    expect(fakeServer.logger.info).toHaveBeenCalledWith(
+      `resend-failed-payments: Stats: ${JSON.stringify(mockStats, null, 2)}`
     )
   })
 
@@ -101,8 +124,9 @@ describe('resend-failed-payments plugin', () => {
 
     expect(updateManyMock).toHaveBeenCalled()
     expect(processDailyPaymentsMock).not.toHaveBeenCalled()
+    expect(getStatsMock).not.toHaveBeenCalled()
     expect(fakeServer.logger.info).toHaveBeenCalledWith(
-      'Registering resend-failed-payments plugin'
+      'resend-failed-payments: Registering plugin'
     )
     expect(fakeServer.logger.info).toHaveBeenCalledWith(
       'resend-failed-payments: updated 0 failed payment(s) to pending'
