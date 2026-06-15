@@ -88,7 +88,9 @@ export const sendPaymentHubRequest = async (server, body) => {
     throw new Error(`Payment hub request failed: ${response.statusText}`)
   }
 
-  logger.info('The PaymentHub request sent successfully')
+  logger.info(
+    `Request successfully sent to Payment Hub for SBI: ${body.sbi} FRN: ${body.frn} (correlation ID: ${body.correlationId})`
+  )
   await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, body)
 
   return {

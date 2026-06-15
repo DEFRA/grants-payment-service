@@ -29,6 +29,22 @@ const fetchWithTimeout = async (url, options, logger) => {
       err,
       `Fetch failed ${JSON.stringify({
         url: urlStr,
+        signal: {
+          aborted: controller.signal.aborted,
+          reason: controller.signal.reason
+        },
+        error: {
+          name: err.name,
+          message: err.message,
+          code: err.code,
+          cause: err.cause,
+          stack: err.stack,
+          syscall: err.syscall,
+          hostname: err.hostname,
+          host: err.host,
+          port: err.port,
+          errno: err.errno
+        },
         ...(config.get('featureFlags.testEndpoints') ? { options } : {})
       })}`
     )

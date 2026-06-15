@@ -34,7 +34,7 @@ describe('fetchGrantPaymentsByDate', () => {
       grants: {
         $elemMatch: {
           payments: {
-            $elemMatch: { dueDate: { $in: [date, nextDay] } }
+            $elemMatch: { dueDate: { $lte: nextDay } }
           }
         }
       }
@@ -60,7 +60,7 @@ describe('fetchGrantPaymentsByDate', () => {
                         input: '$$g.payments',
                         as: 'p',
                         cond: {
-                          $and: [{ $in: ['$$p.dueDate', [date, nextDay]] }]
+                          $and: [{ $lte: ['$$p.dueDate', nextDay] }]
                         }
                       }
                     }
@@ -100,7 +100,7 @@ describe('fetchGrantPaymentsByDate', () => {
         $elemMatch: {
           payments: {
             $elemMatch: {
-              dueDate: { $in: [date, nextDay] },
+              dueDate: { $lte: nextDay },
               status: 'pending'
             }
           }
@@ -129,7 +129,7 @@ describe('fetchGrantPaymentsByDate', () => {
                         as: 'p',
                         cond: {
                           $and: [
-                            { $in: ['$$p.dueDate', [date, nextDay]] },
+                            { $lte: ['$$p.dueDate', nextDay] },
                             { $eq: ['$$p.status', 'pending'] }
                           ]
                         }
@@ -211,7 +211,7 @@ describe('streamGrantPaymentsByDate', () => {
       grants: {
         $elemMatch: {
           payments: {
-            $elemMatch: { dueDate: { $in: [date, nextDay] } }
+            $elemMatch: { dueDate: { $lte: nextDay } }
           }
         }
       }
@@ -237,7 +237,7 @@ describe('streamGrantPaymentsByDate', () => {
                         input: '$$g.payments',
                         as: 'p',
                         cond: {
-                          $and: [{ $in: ['$$p.dueDate', [date, nextDay]] }]
+                          $and: [{ $lte: ['$$p.dueDate', nextDay] }]
                         }
                       }
                     }
@@ -269,7 +269,7 @@ describe('streamGrantPaymentsByDate', () => {
         $elemMatch: {
           payments: {
             $elemMatch: {
-              dueDate: { $in: [date, nextDay] },
+              dueDate: { $lte: nextDay },
               status: 'pending'
             }
           }
@@ -298,7 +298,7 @@ describe('streamGrantPaymentsByDate', () => {
                         as: 'p',
                         cond: {
                           $and: [
-                            { $in: ['$$p.dueDate', [date, nextDay]] },
+                            { $lte: ['$$p.dueDate', nextDay] },
                             { $eq: ['$$p.status', 'pending'] }
                           ]
                         }
