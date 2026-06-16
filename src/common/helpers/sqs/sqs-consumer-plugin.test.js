@@ -6,7 +6,6 @@ import { Consumer } from 'sqs-consumer'
 import { config } from '#~/config/index.js'
 
 import { createSqsConsumerPlugin } from './sqs-consumer-plugin.js'
-import { runWithSqsMessageDeduplication } from './sqs-message-deduplication.js'
 
 const mockConfigGet = (key) => {
   switch (key) {
@@ -20,16 +19,10 @@ const mockConfigGet = (key) => {
       return 20
     case 'sqs.visibilityTimeout':
       return 60
-    case 'sqs.messageDeduplicationEnabled':
-      return false
     default:
       return undefined
   }
 }
-
-vi.mock('./sqs-message-deduplication.js', () => ({
-  runWithSqsMessageDeduplication: vi.fn(async ({ run }) => run())
-}))
 
 vi.mock('@aws-sdk/client-sqs')
 
@@ -176,42 +169,6 @@ describe('createSqsConsumerPlugin', () => {
     expect(server.logger.error).toHaveBeenCalledWith(
       error,
       'SQS consumer (test-tag) processing error: failed to process message'
-    )
-  })
-
-  it('wraps message handling with transport deduplication when enabled', async () => {
-    config.get.mockImplementation((key) => {
-      if (key === 'sqs.messageDeduplicationEnabled') return true
-      return mockConfigGet(key)
-    })
-
-    const handler = vi.fn()
-    const { plugin } = createSqsConsumerPlugin({
-      tag: 'cancel-payment',
-      queueUrl,
-      handler
-    })
-    await plugin.register(server)
-    const handleMessage = Consumer.create.mock.calls[0][0].handleMessage
-
-    await handleMessage({
-      MessageId: 'dedup-msg',
-      Body: JSON.stringify({ type: 'test' })
-    })
-
-    expect(runWithSqsMessageDeduplication).toHaveBeenCalledWith(
-      expect.objectContaining({
-        enabled: true,
-        queueTag: 'cancel-payment',
-        messageId: 'dedup-msg',
-        logger: server.logger,
-        run: expect.any(Function)
-      })
-    )
-    expect(handler).toHaveBeenCalledWith(
-      'dedup-msg',
-      { type: 'test' },
-      server.logger
     )
   })
 
