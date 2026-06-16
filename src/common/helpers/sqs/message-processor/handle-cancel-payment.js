@@ -17,12 +17,20 @@ export async function handleCancelPaymentEvent(messageId, payload, logger) {
   const { sbi, frn } = payload.data
 
   try {
-    const grantPayment = await cancelGrantPayments(sbi, frn)
+    const { updatedPayments, foundGrantPayments } = await cancelGrantPayments(
+      sbi,
+      frn
+    )
 
-    if (grantPayment.length) {
+    if (updatedPayments.length) {
       logger.info(
         { messageId, sbi },
-        `Successfully cancelled grant payment entry ${JSON.stringify(grantPayment)}`
+        `Successfully cancelled grant payment entry ${JSON.stringify(updatedPayments)}`
+      )
+    } else if (foundGrantPayments.length) {
+      logger.warn(
+        { messageId, sbi },
+        `Found grant payment entries for sbi ${sbi} and frn ${frn}, but none were in a pending state to be cancelled`
       )
     } else {
       logger.warn(
