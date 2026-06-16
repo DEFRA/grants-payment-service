@@ -3,6 +3,7 @@ import { vi, expect } from 'vitest'
 import crypto from 'node:crypto'
 
 import { Pact, MatchersV3 } from '@pact-foundation/pact'
+import { Server as ProxyServer } from 'proxy-chain'
 
 import { createServer } from '#~/server.js'
 import { config } from '#~/config/index.js'
@@ -18,6 +19,7 @@ vi.mock('#~/api/common/helpers/sns-publisher.js', () => ({
 }))
 
 let server
+let httpProxyServer
 
 describe('cron job schedule sending a POST request to payment hub', () => {
   const provider = new Pact({
@@ -29,11 +31,17 @@ describe('cron job schedule sending a POST request to payment hub', () => {
   beforeAll(async () => {
     global.fetchMock.disableMocks()
 
+    httpProxyServer = new ProxyServer({ port: 8080, verbose: true })
+
+    await httpProxyServer.listen()
+    console.log(`Proxy server is listening on port ${httpProxyServer.port}`)
+
     const mongoOverrides = buildIsolatedMongoOptions('payment-hub-contract')
 
     // Configure the application
     config.set('port', crypto.randomInt(30001, 65535))
     config.set('mongoUri', mongoOverrides.mongoUrl)
+    config.set('httpProxy', 'http://localhost:8080')
     config.set('featureFlags.isPaymentHubEnabled', true)
 
     // Create and start the server
@@ -50,6 +58,8 @@ describe('cron job schedule sending a POST request to payment hub', () => {
       await server.stop({ timeout: 0 })
     }
     config.set('featureFlags.isPaymentHubEnabled', false)
+
+    httpProxyServer.close()
 
     global.fetchMock.enableMocks()
   })
