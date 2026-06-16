@@ -143,7 +143,7 @@ export const processDailyPayments = async (
   } else {
     const nextDay = getNextDay(useDate)
     const logLimitedTo = limit ? ` (limited to ${limit} payments)` : ''
-    logMessage = `Processing payments for dates: ${useDate} - ${nextDay}${logLimitedTo}`
+    logMessage = `Processing payments for dates <= ${nextDay}${logLimitedTo}`
     logger.info(logMessage)
   }
 

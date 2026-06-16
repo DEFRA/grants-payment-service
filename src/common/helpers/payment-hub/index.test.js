@@ -65,6 +65,8 @@ describe('Payment Hub Helper', () => {
         'paymentHub.key': 'test-key',
         'paymentHub.keyName': 'test-key-name',
         'featureFlags.isPaymentHubEnabled': true,
+        'fetch.timeout': 30000,
+        'fetch.maxAttempts': 3,
         log: {
           enabled: true,
           level: 'info',

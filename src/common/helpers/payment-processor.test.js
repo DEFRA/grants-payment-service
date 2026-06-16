@@ -138,7 +138,7 @@ describe('processDailyPayments', () => {
       undefined
     )
     expect(logger.info).toHaveBeenCalledWith(
-      `Processing payments for dates: ${fakeDate} - ${getNextDay(fakeDate)}`
+      `Processing payments for dates <= ${getNextDay(fakeDate)}`
     )
 
     expect(sendPaymentHubRequest).toHaveBeenCalledTimes(2)
@@ -289,7 +289,7 @@ describe('processDailyPayments', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       error,
-      `Failed to process payments while Processing payments for dates: ${fakeDate} - ${getNextDay(fakeDate)}`
+      `Failed to process payments while Processing payments for dates <= ${getNextDay(fakeDate)}`
     )
   })
 
@@ -468,7 +468,7 @@ describe('processDailyPayments', () => {
     )
 
     expect(logger.info).toHaveBeenCalledWith(
-      `Processing payments for dates: ${fakeDate} - ${getNextDay(fakeDate)} (limited to ${limit} payments)`
+      `Processing payments for dates <= ${getNextDay(fakeDate)} (limited to ${limit} payments)`
     )
   })
 
