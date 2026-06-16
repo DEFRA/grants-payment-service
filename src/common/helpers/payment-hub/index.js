@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import { proxyFetch } from '#~/common/helpers/fetch.js'
+import { fetchWithRetry } from '#~/common/helpers/fetch.js'
 import { config } from '#~/config/index.js'
 import { initCache } from '#~/common/helpers/cache.js'
 import {
@@ -70,7 +70,7 @@ export const sendPaymentHubRequest = async (server, body) => {
   logger.info(
     `Attempting to submit a message to payment hub: ${JSON.stringify(body, null, 2)}`
   )
-  const response = await proxyFetch(
+  const response = await fetchWithRetry(
     url,
     {
       method: 'POST',

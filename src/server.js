@@ -11,7 +11,6 @@ import { mongooseDb } from '#~/common/helpers/mongoose.js'
 import { failAction } from '#~/common/helpers/fail-action.js'
 import { pulse } from '#~/common/helpers/pulse.js'
 import { requestTracing } from '#~/common/helpers/request-tracing.js'
-import { setupProxy } from '#~/common/helpers/proxy/setup-proxy.js'
 import { metrics } from '@defra/cdp-metrics'
 import { createSqsConsumerPlugin } from '#~/common/helpers/sqs/sqs-consumer-plugin.js'
 import { handleCreatePaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-create-payment.js'
@@ -22,7 +21,6 @@ import { resendFailedPayments } from '#~/plugins/resend-failed-payments.js'
 async function createServer(serverOptions = {}) {
   const { mongoUrl, mongoDatabase, disableSQS = false } = serverOptions
 
-  setupProxy()
   const server = Hapi.server({
     host: config.get('host'),
     port: config.get('port'),

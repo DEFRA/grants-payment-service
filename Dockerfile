@@ -1,6 +1,7 @@
 ARG PARENT_VERSION=2.10.1-node24.11.1
 ARG PORT=3000
 ARG PORT_DEBUG=9229
+ARG NODE_USE_ENV_PROXY=1
 
 FROM defradigital/node-development:${PARENT_VERSION} AS development
 ARG PARENT_VERSION
@@ -8,7 +9,9 @@ LABEL uk.gov.defra.ffc.parent-image=defradigital/node-development:${PARENT_VERSI
 
 ARG PORT
 ARG PORT_DEBUG
+ARG NODE_USE_ENV_PROXY
 ENV PORT=${PORT}
+ENV NODE_USE_ENV_PROXY=${NODE_USE_ENV_PROXY}
 EXPOSE ${PORT} ${PORT_DEBUG}
 
 COPY --chown=node:node package*.json ./
@@ -33,7 +36,9 @@ COPY --from=development /home/node/src ./src/
 RUN npm ci --omit=dev
 
 ARG PORT
+ARG NODE_USE_ENV_PROXY
 ENV PORT=${PORT}
+ENV NODE_USE_ENV_PROXY=${NODE_USE_ENV_PROXY}
 EXPOSE ${PORT}
 
 CMD [ "node", "src" ]
