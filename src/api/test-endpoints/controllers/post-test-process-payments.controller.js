@@ -1,11 +1,7 @@
 import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { processDailyPayments } from '#~/common/helpers/payment-processor.js'
-import {
-  getNextDay,
-  getTodaysDate,
-  getTomorrowsDate
-} from '#~/common/helpers/date.js'
+import { getNextDay, getTomorrowsDate } from '#~/common/helpers/date.js'
 import { config } from '#~/config/index.js'
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 
@@ -102,13 +98,9 @@ const postTestProcessPaymentsController = {
         { date }
       )
 
-      const dateLog = date
-        ? `${date} - ${getNextDay(date)}`
-        : `${getTodaysDate()} - ${getTomorrowsDate()}`
-
       return h
         .response({
-          message: `Triggered daily payment processing for ${dateLog}, showing first ${paginationLimit} payments with full details, check logs for more details`,
+          message: `Triggered daily payment processing for payments due <= ${date ? getNextDay(date) : getTomorrowsDate()}, showing first ${paginationLimit} payments with full details, check logs for more details`,
           result: paymentsWithResponses
         })
         .code(statusCodes.ok)

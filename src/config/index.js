@@ -320,12 +320,6 @@ const config = convict({
       format: 'nat',
       default: 20,
       env: 'WAIT_TIME_SECONDS'
-    },
-    messageDeduplicationEnabled: {
-      doc: 'Skip SQS messages already recorded in processed_sqs_messages (by queue tag and MessageId)',
-      format: Boolean,
-      default: true,
-      env: 'SQS_MESSAGE_DEDUPLICATION_ENABLED'
     }
   }
 })
