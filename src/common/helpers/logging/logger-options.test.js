@@ -1,25 +1,48 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getTraceId } from '@defra/hapi-tracing'
-import { config } from '#~/config/index.js'
 
-vi.mock('@defra/hapi-tracing', () => ({
-  getTraceId: vi.fn()
-}))
-
-// Set config before importing logger-options
-config.set('log.isEnabled', false)
-config.set('log.redact', ['req', 'res'])
-config.set('log.level', 'info')
-config.set('log.format', 'pino-pretty')
-config.set('serviceName', 'test-service')
-config.set('serviceVersion', '1.0.0')
-config.set('featureFlags.testEndpoints', false)
-
-import { loggerOptions } from './logger-options.js'
+// Create a reusable mock function for getTraceId
+const mockGetTraceId = vi.fn()
 
 describe('loggerOptions', () => {
-  beforeEach(() => {
+  let loggerOptions
+
+  beforeEach(async () => {
     vi.clearAllMocks()
+    vi.resetModules()
+
+    // Mock config module
+    vi.doMock('#~/config/index.js', () => ({
+      config: {
+        get: vi.fn((key) => {
+          if (key === 'log') {
+            return {
+              isEnabled: false,
+              redact: ['req', 'res'],
+              level: 'info',
+              format: 'pino-pretty'
+            }
+          } else if (key === 'serviceName') {
+            return 'test-service'
+          } else if (key === 'serviceVersion') {
+            return '1.0.0'
+          } else if (key === 'featureFlags.testEndpoints') {
+            return false
+          } else {
+            return undefined
+          }
+        }),
+        set: vi.fn()
+      }
+    }))
+
+    // Mock @defra/hapi-tracing
+    vi.doMock('@defra/hapi-tracing', () => ({
+      getTraceId: mockGetTraceId
+    }))
+
+    // Import loggerOptions
+    const module = await import('./logger-options.js')
+    loggerOptions = module.loggerOptions
   })
 
   it('has valid basic configuration', () => {
@@ -31,14 +54,14 @@ describe('loggerOptions', () => {
 
   describe('mixin', () => {
     it('returns empty object when no traceId is present', () => {
-      getTraceId.mockReturnValue(null)
+      mockGetTraceId.mockReturnValue(null)
       const result = loggerOptions.mixin()
       expect(result).toEqual({})
     })
 
     it('returns trace object when traceId is present', () => {
       const fakeTraceId = 'test-trace-id'
-      getTraceId.mockReturnValue(fakeTraceId)
+      mockGetTraceId.mockReturnValue(fakeTraceId)
       const result = loggerOptions.mixin()
       expect(result).toEqual({ trace: { id: fakeTraceId } })
     })
@@ -46,30 +69,50 @@ describe('loggerOptions', () => {
 })
 
 describe('loggerOptions with testEndpoints feature flag', () => {
-  beforeEach(() => {
+  let loggerOptions
+
+  beforeEach(async () => {
     vi.clearAllMocks()
+    vi.resetModules()
+
+    // Mock config module with testEndpoints enabled
+    vi.doMock('#~/config/index.js', () => ({
+      config: {
+        get: vi.fn((key) => {
+          if (key === 'log') {
+            return {
+              isEnabled: false,
+              redact: ['req', 'res', 'responseTime'],
+              level: 'info',
+              format: 'pino-pretty'
+            }
+          } else if (key === 'serviceName') {
+            return 'test-service'
+          } else if (key === 'serviceVersion') {
+            return '1.0.0'
+          } else if (key === 'featureFlags.testEndpoints') {
+            return true
+          } else {
+            return undefined
+          }
+        }),
+        set: vi.fn()
+      }
+    }))
+
+    // Mock @defra/hapi-tracing
+    vi.doMock('@defra/hapi-tracing', () => ({
+      getTraceId: mockGetTraceId
+    }))
+
+    // Import loggerOptions
+    const module = await import('./logger-options.js')
+    loggerOptions = module.loggerOptions
   })
 
   it('sets redact to only x-api-key and enables logPayload when testEndpoints is enabled', () => {
-    vi.resetModules()
-    // Re-apply mock
-    vi.doMock('@defra/hapi-tracing', () => ({
-      getTraceId: vi.fn()
-    }))
-
-    // Set config with testEndpoints true first
-    config.set('log.isEnabled', false)
-    config.set('log.redact', ['req', 'res', 'responseTime'])
-    config.set('log.level', 'info')
-    config.set('log.format', 'pino-pretty')
-    config.set('serviceName', 'test-service')
-    config.set('serviceVersion', '1.0.0')
-    config.set('featureFlags.testEndpoints', true)
-
-    const { loggerOptions: testLoggerOptions } = require('./logger-options.js')
-
-    expect(testLoggerOptions.redact.paths).toEqual(['req.headers.x-api-key'])
-    expect(testLoggerOptions.redact.remove).toBe(false)
-    expect(testLoggerOptions.logPayload).toBe(true)
+    expect(loggerOptions.redact.paths).toEqual(['req.headers.x-api-key'])
+    expect(loggerOptions.redact.remove).toBe(false)
+    expect(loggerOptions.logPayload).toBe(true)
   })
 })
