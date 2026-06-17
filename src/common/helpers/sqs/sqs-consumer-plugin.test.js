@@ -53,7 +53,8 @@ describe('createSqsConsumerPlugin', () => {
     server = {
       logger: {
         info: vi.fn(),
-        error: vi.fn()
+        error: vi.fn(),
+        debug: vi.fn()
       },
       events: {
         on: vi.fn()
@@ -168,7 +169,7 @@ describe('createSqsConsumerPlugin', () => {
 
     expect(server.logger.error).toHaveBeenCalledWith(
       error,
-      'SQS consumer (test-tag) processing error: failed to process message'
+      'SQS consumer (test-tag) processing error: failed to process message - message will be returned to queue for retry'
     )
   })
 
@@ -188,6 +189,46 @@ describe('createSqsConsumerPlugin', () => {
       'unknown-message-id',
       expect.any(Object),
       expect.any(Object)
+    )
+  })
+
+  it('logs message received event', async () => {
+    const handler = vi.fn()
+    const { plugin } = createSqsConsumerPlugin({
+      tag: 'test-tag',
+      queueUrl,
+      handler
+    })
+    await plugin.register(server)
+
+    const messageReceivedHandler = mockConsumer.on.mock.calls.find(
+      (call) => call[0] === 'message_received'
+    )[1]
+    const message = { MessageId: 'msg-123' }
+    messageReceivedHandler(message)
+
+    expect(server.logger.debug).toHaveBeenCalledWith(
+      'SQS consumer (test-tag) message received (MessageId: msg-123)'
+    )
+  })
+
+  it('logs message processed event', async () => {
+    const handler = vi.fn()
+    const { plugin } = createSqsConsumerPlugin({
+      tag: 'test-tag',
+      queueUrl,
+      handler
+    })
+    await plugin.register(server)
+
+    const messageProcessedHandler = mockConsumer.on.mock.calls.find(
+      (call) => call[0] === 'message_processed'
+    )[1]
+    const message = { MessageId: 'msg-456' }
+    messageProcessedHandler(message)
+
+    expect(server.logger.info).toHaveBeenCalledWith(
+      'SQS consumer (test-tag) message processed successfully (MessageId: msg-456) - message deleted from queue'
     )
   })
 })
