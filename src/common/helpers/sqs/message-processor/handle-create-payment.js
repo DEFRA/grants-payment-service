@@ -47,7 +47,16 @@ export async function handleCreatePaymentEvent(messageId, payload, logger) {
       err?.code === mongoDuplicateKeyErrorCode
 
     if (isDuplicateKeyError) {
-      logger.warn(err, 'Duplicate grant payment entry received')
+      logger.warn(
+        err,
+        `Duplicate grant payment entry received for SBI: ${payload?.data?.sbi} FRN: ${payload?.data?.frn} correlation IDs: ${payload?.data?.grants
+          ?.map?.((g) => [
+            g.correlationId,
+            ...(g.payments?.map?.((p) => p.correlationId) || [])
+          ])
+          .flat()
+          .join(', ')}`
+      )
     } else {
       logger.error(err, grafanaLogMessages.error.createPayment)
     }
