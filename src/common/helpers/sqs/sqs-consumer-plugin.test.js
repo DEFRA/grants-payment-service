@@ -202,17 +202,19 @@ describe('createSqsConsumerPlugin', () => {
     await plugin.register(server)
     const handleMessage = Consumer.create.mock.calls[0][0].handleMessage
 
-    await handleMessage({
+    const message = {
       MessageId: 'msg-123',
       Body: JSON.stringify({ foo: 'bar' })
-    })
+    }
+    const result = await handleMessage(message)
 
     expect(server.logger.info).toHaveBeenCalledWith(
       'SQS consumer (test-tag) handling message (MessageId: msg-123)'
     )
     expect(server.logger.info).toHaveBeenCalledWith(
-      'SQS consumer (test-tag) message processed successfully (MessageId: msg-123) - message deleted from queue'
+      'SQS consumer (test-tag) message processed successfully (MessageId: msg-123) - deleting message from queue'
     )
+    expect(result).toBe(message)
   })
 })
 
