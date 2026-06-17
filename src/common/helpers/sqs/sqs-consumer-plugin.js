@@ -88,7 +88,19 @@ export const createSqsConsumerPlugin = ({ tag, queueUrl, handler }) => ({
       consumer.on('processing_error', (err) => {
         server.logger.error(
           err,
-          `SQS consumer (${tag}) processing error: ${err.message}`
+          `SQS consumer (${tag}) processing error: ${err.message} - message will be returned to queue for retry`
+        )
+      })
+
+      consumer.on('message_processed', (message) => {
+        server.logger.info(
+          `SQS consumer (${tag}) message processed successfully (MessageId: ${message.MessageId}) - message deleted from queue`
+        )
+      })
+
+      consumer.on('message_received', (message) => {
+        server.logger.debug(
+          `SQS consumer (${tag}) message received (MessageId: ${message.MessageId})`
         )
       })
 
