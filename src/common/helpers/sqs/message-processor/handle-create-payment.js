@@ -10,16 +10,11 @@ import { transformFpttPaymentDataToPaymentHubFormat } from '#~/common/helpers/pa
  * @param {import('pino').Logger} logger
  */
 export async function handleCreatePaymentEvent(messageId, payload, logger) {
-  logger.info(
-    { messageId, eventType: payload.type, sbi: payload?.data?.sbi },
-    `Received create_payment payload is  ${JSON.stringify(payload, null, 2)}`
-  )
-
   try {
     const grantPayment = await createGrantPayment(payload.data)
 
     logger.info(
-      `Successfully created grant payment entry ${JSON.stringify(grantPayment)}`
+      `Successfully created grant payment entry for message ${messageId}: ${JSON.stringify(grantPayment)}`
     )
 
     const identifiers = {
@@ -49,7 +44,7 @@ export async function handleCreatePaymentEvent(messageId, payload, logger) {
     if (isDuplicateKeyError) {
       logger.warn(
         err,
-        `Duplicate grant payment entry received for SBI: ${payload?.data?.sbi} FRN: ${payload?.data?.frn} correlation IDs: ${payload?.data?.grants
+        `Duplicate grant payment entry received for message ${messageId}: SBI: ${payload?.data?.sbi} FRN: ${payload?.data?.frn} correlation IDs: ${payload?.data?.grants
           ?.map?.((g) => [
             g.correlationId,
             ...(g.payments?.map?.((p) => p.correlationId) || [])
