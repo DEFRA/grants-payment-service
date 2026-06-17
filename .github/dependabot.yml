@@ -8,12 +8,26 @@ updates:
 
     # Group packages into shared PR
     groups:
+      core:
+        patterns:
+          - '@defra/*'
+          - '@hapi/*'
+          - 'croner'
+          - 'hapi*'
+          - 'joi'
+          - 'mongoose'
+          - 'sqs-consumer'
+
       build:
         patterns:
+          - '@babel/*'
           - 'autoprefixer'
 
       lint:
         patterns:
+          - 'eslint'
+          - 'eslint-*'
+          - 'neostandard'
           - 'prettier'
           - 'stylelint'
           - 'stylelint-*'
@@ -27,8 +41,13 @@ updates:
 
       tools:
         patterns:
+          - '@aws-sdk/*'
+          - 'aws*'
+          - 'convict'
+          - 'convict*'
           - 'husky'
           - 'vitest'
+          - 'vitest-*'
           - '@vitest/*'
           - 'nodemon'
           - 'npm-run-all'
