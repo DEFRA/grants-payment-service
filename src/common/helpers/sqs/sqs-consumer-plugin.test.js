@@ -192,7 +192,7 @@ describe('createSqsConsumerPlugin', () => {
     )
   })
 
-  it('logs message received event', async () => {
+  it('logs when handling a message', async () => {
     const handler = vi.fn()
     const { plugin } = createSqsConsumerPlugin({
       tag: 'test-tag',
@@ -200,35 +200,18 @@ describe('createSqsConsumerPlugin', () => {
       handler
     })
     await plugin.register(server)
+    const handleMessage = Consumer.create.mock.calls[0][0].handleMessage
 
-    const messageReceivedHandler = mockConsumer.on.mock.calls.find(
-      (call) => call[0] === 'message_received'
-    )[1]
-    const message = { MessageId: 'msg-123' }
-    messageReceivedHandler(message)
-
-    expect(server.logger.debug).toHaveBeenCalledWith(
-      'SQS consumer (test-tag) message received (MessageId: msg-123)'
-    )
-  })
-
-  it('logs message processed event', async () => {
-    const handler = vi.fn()
-    const { plugin } = createSqsConsumerPlugin({
-      tag: 'test-tag',
-      queueUrl,
-      handler
+    await handleMessage({
+      MessageId: 'msg-123',
+      Body: JSON.stringify({ foo: 'bar' })
     })
-    await plugin.register(server)
-
-    const messageProcessedHandler = mockConsumer.on.mock.calls.find(
-      (call) => call[0] === 'message_processed'
-    )[1]
-    const message = { MessageId: 'msg-456' }
-    messageProcessedHandler(message)
 
     expect(server.logger.info).toHaveBeenCalledWith(
-      'SQS consumer (test-tag) message processed successfully (MessageId: msg-456) - message deleted from queue'
+      'SQS consumer (test-tag) handling message (MessageId: msg-123)'
+    )
+    expect(server.logger.info).toHaveBeenCalledWith(
+      'SQS consumer (test-tag) message processed successfully (MessageId: msg-123) - message deleted from queue'
     )
   })
 })
@@ -287,12 +270,33 @@ describe('processMessage', () => {
     return Consumer.create.mock.calls[0][0].handleMessage
   }
 
+  it('logs received payload with eventType and sbi', async () => {
+    const handler = vi.fn()
+    const handleMessage = await getHandleMessage(handler)
+
+    const payload = {
+      type: 'cloud.defra.dev.farming-grants-agreements-api.payment.create',
+      data: { sbi: '123456789' }
+    }
+    const message = {
+      MessageId: 'msg-123',
+      Body: JSON.stringify(payload)
+    }
+
+    await handleMessage(message)
+
+    expect(logger.info).toHaveBeenCalledWith(
+      { messageId: 'msg-123', eventType: payload.type, sbi: '123456789' },
+      `Received message msg-123: ${payload.type} event with payload ${JSON.stringify(payload, null, 2)}`
+    )
+  })
+
   it('throws badData when message Body is missing', async () => {
     const handleMessage = await getHandleMessage(vi.fn())
 
     await expect(handleMessage({ MessageId: '1' })).rejects.toMatchObject({
       isBoom: true,
-      message: 'SQS message missing Body'
+      message: 'SQS message missing Body for message 1'
     })
   })
 
@@ -305,7 +309,7 @@ describe('processMessage', () => {
 
     await expect(handleMessage(message)).rejects.toMatchObject({
       isBoom: true,
-      message: `Invalid message format: ${message.Body}`
+      message: `Invalid message format: ${message.Body} for message 2`
     })
   })
 
@@ -398,7 +402,7 @@ describe('processMessage', () => {
 
     await expect(handleMessage(sqsMessage)).rejects.toMatchObject({
       isBoom: true,
-      message: `Invalid message format: ${sqsMessage.Body}`
+      message: `Invalid message format: ${sqsMessage.Body} for message sqs-message-id`
     })
   })
 

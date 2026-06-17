@@ -13,7 +13,9 @@ import { config } from '#~/config/index.js'
  */
 const processMessage = async (handler, message, logger) => {
   if (!message?.Body) {
-    throw Boom.badData('SQS message missing Body')
+    throw Boom.badData(
+      `SQS message missing Body for message ${message.MessageId}`
+    )
   }
 
   try {
@@ -27,10 +29,18 @@ const processMessage = async (handler, message, logger) => {
 
     const messageId = message.MessageId ?? 'unknown-message-id'
 
+    logger.info(
+      { messageId, eventType: payload.type, sbi: payload?.data?.sbi },
+      `Received message ${messageId}: ${payload.type} event with payload ${JSON.stringify(payload, null, 2)}`
+    )
+
     await handler(messageId, payload, logger)
   } catch (error) {
     if (error?.name === 'SyntaxError') {
-      throw Boom.badData(`Invalid message format: ${message.Body}`, error)
+      throw Boom.badData(
+        `Invalid message format: ${message.Body} for message ${message.MessageId}`,
+        error
+      )
     }
 
     throw Boom.boomify(error)
@@ -73,7 +83,13 @@ export const createSqsConsumerPlugin = ({ tag, queueUrl, handler }) => ({
         attributeNames: ['All'],
         messageAttributeNames: ['All'],
         handleMessage: async (message) => {
+          server.logger.info(
+            `SQS consumer (${tag}) handling message (MessageId: ${message.MessageId})`
+          )
           await processMessage(handler, message, server.logger)
+          server.logger.info(
+            `SQS consumer (${tag}) message processed successfully (MessageId: ${message.MessageId}) - message deleted from queue`
+          )
         }
       })
 
@@ -89,18 +105,6 @@ export const createSqsConsumerPlugin = ({ tag, queueUrl, handler }) => ({
         server.logger.error(
           err,
           `SQS consumer (${tag}) processing error: ${err.message} - message will be returned to queue for retry`
-        )
-      })
-
-      consumer.on('message_processed', (message) => {
-        server.logger.info(
-          `SQS consumer (${tag}) message processed successfully (MessageId: ${message.MessageId}) - message deleted from queue`
-        )
-      })
-
-      consumer.on('message_received', (message) => {
-        server.logger.debug(
-          `SQS consumer (${tag}) message received (MessageId: ${message.MessageId})`
         )
       })
 
