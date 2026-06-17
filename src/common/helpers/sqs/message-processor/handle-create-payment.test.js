@@ -141,7 +141,7 @@ describe('handleCreatePaymentEvent', () => {
 
     expect(logger.warn).toHaveBeenCalledWith(
       error,
-      'Duplicate grant payment entry received'
+      'Duplicate grant payment entry received for SBI: 106284736 FRN: 12544567 correlation IDs: grant-correlation-id, payment-correlation-id'
     )
     expect(logger.error).not.toHaveBeenCalled()
   })
