@@ -86,10 +86,14 @@ export const createSqsConsumerPlugin = ({ tag, queueUrl, handler }) => ({
           server.logger.info(
             `SQS consumer (${tag}) handling message (MessageId: ${message.MessageId})`
           )
+
           await processMessage(handler, message, server.logger)
+
           server.logger.info(
-            `SQS consumer (${tag}) message processed successfully (MessageId: ${message.MessageId}) - message deleted from queue`
+            `SQS consumer (${tag}) message processed successfully (MessageId: ${message.MessageId}) - deleting message from queue`
           )
+
+          return message
         }
       })
 
