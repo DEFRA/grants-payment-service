@@ -25,7 +25,7 @@ describe('loggerOptions', () => {
             return 'test-service'
           } else if (key === 'serviceVersion') {
             return '1.0.0'
-          } else if (key === 'featureFlags.testEndpoints') {
+          } else if (key === 'featureFlags.requestLoggerDebug') {
             return false
           } else {
             return undefined
@@ -68,7 +68,7 @@ describe('loggerOptions', () => {
   })
 })
 
-describe('loggerOptions with testEndpoints feature flag', () => {
+describe('loggerOptions with requestLoggerDebug feature flag', () => {
   let loggerOptions
 
   beforeEach(async () => {
@@ -90,7 +90,7 @@ describe('loggerOptions with testEndpoints feature flag', () => {
             return 'test-service'
           } else if (key === 'serviceVersion') {
             return '1.0.0'
-          } else if (key === 'featureFlags.testEndpoints') {
+          } else if (key === 'featureFlags.requestLoggerDebug') {
             return true
           } else {
             return undefined
@@ -110,7 +110,7 @@ describe('loggerOptions with testEndpoints feature flag', () => {
     loggerOptions = module.loggerOptions
   })
 
-  it('sets redact to only x-api-key and enables logPayload when testEndpoints is enabled', () => {
+  it('sets redact to only x-api-key and enables logPayload when requestLoggerDebug is enabled', () => {
     expect(loggerOptions.redact.paths).toEqual(['req.headers.x-api-key'])
     expect(loggerOptions.redact.remove).toBe(false)
     expect(loggerOptions.logPayload).toBe(true)

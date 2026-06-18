@@ -22,6 +22,7 @@ describe('#healthController', () => {
     config.set('featureFlags.testEndpoints', true)
     config.set('featureFlags.isPaymentHubEnabled', false)
     config.set('featureFlags.enableBackups', false)
+    config.set('featureFlags.requestLoggerDebug', false)
 
     // import createServer after mongoose is mocked so controllers picks up the mock
     const { createServer } = await import('../../server.js')
@@ -57,7 +58,8 @@ describe('#healthController', () => {
           testEndpoints: true,
           isPaymentHubEnabled: false,
           enableBackups: false,
-          resendFailedPaymentsEnabled: false
+          resendFailedPaymentsEnabled: false,
+          requestLoggerDebug: false
         }
       })
       expect(statusCode).toBe(statusCodes.ok)
@@ -118,7 +120,8 @@ describe('#healthController', () => {
           testEndpoints: true,
           isPaymentHubEnabled: false,
           enableBackups: false,
-          resendFailedPaymentsEnabled: false
+          resendFailedPaymentsEnabled: false,
+          requestLoggerDebug: false
         }
       })
       expect(response.statusCode).toBe(statusCodes.ok)

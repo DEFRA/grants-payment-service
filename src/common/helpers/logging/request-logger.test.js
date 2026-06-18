@@ -18,13 +18,18 @@ describe('customRequestCompleteMessage', () => {
     vi.doMock('#~/config/index.js', () => ({
       config: {
         get: vi.fn((key) => {
-          if (key === 'featureFlags.testEndpoints') {
+          if (key === 'featureFlags.requestLoggerDebug') {
             return true
           }
           return undefined
         })
       }
     }))
+    // Mock isInteractive to be false
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: false,
+      configurable: true
+    })
     const module = await import('./request-logger.js')
     customRequestCompleteMessage =
       module.requestLogger.options.customRequestCompleteMessage
@@ -109,37 +114,93 @@ describe('customRequestCompleteMessage', () => {
   })
 })
 
-describe('requestLogger', () => {
-  it('includes customRequestCompleteMessage in options when testEndpoints is enabled', async () => {
+describe('requestLogger options', () => {
+  it('includes customRequestCompleteMessage when requestLoggerDebugEnabled is true and isInteractive is false', async () => {
     vi.resetModules()
     vi.doMock('#~/config/index.js', () => ({
       config: {
         get: vi.fn((key) => {
-          if (key === 'featureFlags.testEndpoints') {
+          if (key === 'featureFlags.requestLoggerDebug') {
             return true
           }
           return undefined
         })
       }
     }))
+    // Mock isInteractive to be false
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: false,
+      configurable: true
+    })
     const module = await import('./request-logger.js')
     expect(
       module.requestLogger.options.customRequestCompleteMessage
     ).toBeDefined()
   })
 
-  it('does not include customRequestCompleteMessage in options when testEndpoints is disabled', async () => {
+  it('does not include customRequestCompleteMessage when requestLoggerDebugEnabled is true and isInteractive is true', async () => {
     vi.resetModules()
     vi.doMock('#~/config/index.js', () => ({
       config: {
         get: vi.fn((key) => {
-          if (key === 'featureFlags.testEndpoints') {
+          if (key === 'featureFlags.requestLoggerDebug') {
+            return true
+          }
+          return undefined
+        })
+      }
+    }))
+    // Mock isInteractive to be true
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: true,
+      configurable: true
+    })
+    const module = await import('./request-logger.js')
+    expect(
+      module.requestLogger.options.customRequestCompleteMessage
+    ).toBeUndefined()
+  })
+
+  it('does not include customRequestCompleteMessage when requestLoggerDebugEnabled is false and isInteractive is false', async () => {
+    vi.resetModules()
+    vi.doMock('#~/config/index.js', () => ({
+      config: {
+        get: vi.fn((key) => {
+          if (key === 'featureFlags.requestLoggerDebug') {
             return false
           }
           return undefined
         })
       }
     }))
+    // Mock isInteractive to be false
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: false,
+      configurable: true
+    })
+    const module = await import('./request-logger.js')
+    expect(
+      module.requestLogger.options.customRequestCompleteMessage
+    ).toBeUndefined()
+  })
+
+  it('does not include customRequestCompleteMessage when requestLoggerDebugEnabled is false and isInteractive is true', async () => {
+    vi.resetModules()
+    vi.doMock('#~/config/index.js', () => ({
+      config: {
+        get: vi.fn((key) => {
+          if (key === 'featureFlags.requestLoggerDebug') {
+            return false
+          }
+          return undefined
+        })
+      }
+    }))
+    // Mock isInteractive to be true
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: true,
+      configurable: true
+    })
     const module = await import('./request-logger.js')
     expect(
       module.requestLogger.options.customRequestCompleteMessage
