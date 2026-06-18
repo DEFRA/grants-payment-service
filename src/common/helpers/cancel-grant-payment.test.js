@@ -51,8 +51,8 @@ describe('cancelGrantPayments', () => {
     expect(mockGrantPayment.grants[0].payments[2].status).toBe('pending') // past date not cancelled
     expect(mockGrantPayment.grants[0].payments[3].status).toBe('paid') // non-pending not cancelled
     expect(mockSave).toHaveBeenCalled()
-    expect(result).toHaveLength(1)
-    expect(result[0]).toBe(mockGrantPayment)
+    expect(result.updatedPayments).toHaveLength(1)
+    expect(result.updatedPayments[0]).toBe(mockGrantPayment)
   })
 
   it('should not call save if no payments were updated', async () => {
@@ -77,6 +77,6 @@ describe('cancelGrantPayments', () => {
     const result = await cancelGrantPayments(sbi, frn)
 
     expect(mockSave).not.toHaveBeenCalled()
-    expect(result).toHaveLength(0)
+    expect(result.updatedPayments).toHaveLength(0)
   })
 })

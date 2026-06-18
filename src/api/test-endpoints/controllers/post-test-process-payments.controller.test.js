@@ -7,11 +7,7 @@ import {
 import { statusCodes } from '#~/common/constants/status-codes.js'
 import { processDailyPayments } from '#~/common/helpers/payment-processor.js'
 import { serializeError } from '#~/common/helpers/serialize-error.js'
-import {
-  getNextDay,
-  getTodaysDate,
-  getTomorrowsDate
-} from '#~/common/helpers/date.js'
+import { getNextDay, getTomorrowsDate } from '#~/common/helpers/date.js'
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 
 vi.mock('#~/common/helpers/payment-processor.js', () => ({
@@ -67,7 +63,7 @@ describe('postTestProcessPaymentsController', () => {
     })
     expect(response.statusCode).toBe(statusCodes.ok)
     expect(response.source).toEqual({
-      message: `Triggered daily payment processing for ${fakeDate} - ${getNextDay(fakeDate)}, showing first 10 payments with full details, check logs for more details`,
+      message: `Triggered daily payment processing for payments due <= ${getNextDay(fakeDate)}, showing first 10 payments with full details, check logs for more details`,
       result: fakeResults.map((r) => ({ db: r }))
     })
   })
@@ -95,7 +91,7 @@ describe('postTestProcessPaymentsController', () => {
       date: undefined
     })
     expect(response.source).toEqual({
-      message: `Triggered daily payment processing for ${getTodaysDate()} - ${getTomorrowsDate()}, showing first 10 payments with full details, check logs for more details`,
+      message: `Triggered daily payment processing for payments due <= ${getTomorrowsDate()}, showing first 10 payments with full details, check logs for more details`,
       result: fakeResults.map((r) => ({ db: r }))
     })
   })

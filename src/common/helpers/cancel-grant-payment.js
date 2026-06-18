@@ -28,5 +28,5 @@ export const cancelGrantPayments = async (sbi, frn) => {
     }
   }
 
-  return updatedPayments
+  return { updatedPayments, foundGrantPayments: grantPayments }
 }

@@ -77,17 +77,8 @@ describe('receive a SFI grant payment event', () => {
 
           await handleCreatePaymentEvent(messageId, payload, mockLogger)
 
-          expect(mockLogger.info.mock.calls[0][0]).toEqual({
-            messageId,
-            eventType,
-            sbi: '106284736'
-          })
-          expect(mockLogger.info.mock.calls[0][1]).toBe(
-            `Received create_payment payload is  ${JSON.stringify(payload, null, 2)}`
-          )
-
-          expect(mockLogger.info.mock.calls[1][0]).toContain(
-            'Successfully created grant payment entry {"sbi":"'
+          expect(mockLogger.info.mock.calls[0][0]).toContain(
+            'Successfully created grant payment entry for message notificationMessageId: {"sbi":"'
           )
         })
       )

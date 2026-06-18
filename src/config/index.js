@@ -236,6 +236,12 @@ const config = convict({
       format: 'Boolean',
       default: false,
       env: 'ENABLE_RESEND_FAILED_PAYMENTS'
+    },
+    requestLoggerDebug: {
+      doc: 'Enable or Disable request logger debug mode',
+      format: 'Boolean',
+      default: false,
+      env: 'ENABLE_REQUEST_LOGGER_DEBUG'
     }
   },
   backup: {
@@ -320,12 +326,6 @@ const config = convict({
       format: 'nat',
       default: 20,
       env: 'WAIT_TIME_SECONDS'
-    },
-    messageDeduplicationEnabled: {
-      doc: 'Skip SQS messages already recorded in processed_sqs_messages (by queue tag and MessageId)',
-      format: Boolean,
-      default: true,
-      env: 'SQS_MESSAGE_DEDUPLICATION_ENABLED'
     }
   }
 })

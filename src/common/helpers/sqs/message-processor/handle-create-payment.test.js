@@ -35,15 +35,7 @@ describe('handleCreatePaymentEvent', () => {
 
     expect(createGrantPayment).toHaveBeenCalledWith(sampleData.grants[0])
     expect(logger.info).toHaveBeenCalledWith(
-      {
-        messageId: 'msg-1',
-        eventType: validPayload.type,
-        sbi: sampleData.grants[0].sbi
-      },
-      `Received create_payment payload is  ${JSON.stringify(validPayload, null, 2)}`
-    )
-    expect(logger.info).toHaveBeenCalledWith(
-      `Successfully created grant payment entry ${JSON.stringify(validPayload)}`
+      `Successfully created grant payment entry for message msg-1: ${JSON.stringify(validPayload)}`
     )
   })
 
@@ -141,7 +133,7 @@ describe('handleCreatePaymentEvent', () => {
 
     expect(logger.warn).toHaveBeenCalledWith(
       error,
-      'Duplicate grant payment entry received'
+      'Duplicate grant payment entry received for message msg-1: SBI: 106284736 FRN: 12544567 correlation IDs: grant-correlation-id, payment-correlation-id'
     )
     expect(logger.error).not.toHaveBeenCalled()
   })

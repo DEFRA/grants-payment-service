@@ -10,6 +10,7 @@ import { serializeError } from '#~/common/helpers/serialize-error.js'
  */
 const postTestQueueMessageController = {
   handler: async (request, h) => {
+    const requestId = crypto.randomUUID()
     try {
       const queueMessage = request.payload
 
@@ -24,7 +25,7 @@ const postTestQueueMessageController = {
       const queueUrl = `${baseQueueUrl.join('/')}/${queueName}`
 
       request.logger.info(
-        `Posting test queue message in: "${queueUrl}" with data: ${JSON.stringify(queueMessage)}`
+        `[RequestID: ${requestId}] Posting test queue message in: "${queueUrl}" with data: ${JSON.stringify(queueMessage)}`
       )
 
       const sqsClient = new SQSClient({
@@ -41,7 +42,7 @@ const postTestQueueMessageController = {
 
       const result = await sqsClient.send(command)
       request.logger.info(
-        `Successfully posted test queue message to: "${queueUrl}" with MessageId: ${result.MessageId}`
+        `[RequestID: ${requestId}] Successfully posted test queue message to: "${queueUrl}" with MessageId: ${result.MessageId}`
       )
 
       return h
@@ -50,7 +51,10 @@ const postTestQueueMessageController = {
         })
         .code(statusCodes.ok)
     } catch (error) {
-      request.logger.error(error, `Error posting test queue message`)
+      request.logger.error(
+        error,
+        `[RequestID: ${requestId}] Error posting test queue message`
+      )
 
       if (error.isBoom) {
         return error

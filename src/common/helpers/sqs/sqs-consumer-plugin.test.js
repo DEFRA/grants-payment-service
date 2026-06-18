@@ -6,7 +6,6 @@ import { Consumer } from 'sqs-consumer'
 import { config } from '#~/config/index.js'
 
 import { createSqsConsumerPlugin } from './sqs-consumer-plugin.js'
-import { runWithSqsMessageDeduplication } from './sqs-message-deduplication.js'
 
 const mockConfigGet = (key) => {
   switch (key) {
@@ -20,16 +19,10 @@ const mockConfigGet = (key) => {
       return 20
     case 'sqs.visibilityTimeout':
       return 60
-    case 'sqs.messageDeduplicationEnabled':
-      return false
     default:
       return undefined
   }
 }
-
-vi.mock('./sqs-message-deduplication.js', () => ({
-  runWithSqsMessageDeduplication: vi.fn(async ({ run }) => run())
-}))
 
 vi.mock('@aws-sdk/client-sqs')
 
@@ -60,7 +53,8 @@ describe('createSqsConsumerPlugin', () => {
     server = {
       logger: {
         info: vi.fn(),
-        error: vi.fn()
+        error: vi.fn(),
+        debug: vi.fn()
       },
       events: {
         on: vi.fn()
@@ -175,43 +169,7 @@ describe('createSqsConsumerPlugin', () => {
 
     expect(server.logger.error).toHaveBeenCalledWith(
       error,
-      'SQS consumer (test-tag) processing error: failed to process message'
-    )
-  })
-
-  it('wraps message handling with transport deduplication when enabled', async () => {
-    config.get.mockImplementation((key) => {
-      if (key === 'sqs.messageDeduplicationEnabled') return true
-      return mockConfigGet(key)
-    })
-
-    const handler = vi.fn()
-    const { plugin } = createSqsConsumerPlugin({
-      tag: 'cancel-payment',
-      queueUrl,
-      handler
-    })
-    await plugin.register(server)
-    const handleMessage = Consumer.create.mock.calls[0][0].handleMessage
-
-    await handleMessage({
-      MessageId: 'dedup-msg',
-      Body: JSON.stringify({ type: 'test' })
-    })
-
-    expect(runWithSqsMessageDeduplication).toHaveBeenCalledWith(
-      expect.objectContaining({
-        enabled: true,
-        queueTag: 'cancel-payment',
-        messageId: 'dedup-msg',
-        logger: server.logger,
-        run: expect.any(Function)
-      })
-    )
-    expect(handler).toHaveBeenCalledWith(
-      'dedup-msg',
-      { type: 'test' },
-      server.logger
+      'SQS consumer (test-tag) processing error: failed to process message - message will be returned to queue for retry'
     )
   })
 
@@ -232,6 +190,31 @@ describe('createSqsConsumerPlugin', () => {
       expect.any(Object),
       expect.any(Object)
     )
+  })
+
+  it('logs when handling a message', async () => {
+    const handler = vi.fn()
+    const { plugin } = createSqsConsumerPlugin({
+      tag: 'test-tag',
+      queueUrl,
+      handler
+    })
+    await plugin.register(server)
+    const handleMessage = Consumer.create.mock.calls[0][0].handleMessage
+
+    const message = {
+      MessageId: 'msg-123',
+      Body: JSON.stringify({ foo: 'bar' })
+    }
+    const result = await handleMessage(message)
+
+    expect(server.logger.info).toHaveBeenCalledWith(
+      'SQS consumer (test-tag) handling message (MessageId: msg-123)'
+    )
+    expect(server.logger.info).toHaveBeenCalledWith(
+      'SQS consumer (test-tag) message processed successfully (MessageId: msg-123) - deleting message from queue'
+    )
+    expect(result).toBe(message)
   })
 })
 
@@ -289,12 +272,33 @@ describe('processMessage', () => {
     return Consumer.create.mock.calls[0][0].handleMessage
   }
 
+  it('logs received payload with eventType and sbi', async () => {
+    const handler = vi.fn()
+    const handleMessage = await getHandleMessage(handler)
+
+    const payload = {
+      type: 'cloud.defra.dev.farming-grants-agreements-api.payment.create',
+      data: { sbi: '123456789' }
+    }
+    const message = {
+      MessageId: 'msg-123',
+      Body: JSON.stringify(payload)
+    }
+
+    await handleMessage(message)
+
+    expect(logger.info).toHaveBeenCalledWith(
+      { messageId: 'msg-123', eventType: payload.type, sbi: '123456789' },
+      `Received message msg-123: ${payload.type} event with payload ${JSON.stringify(payload, null, 2)}`
+    )
+  })
+
   it('throws badData when message Body is missing', async () => {
     const handleMessage = await getHandleMessage(vi.fn())
 
     await expect(handleMessage({ MessageId: '1' })).rejects.toMatchObject({
       isBoom: true,
-      message: 'SQS message missing Body'
+      message: 'SQS message missing Body for message 1'
     })
   })
 
@@ -307,7 +311,7 @@ describe('processMessage', () => {
 
     await expect(handleMessage(message)).rejects.toMatchObject({
       isBoom: true,
-      message: `Invalid message format: ${message.Body}`
+      message: `Invalid message format: ${message.Body} for message 2`
     })
   })
 
@@ -400,7 +404,7 @@ describe('processMessage', () => {
 
     await expect(handleMessage(sqsMessage)).rejects.toMatchObject({
       isBoom: true,
-      message: `Invalid message format: ${sqsMessage.Body}`
+      message: `Invalid message format: ${sqsMessage.Body} for message sqs-message-id`
     })
   })
 

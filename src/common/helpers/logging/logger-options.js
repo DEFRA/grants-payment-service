@@ -5,6 +5,8 @@ import { getTraceId } from '@defra/hapi-tracing'
 const logConfig = config.get('log') || {}
 const serviceName = config.get('serviceName') || ''
 const serviceVersion = config.get('serviceVersion') || ''
+const requestLoggerDebugEnabled =
+  config.get('featureFlags.requestLoggerDebug') === true
 
 const formatters = {
   ecs: {
@@ -20,12 +22,15 @@ export const loggerOptions = {
   enabled: logConfig.isEnabled ?? false,
   ignorePaths: ['/health'],
   redact: {
-    paths: logConfig.redact || [],
-    remove: true
+    paths: requestLoggerDebugEnabled
+      ? ['req.headers.x-api-key']
+      : logConfig.redact || [],
+    remove: !requestLoggerDebugEnabled
   },
   level: logConfig.level || 'info',
   ...formatters[logConfig.format],
   nesting: true,
+  logPayload: requestLoggerDebugEnabled,
   mixin() {
     const mixinValues = {}
     const traceId = getTraceId()
