@@ -4,24 +4,18 @@ import { Consumer } from 'sqs-consumer'
 
 import { config } from '#~/config/index.js'
 
-import { runWithSqsMessageDeduplication } from './sqs-message-deduplication.js'
-
 /**
  * Parse and process a single SQS message.
  *
  * @param {(messageId: string, payload: any, logger: import('pino').Logger) => Promise<void>} handler
  * @param {import('@aws-sdk/client-sqs').Message} message
  * @param {import('pino').Logger} logger
- * @param {{ queueTag: string, messageDeduplicationEnabled: boolean }} options
  */
-const processMessage = async (
-  handler,
-  message,
-  logger,
-  { queueTag, messageDeduplicationEnabled }
-) => {
+const processMessage = async (handler, message, logger) => {
   if (!message?.Body) {
-    throw Boom.badData('SQS message missing Body')
+    throw Boom.badData(
+      `SQS message missing Body for message ${message.MessageId}`
+    )
   }
 
   try {
@@ -35,17 +29,18 @@ const processMessage = async (
 
     const messageId = message.MessageId ?? 'unknown-message-id'
 
-    await runWithSqsMessageDeduplication({
-      enabled: messageDeduplicationEnabled,
-      queueTag,
-      messageId,
-      messageBody: message.Body,
-      logger,
-      run: async () => handler(messageId, payload, logger)
-    })
+    logger.info(
+      { messageId, eventType: payload.type, sbi: payload?.data?.sbi },
+      `Received message ${messageId}: ${payload.type} event with payload ${JSON.stringify(payload, null, 2)}`
+    )
+
+    await handler(messageId, payload, logger)
   } catch (error) {
     if (error?.name === 'SyntaxError') {
-      throw Boom.badData(`Invalid message format: ${message.Body}`, error)
+      throw Boom.badData(
+        `Invalid message format: ${message.Body} for message ${message.MessageId}`,
+        error
+      )
     }
 
     throw Boom.boomify(error)
@@ -88,12 +83,17 @@ export const createSqsConsumerPlugin = ({ tag, queueUrl, handler }) => ({
         attributeNames: ['All'],
         messageAttributeNames: ['All'],
         handleMessage: async (message) => {
-          await processMessage(handler, message, server.logger, {
-            queueTag: tag,
-            messageDeduplicationEnabled: config.get(
-              'sqs.messageDeduplicationEnabled'
-            )
-          })
+          server.logger.info(
+            `SQS consumer (${tag}) handling message (MessageId: ${message.MessageId})`
+          )
+
+          await processMessage(handler, message, server.logger)
+
+          server.logger.info(
+            `SQS consumer (${tag}) message processed successfully (MessageId: ${message.MessageId}) - deleting message from queue`
+          )
+
+          return message
         }
       })
 
@@ -108,7 +108,7 @@ export const createSqsConsumerPlugin = ({ tag, queueUrl, handler }) => ({
       consumer.on('processing_error', (err) => {
         server.logger.error(
           err,
-          `SQS consumer (${tag}) processing error: ${err.message}`
+          `SQS consumer (${tag}) processing error: ${err.message} - message will be returned to queue for retry`
         )
       })
 
