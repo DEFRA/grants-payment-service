@@ -236,6 +236,12 @@ const config = convict({
       format: 'Boolean',
       default: false,
       env: 'ENABLE_RESEND_FAILED_PAYMENTS'
+    },
+    requestLoggerDebug: {
+      doc: 'Enable or Disable request logger debug mode',
+      format: 'Boolean',
+      default: false,
+      env: 'ENABLE_REQUEST_LOGGER_DEBUG'
     }
   },
   backup: {

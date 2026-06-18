@@ -3,7 +3,9 @@ import hapiPino from 'hapi-pino'
 import { loggerOptions } from '#~/common/helpers/logging/logger-options.js'
 import { config } from '#~/config/index.js'
 
-const testEndpointsEnabled = config.get('featureFlags.testEndpoints') === true
+const requestLoggerDebugEnabled =
+  config.get('featureFlags.requestLoggerDebug') === true
+const isInteractive = process.stdout.isTTY
 
 // Custom message function that includes payloads in the log message
 const customRequestCompleteMessage = (request, responseTime) => {
@@ -39,7 +41,9 @@ const requestLogger = {
   plugin: hapiPino,
   options: {
     ...loggerOptions,
-    ...(testEndpointsEnabled ? { customRequestCompleteMessage } : {})
+    ...(requestLoggerDebugEnabled && !isInteractive
+      ? { customRequestCompleteMessage }
+      : {})
   }
 }
 
