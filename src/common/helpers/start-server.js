@@ -9,6 +9,9 @@ async function startServer() {
   server.logger.info(
     `Feature flags: ${JSON.stringify(config.get('featureFlags'), null, 2)}`
   )
+  server.logger.info(
+    `Disabled scheme codes: ${JSON.stringify(config.get('disabledSchemeCodes'), null, 2)}`
+  )
   server.logger.info('Server started successfully')
   server.logger.info(
     `Access your backend on http://localhost:${config.get('port')}`

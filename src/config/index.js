@@ -4,6 +4,7 @@ import convict from 'convict'
 import convictFormatWithValidator from 'convict-format-with-validator'
 
 import { convictValidateMongoUri } from '#~/common/helpers/convict/validate-mongo-uri.js'
+import { convictArrayAllowEmpty } from '#~/common/helpers/convict/array-allow-empty.js'
 
 try {
   loadEnvFile()
@@ -14,6 +15,7 @@ try {
 }
 
 convict.addFormat(convictValidateMongoUri)
+convict.addFormat(convictArrayAllowEmpty)
 convict.addFormats(convictFormatWithValidator)
 
 const isProduction = process.env.NODE_ENV === 'production'
@@ -161,14 +163,6 @@ const config = convict({
       format: String,
       default: '0 7 * * *',
       env: 'CRON_STATS_SCHEDULE'
-    }
-  },
-  dataMigration: {
-    dueDate: {
-      doc: 'Due date string used by data migration (YYYY-MM-DD)',
-      format: String,
-      default: '2026-05-15',
-      env: 'DATA_MIGRATION_DUE_DATE'
     }
   },
   paymentProcessor: {
@@ -327,6 +321,12 @@ const config = convict({
       default: 20,
       env: 'WAIT_TIME_SECONDS'
     }
+  },
+  disabledSchemeCodes: {
+    doc: 'Comma-separated list of action/scheme codes to disable processing for',
+    format: 'array-allow-empty',
+    default: ['PA3'],
+    env: 'DISABLED_SCHEME_CODES'
   }
 })
 

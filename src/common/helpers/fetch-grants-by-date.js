@@ -1,4 +1,5 @@
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
+import { config } from '#~/config/index.js'
 import { getNextDay } from './date.js'
 import { wrapWithPagination } from './pagination.js'
 
@@ -115,6 +116,14 @@ export const streamGrantPaymentsByCorrelationIds = (
     paymentMatch.status = status
   }
 
+  paymentMatch.invoiceLines = {
+    $not: {
+      $elemMatch: {
+        schemeCode: { $in: config.get('disabledSchemeCodes') }
+      }
+    }
+  }
+
   const pipeline = [
     {
       $match: {
@@ -147,7 +156,23 @@ export const streamGrantPaymentsByCorrelationIds = (
                       cond: {
                         $and: [
                           { $in: ['$$p.correlationId', correlationIds] },
-                          status ? { $eq: ['$$p.status', status] } : true
+                          status ? { $eq: ['$$p.status', status] } : true,
+                          {
+                            $not: {
+                              $anyElementTrue: {
+                                $map: {
+                                  input: '$$p.invoiceLines',
+                                  as: 'il',
+                                  in: {
+                                    $in: [
+                                      '$$il.schemeCode',
+                                      config.get('disabledSchemeCodes')
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
                         ]
                       }
                     }

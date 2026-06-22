@@ -10,7 +10,7 @@ import {
   updatePaymentStatus,
   markAllStaleLockedPaymentsAsFailed
 } from '#~/common/helpers/update-payment-status.js'
-import { transformFpttPaymentDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/fptt-data-transformer.js'
+import { transformDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/data-transformer.js'
 import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js'
 
@@ -38,17 +38,11 @@ const processSinglePayment = async (
 
   let paymentHubData
   try {
-    if (grant.sourceSystem === 'FPTT') {
-      paymentHubData = transformFpttPaymentDataToPaymentHubFormat(
-        identifiers,
-        grant,
-        payment
-      )
-    } else {
-      throw new Error(
-        `Unsupported grant sourceSystem ${grant.sourceSystem} for payment ${payment._id}`
-      )
-    }
+    paymentHubData = transformDataToPaymentHubFormat(
+      identifiers,
+      grant,
+      payment
+    )
   } catch (err) {
     logger.error(
       err,

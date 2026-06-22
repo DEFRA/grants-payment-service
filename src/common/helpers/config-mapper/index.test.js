@@ -17,20 +17,25 @@ describe('config-mapper', () => {
     it('returns config for SFI', () => {
       expect(getPaymentHubConfig('SFI')).toEqual({
         accountCode: 'SOS710',
+        deliveryBody: 'RP00',
+        fesCode: 'FALS_FPTT',
         fundCode: 'DRD10',
         ledger: 'AP',
-        deliveryBody: 'RP00',
-        fesCode: 'FALS_FPTT'
+        remittanceDescription: 'Farm Payments Technical Test Payment',
+        sourceSystem: 'FPTT'
       })
     })
 
     it('returns config for WMP', () => {
       expect(getPaymentHubConfig('WMP')).toEqual({
-        accountCode: 'AC002',
-        fundCode: 'FUND20',
-        ledger: 'BP',
-        deliveryBody: 'RP00',
-        fesCode: 'FALS_FPTT'
+        accountCode: 'SOS710',
+        deliveryBody: 'RP10',
+        fesCode: 'FALS_WMP',
+        fundCode: 'DRD10',
+        ledger: 'AP',
+        remittanceDescription: 'Woodland Management Plan Payment',
+        schemeCode: '82555',
+        sourceSystem: 'WMP'
       })
     })
 

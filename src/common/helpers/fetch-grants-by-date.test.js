@@ -9,7 +9,10 @@ import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 vi.mock('#~/api/common/models/grant_payments.js')
 vi.mock('#~/config/index.js', () => ({
   config: {
-    get: vi.fn().mockReturnValue(10)
+    get: vi.fn((key) => {
+      if (key === 'disabledSchemeCodes') return ['PA3']
+      return 10
+    })
   }
 }))
 
@@ -362,7 +365,16 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
       grants: {
         $elemMatch: {
           payments: {
-            $elemMatch: { correlationId: { $in: correlationIds } }
+            $elemMatch: {
+              correlationId: { $in: correlationIds },
+              invoiceLines: {
+                $not: {
+                  $elemMatch: {
+                    schemeCode: { $in: ['PA3'] }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -390,7 +402,18 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
                         cond: {
                           $and: [
                             { $in: ['$$p.correlationId', correlationIds] },
-                            true
+                            true,
+                            {
+                              $not: {
+                                $anyElementTrue: {
+                                  $map: {
+                                    input: '$$p.invoiceLines',
+                                    as: 'il',
+                                    in: { $in: ['$$il.schemeCode', ['PA3']] }
+                                  }
+                                }
+                              }
+                            }
                           ]
                         }
                       }
@@ -423,7 +446,14 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
           payments: {
             $elemMatch: {
               correlationId: { $in: correlationIds },
-              status: 'pending'
+              status: 'pending',
+              invoiceLines: {
+                $not: {
+                  $elemMatch: {
+                    schemeCode: { $in: ['PA3'] }
+                  }
+                }
+              }
             }
           }
         }
@@ -452,7 +482,18 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
                         cond: {
                           $and: [
                             { $in: ['$$p.correlationId', correlationIds] },
-                            { $eq: ['$$p.status', 'pending'] }
+                            { $eq: ['$$p.status', 'pending'] },
+                            {
+                              $not: {
+                                $anyElementTrue: {
+                                  $map: {
+                                    input: '$$p.invoiceLines',
+                                    as: 'il',
+                                    in: { $in: ['$$il.schemeCode', ['PA3']] }
+                                  }
+                                }
+                              }
+                            }
                           ]
                         }
                       }

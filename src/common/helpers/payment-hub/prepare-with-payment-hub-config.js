@@ -1,38 +1,36 @@
 import { getPaymentHubConfig } from '#~/common/helpers/config-mapper/index.js'
 
-export const prepareWithPaymentHubConfig = (grantPayment) => {
+export function prepareWithPaymentHubConfig(grantPayment) {
   const schemeConfig = getPaymentHubConfig(grantPayment.scheme)
   if (!schemeConfig) {
     return grantPayment
   }
 
-  const { deliveryBody, accountCode, fundCode, ...remainingSchemeConfig } =
-    schemeConfig
-  const grants = (grantPayment.grants || []).map((grant) => {
-    grant.deliveryBody = deliveryBody
-    const payments = (grant.payments || []).map((payment) => {
-      payment.status = 'pending'
-      const invoiceLines = (payment.invoiceLines || []).map((invoiceLine) => ({
-        ...invoiceLine,
-        deliveryBody,
-        accountCode,
-        fundCode
-      }))
-      return {
-        ...payment,
-        invoiceLines
-      }
-    })
-
-    return {
-      ...grant,
-      ...remainingSchemeConfig,
-      payments
-    }
-  })
+  const {
+    deliveryBody,
+    accountCode,
+    fundCode,
+    schemeCode,
+    ...remainingSchemeConfig
+  } = schemeConfig
 
   return {
     ...grantPayment,
-    grants
+    grants: (grantPayment.grants || []).map((grant) => ({
+      ...grant,
+      deliveryBody,
+      ...remainingSchemeConfig,
+      payments: (grant.payments || []).map((payment) => ({
+        ...payment,
+        status: 'pending',
+        invoiceLines: (payment.invoiceLines || []).map((invoiceLine) => ({
+          ...invoiceLine,
+          ...(schemeCode ? { schemeCode } : {}),
+          deliveryBody,
+          accountCode,
+          fundCode
+        }))
+      }))
+    }))
   }
 }

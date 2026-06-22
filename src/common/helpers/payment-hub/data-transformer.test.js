@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 import { vi } from 'vitest'
-import { transformFpttPaymentDataToPaymentHubFormat } from './fptt-data-transformer.js'
+import { transformDataToPaymentHubFormat } from './data-transformer.js'
 
 vi.mock('#~/common/helpers/logging/logger.js', () => ({
   getLogger: vi.fn().mockReturnValue({
@@ -8,7 +8,7 @@ vi.mock('#~/common/helpers/logging/logger.js', () => ({
   })
 }))
 
-describe('transformFpttPaymentDataToPaymentHubFormat', () => {
+describe('transformDataToPaymentHubFormat', () => {
   const baseIdentifiers = { sbi: '111', frn: '222', claimId: '333' }
   const baseGrant = {
     invoiceNumber: 'INV1',
@@ -43,14 +43,13 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       ]
     }
 
-    const result = transformFpttPaymentDataToPaymentHubFormat(
+    const result = transformDataToPaymentHubFormat(
       baseIdentifiers,
       { ...baseGrant, payments: [payment] },
       payment
     )
 
     expect(result).toMatchObject({
-      sourceSystem: 'FPTT',
       ledger: 'AP',
       invoiceNumber: 'INV1Q1',
       frn: '222',
@@ -63,7 +62,6 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       currency: 'EUR',
       dueDate: '05/06/2026',
       value: '-12.34',
-      remittanceDescription: 'Farm Payments Technical Test Payment',
       recoveryDate: '06/06/2026',
       originalInvoiceNumber: 'OINV',
       originalSettlementDate: '07/06/2026',
@@ -131,35 +129,35 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       payments
     }
 
-    const firstResult = transformFpttPaymentDataToPaymentHubFormat(
+    const firstResult = transformDataToPaymentHubFormat(
       baseIdentifiers,
       grant,
       firstPayment
     )
     expect(firstResult.invoiceNumber).toBe('INV1Q1')
 
-    const secondResult = transformFpttPaymentDataToPaymentHubFormat(
+    const secondResult = transformDataToPaymentHubFormat(
       baseIdentifiers,
       grant,
       secondPayment
     )
     expect(secondResult.invoiceNumber).toBe('INV1Q2')
 
-    const thirdResult = transformFpttPaymentDataToPaymentHubFormat(
+    const thirdResult = transformDataToPaymentHubFormat(
       baseIdentifiers,
       grant,
       thirdPayment
     )
     expect(thirdResult.invoiceNumber).toBe('INV1Q3')
 
-    const fourthResult = transformFpttPaymentDataToPaymentHubFormat(
+    const fourthResult = transformDataToPaymentHubFormat(
       baseIdentifiers,
       grant,
       fourthPayment
     )
     expect(fourthResult.invoiceNumber).toBe('INV1Q4')
 
-    const fifthResult = transformFpttPaymentDataToPaymentHubFormat(
+    const fifthResult = transformDataToPaymentHubFormat(
       baseIdentifiers,
       grant,
       fifthPayment
@@ -170,7 +168,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
   it('omits AR fields entirely when no AR data is present', () => {
     const paymentId = new mongoose.Types.ObjectId()
     const payment = { _id: paymentId, dueDate: '2026-06-05', invoiceLines: [] }
-    const result = transformFpttPaymentDataToPaymentHubFormat(
+    const result = transformDataToPaymentHubFormat(
       baseIdentifiers,
       { ...baseGrant, originalInvoiceNumber: undefined, payments: [payment] },
       payment
@@ -204,7 +202,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       ]
     }
 
-    const result = transformFpttPaymentDataToPaymentHubFormat(
+    const result = transformDataToPaymentHubFormat(
       baseIdentifiers,
       { ...grant, payments: [payment] },
       payment
@@ -224,7 +222,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       dueDate: '2026-12-01',
       invoiceLines: []
     }
-    const out = transformFpttPaymentDataToPaymentHubFormat(
+    const out = transformDataToPaymentHubFormat(
       baseIdentifiers,
       { ...baseGrant, payments: [minimalPayment] },
       minimalPayment
@@ -234,7 +232,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
 
   it('throws when payment _id is missing', () => {
     expect(() =>
-      transformFpttPaymentDataToPaymentHubFormat(
+      transformDataToPaymentHubFormat(
         baseIdentifiers,
         { ...baseGrant, payments: [] },
         { dueDate: '2026-06-05', invoiceLines: [] }
@@ -255,7 +253,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       payments: [{ _id: objectId, dueDate: '2026-06-05', invoiceLines: [] }]
     }
 
-    const result = transformFpttPaymentDataToPaymentHubFormat(
+    const result = transformDataToPaymentHubFormat(
       baseIdentifiers,
       grant,
       grantPayment
@@ -277,7 +275,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
       payments: [{ dueDate: '2026-03-01', invoiceLines: [] }, validPayment]
     }
 
-    const result = transformFpttPaymentDataToPaymentHubFormat(
+    const result = transformDataToPaymentHubFormat(
       baseIdentifiers,
       grant,
       validPayment
@@ -290,7 +288,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     const paymentId = new mongoose.Types.ObjectId()
     const grantWithoutYear = { ...baseGrant, marketingYear: undefined }
     const payment = { _id: paymentId, dueDate: '2026-06-05', invoiceLines: [] }
-    const result = transformFpttPaymentDataToPaymentHubFormat(
+    const result = transformDataToPaymentHubFormat(
       baseIdentifiers,
       { ...grantWithoutYear, payments: [payment] },
       payment
@@ -321,7 +319,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
         }
       ]
     }
-    const out = transformFpttPaymentDataToPaymentHubFormat(
+    const out = transformDataToPaymentHubFormat(
       baseIdentifiers,
       { ...grant, payments: [payment] },
       payment
@@ -337,7 +335,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     const grant = { ...baseGrant, debtType: 'TOOLONG' }
     const payment = { _id: paymentId, dueDate: '2026-06-05', invoiceLines: [] }
     expect(() =>
-      transformFpttPaymentDataToPaymentHubFormat(
+      transformDataToPaymentHubFormat(
         baseIdentifiers,
         { ...grant, payments: [payment] },
         payment
@@ -367,11 +365,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     }
 
     expect(() =>
-      transformFpttPaymentDataToPaymentHubFormat(
-        baseIdentifiers,
-        grant,
-        otherPayment
-      )
+      transformDataToPaymentHubFormat(baseIdentifiers, grant, otherPayment)
     ).toThrow(/Payment not found/)
   })
 
@@ -395,7 +389,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
     }
 
     // With index-based calculation, earlier payment date doesn't cause error
-    const result = transformFpttPaymentDataToPaymentHubFormat(
+    const result = transformDataToPaymentHubFormat(
       baseIdentifiers,
       grant,
       secondPayment
@@ -414,11 +408,7 @@ describe('transformFpttPaymentDataToPaymentHubFormat', () => {
 
     // When payments array is empty, payment is not found, should throw
     expect(() =>
-      transformFpttPaymentDataToPaymentHubFormat(
-        baseIdentifiers,
-        grant,
-        payment
-      )
+      transformDataToPaymentHubFormat(baseIdentifiers, grant, payment)
     ).toThrow(/Payment not found/)
   })
 })

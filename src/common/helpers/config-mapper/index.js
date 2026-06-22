@@ -21,18 +21,23 @@ const actions = {
 
 const schemeConfigMapper = {
   SFI: {
-    accountCode: 'SOS710',
-    fundCode: 'DRD10',
+    sourceSystem: 'FPTT', //Farm Payments Technical Test
     ledger: 'AP',
     deliveryBody: 'RP00',
-    fesCode: 'FALS_FPTT'
+    fesCode: 'FALS_FPTT',
+    remittanceDescription: 'Farm Payments Technical Test Payment',
+    accountCode: 'SOS710',
+    fundCode: 'DRD10'
   },
   WMP: {
-    accountCode: 'AC002',
-    fundCode: 'FUND20',
-    ledger: 'BP',
-    deliveryBody: 'RP00',
-    fesCode: 'FALS_FPTT'
+    sourceSystem: 'WMP', // Woodland Management Plan
+    ledger: 'AP',
+    deliveryBody: 'RP10',
+    fesCode: 'FALS_WMP',
+    remittanceDescription: 'Woodland Management Plan Payment',
+    schemeCode: '82555',
+    accountCode: 'SOS710',
+    fundCode: 'DRD10'
   }
 }
 
