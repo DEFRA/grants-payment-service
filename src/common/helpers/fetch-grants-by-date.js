@@ -105,11 +105,7 @@ export const streamGrantPaymentsByDate = (date, status, limit, page) => {
   return GrantPaymentsModel.aggregate(pipeline).cursor()
 }
 
-export const streamGrantPaymentsByCorrelationIds = (
-  correlationIds,
-  status,
-  limit
-) => {
+const buildPaymentMatchForCorrelationIds = (correlationIds, status) => {
   const paymentMatch = { correlationId: { $in: correlationIds } }
 
   if (status) {
@@ -124,80 +120,103 @@ export const streamGrantPaymentsByCorrelationIds = (
     }
   }
 
-  const pipeline = [
-    {
-      $match: {
-        grants: {
-          $elemMatch: {
-            payments: {
-              $elemMatch: paymentMatch
-            }
-          }
-        }
-      }
-    },
-    {
-      $project: {
-        sbi: 1,
-        frn: 1,
-        claimId: 1,
-        grants: {
-          $map: {
-            input: '$grants',
-            as: 'g',
-            in: {
-              $mergeObjects: [
-                '$$g',
-                {
-                  matchedPayments: {
-                    $filter: {
-                      input: '$$g.payments',
-                      as: 'p',
-                      cond: {
-                        $and: [
-                          { $in: ['$$p.correlationId', correlationIds] },
-                          status ? { $eq: ['$$p.status', status] } : true,
-                          {
-                            $not: {
-                              $anyElementTrue: {
-                                $map: {
-                                  input: '$$p.invoiceLines',
-                                  as: 'il',
-                                  in: {
-                                    $in: [
-                                      '$$il.schemeCode',
-                                      config.get('disabledSchemeCodes')
-                                    ]
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        }
-      }
-    },
-    {
-      $match: {
-        grants: {
-          $elemMatch: {
-            'matchedPayments.0': { $exists: true }
-          }
+  return paymentMatch
+}
+
+const buildMatchStageForCorrelationIds = (paymentMatch) => ({
+  $match: {
+    grants: {
+      $elemMatch: {
+        payments: {
+          $elemMatch: paymentMatch
         }
       }
     }
-  ]
+  }
+})
 
+const buildProjectStageForCorrelationIds = (correlationIds, status) => ({
+  $project: {
+    sbi: 1,
+    frn: 1,
+    claimId: 1,
+    grants: {
+      $map: {
+        input: '$grants',
+        as: 'g',
+        in: {
+          $mergeObjects: [
+            '$$g',
+            {
+              matchedPayments: {
+                $filter: {
+                  input: '$$g.payments',
+                  as: 'p',
+                  cond: {
+                    $and: [
+                      { $in: ['$$p.correlationId', correlationIds] },
+                      status ? { $eq: ['$$p.status', status] } : true,
+                      {
+                        $not: {
+                          $anyElementTrue: {
+                            $map: {
+                              input: '$$p.invoiceLines',
+                              as: 'il',
+                              in: {
+                                $in: [
+                                  '$$il.schemeCode',
+                                  config.get('disabledSchemeCodes')
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+})
+
+const buildFinalMatchStage = () => ({
+  $match: {
+    grants: {
+      $elemMatch: {
+        'matchedPayments.0': { $exists: true }
+      }
+    }
+  }
+})
+
+const addLimitAndSort = (pipeline, limit) => {
   if (limit) {
     pipeline.push({ $limit: limit }, { $sort: { createdAt: -1 } })
   }
+}
+
+export const streamGrantPaymentsByCorrelationIds = (
+  correlationIds,
+  status,
+  limit
+) => {
+  const paymentMatch = buildPaymentMatchForCorrelationIds(
+    correlationIds,
+    status
+  )
+
+  const pipeline = [
+    buildMatchStageForCorrelationIds(paymentMatch),
+    buildProjectStageForCorrelationIds(correlationIds, status),
+    buildFinalMatchStage()
+  ]
+
+  addLimitAndSort(pipeline, limit)
 
   return GrantPaymentsModel.aggregate(pipeline).cursor()
 }
