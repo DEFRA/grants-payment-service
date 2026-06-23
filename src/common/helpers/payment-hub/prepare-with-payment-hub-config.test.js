@@ -121,4 +121,113 @@ describe('prepareWithPaymentHubConfig', () => {
     const result = prepareWithPaymentHubConfig(grantPayment)
     expect(result.grants[0].payments[0].invoiceLines).toEqual([])
   })
+
+  it('should return grantPayment with WMP schemeConfig merged into each grant', () => {
+    const grantPayment = {
+      sbi: 'SBI123',
+      frn: 'FRN456',
+      claimId: 'CLAIM-789',
+      scheme: 'WMP',
+      grants: [
+        {
+          paymentRequestNumber: 1,
+          correlationId: 'CORR-ID-001',
+          invoiceNumber: 'WMP-INV-123',
+          originalInvoiceNumber: 'WMP-INV-123',
+          agreementNumber: 'WMP123456',
+          totalAmount: 15000,
+          currency: 'GBP',
+          marketingYear: 2026,
+          payments: [
+            {
+              dueDate: '2024-06-01',
+              totalAmount: 15000,
+              invoiceLines: [
+                {
+                  amount: 15000,
+                  description: 'Test Payment'
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+
+    const result = prepareWithPaymentHubConfig(grantPayment)
+    const grant = result.grants[0]
+
+    // From WMP config
+    expect(grant.sourceSystem).toBe('WMP')
+    expect(grant.ledger).toBe('AP')
+    expect(grant.fesCode).toBe('FALS_WMP')
+    expect(grant.deliveryBody).toBe('RP10')
+    expect(grant.remittanceDescription).toBe('Woodland Management Plan Payment')
+
+    // Should be at invoiceLines level
+    grant.payments.forEach((payment) => {
+      expect(payment.status).toBe('pending')
+      payment.invoiceLines.forEach((invoiceLine) => {
+        expect(invoiceLine.schemeCode).toBe('82555')
+        expect(invoiceLine.accountCode).toBe('SOS710')
+        expect(invoiceLine.fundCode).toBe('DRD10')
+        expect(invoiceLine.deliveryBody).toBe('RP10')
+      })
+    })
+    // Check original grant properties are preserved
+    expect(grant.sourceSystem).toBe('WMP')
+    expect(grant.correlationId).toBe('CORR-ID-001')
+  })
+
+  it('should allow incoming grantPayment to overwrite schemeConfig values', () => {
+    const grantPayment = {
+      sbi: 'SBI123',
+      scheme: 'WMP',
+      grants: [
+        {
+          sourceSystem: 'CUSTOM_SOURCE_SYSTEM', // should override schemeConfig
+          ledger: 'CUSTOM_LEDGER', // should override schemeConfig
+          fesCode: 'CUSTOM_FES', // should override schemeConfig
+          deliveryBody: 'CUSTOM_BODY', // should override schemeConfig
+          remittanceDescription: 'CUSTOM_REMITTANCE',
+          payments: [
+            {
+              dueDate: '2024-05-01',
+              totalAmount: 10000,
+              invoiceLines: [
+                {
+                  schemeCode: 'CUSTOM_SCHEME',
+                  amount: 6000,
+                  description: 'Test line',
+                  accountCode: 'CUSTOM_ACCOUNT', // should override schemeConfig
+                  fundCode: 'CUSTOM_FUND', // should override schemeConfig
+                  deliveryBody: 'CUSTOM_LINE_BODY' // should override schemeConfig
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+
+    const result = prepareWithPaymentHubConfig(grantPayment)
+    const grant = result.grants[0]
+
+    // Grant level - incoming values should override schemeConfig
+    expect(grant.sourceSystem).toBe('CUSTOM_SOURCE_SYSTEM')
+    expect(grant.ledger).toBe('CUSTOM_LEDGER')
+    expect(grant.fesCode).toBe('CUSTOM_FES')
+    expect(grant.deliveryBody).toBe('CUSTOM_BODY')
+    expect(grant.remittanceDescription).toBe('CUSTOM_REMITTANCE')
+
+    // InvoiceLine level - incoming values should override schemeConfig
+    grant.payments.forEach((payment) => {
+      payment.invoiceLines.forEach((invoiceLine) => {
+        expect(invoiceLine.schemeCode).toBe('CUSTOM_SCHEME')
+        expect(invoiceLine.accountCode).toBe('CUSTOM_ACCOUNT')
+        expect(invoiceLine.fundCode).toBe('CUSTOM_FUND')
+        expect(invoiceLine.deliveryBody).toBe('CUSTOM_LINE_BODY')
+      })
+    })
+  })
 })

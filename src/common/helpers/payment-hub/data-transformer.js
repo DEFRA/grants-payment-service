@@ -72,6 +72,7 @@ export const transformDataToPaymentHubFormat = (
   grant,
   payment
 ) => ({
+  sourceSystem: grant.sourceSystem,
   ledger: grant.ledger,
   deliveryBody: grant.deliveryBody,
   invoiceNumber: updateQuarter(grant.invoiceNumber, grant?.payments, payment),
@@ -84,6 +85,7 @@ export const transformDataToPaymentHubFormat = (
   contractNumber: identifiers.claimId,
   currency: payment.currency || 'GBP',
   dueDate: formatPaymentDate(payment.dueDate),
+  remittanceDescription: grant.remittanceDescription,
   invoiceLines: buildInvoiceLines(grant, payment),
   correlationId: payment.correlationId,
 

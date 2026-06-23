@@ -17,18 +17,18 @@ export function prepareWithPaymentHubConfig(grantPayment) {
   return {
     ...grantPayment,
     grants: (grantPayment.grants || []).map((grant) => ({
-      ...grant,
       deliveryBody,
       ...remainingSchemeConfig,
+      ...grant,
       payments: (grant.payments || []).map((payment) => ({
         ...payment,
         status: 'pending',
         invoiceLines: (payment.invoiceLines || []).map((invoiceLine) => ({
-          ...invoiceLine,
           ...(schemeCode ? { schemeCode } : {}),
           deliveryBody,
           accountCode,
-          fundCode
+          fundCode,
+          ...invoiceLine
         }))
       }))
     }))
