@@ -1,8 +1,8 @@
 import { convictArrayAllowEmpty } from '#~/common/helpers/convict/array-allow-empty.js'
 
 describe('#convictArrayAllowEmpty', () => {
-  test('With empty array string "[]", Should return empty array', () => {
-    expect(convictArrayAllowEmpty.coerce('[]')).toEqual([])
+  test.each(['', '[]'])('With %j, Should return empty array', (value) => {
+    expect(convictArrayAllowEmpty.coerce(value)).toEqual([])
   })
 
   test('With comma-separated string, Should return array of trimmed values', () => {

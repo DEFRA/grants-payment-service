@@ -325,6 +325,7 @@ const config = convict({
   disabledActionCodes: {
     doc: 'Comma-separated list of action/scheme codes to disable processing for',
     format: 'array-allow-empty',
+    nullable: true,
     default: ['PA3'],
     env: 'DISABLED_ACTION_CODES'
   }

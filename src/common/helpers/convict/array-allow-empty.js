@@ -6,14 +6,14 @@ export const convictArrayAllowEmpty = {
     }
   },
   coerce: function (val) {
-    if (typeof val === 'string' && val === '[]') {
-      return []
+    if (typeof val === 'string') {
+      if (val === '[]' || val === '') {
+        return []
+      }
+      return val.split(',').map((v) => v.trim())
     }
     if (Array.isArray(val)) {
       return val
-    }
-    if (typeof val === 'string') {
-      return val.split(',').map((v) => v.trim())
     }
     return val
   }
