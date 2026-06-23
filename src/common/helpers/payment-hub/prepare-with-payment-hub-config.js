@@ -6,13 +6,8 @@ export function prepareWithPaymentHubConfig(grantPayment) {
     return grantPayment
   }
 
-  const {
-    deliveryBody,
-    accountCode,
-    fundCode,
-    schemeCode,
-    ...remainingSchemeConfig
-  } = schemeConfig
+  const { deliveryBody, accountCode, fundCode, ...remainingSchemeConfig } =
+    schemeConfig
 
   return {
     ...grantPayment,
@@ -24,7 +19,6 @@ export function prepareWithPaymentHubConfig(grantPayment) {
         ...payment,
         status: 'pending',
         invoiceLines: (payment.invoiceLines || []).map((invoiceLine) => ({
-          ...(schemeCode ? { schemeCode } : {}),
           deliveryBody,
           accountCode,
           fundCode,

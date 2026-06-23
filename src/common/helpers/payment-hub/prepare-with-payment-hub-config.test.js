@@ -168,7 +168,6 @@ describe('prepareWithPaymentHubConfig', () => {
     grant.payments.forEach((payment) => {
       expect(payment.status).toBe('pending')
       payment.invoiceLines.forEach((invoiceLine) => {
-        expect(invoiceLine.schemeCode).toBe('82555')
         expect(invoiceLine.accountCode).toBe('SOS710')
         expect(invoiceLine.fundCode).toBe('DRD10')
         expect(invoiceLine.deliveryBody).toBe('RP10')

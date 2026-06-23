@@ -7,6 +7,7 @@ describe('config-mapper', () => {
       ['UPL1', '84021'],
       ['UPL2', '84023'],
       ['UPL3', '84025'],
+      ['PA3', '82555'],
       ['UNKNOWN', undefined]
     ])('given name %s it returns code %s', (name, expectedCode) => {
       expect(getActionCodeByName(name)).toBe(expectedCode)
@@ -34,7 +35,6 @@ describe('config-mapper', () => {
         fundCode: 'DRD10',
         ledger: 'AP',
         remittanceDescription: 'Woodland Management Plan Payment',
-        schemeCode: '82555',
         sourceSystem: 'WMP'
       })
     })

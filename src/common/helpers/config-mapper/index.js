@@ -15,6 +15,10 @@ const actions = {
     {
       name: 'UPL3',
       code: '84025'
+    },
+    {
+      name: 'PA3', // WMP
+      code: '82555'
     }
   ]
 }
@@ -35,7 +39,6 @@ const schemeConfigMapper = {
     deliveryBody: 'RP10',
     fesCode: 'FALS_WMP',
     remittanceDescription: 'Woodland Management Plan Payment',
-    schemeCode: '82555',
     accountCode: 'SOS710',
     fundCode: 'DRD10'
   }
