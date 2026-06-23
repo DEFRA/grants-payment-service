@@ -1,6 +1,6 @@
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
 import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js'
-import { transformFpttPaymentDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/fptt-data-transformer.js'
+import { transformDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/data-transformer.js'
 
 /**
  * Inbound create_payment event handler
@@ -25,7 +25,7 @@ export async function handleCreatePaymentEvent(messageId, payload, logger) {
 
     for (const grant of grantPayment.grants || []) {
       for (const payment of grant.payments || []) {
-        const paymentHubData = transformFpttPaymentDataToPaymentHubFormat(
+        const paymentHubData = transformDataToPaymentHubFormat(
           identifiers,
           grant,
           payment

@@ -67,6 +67,7 @@ schema.index({ 'grants.correlationId': 1 }, { unique: true })
 schema.index({ 'grants.payments.correlationId': 1 }, { unique: true })
 schema.index({ 'grants.payments.dueDate': 1 })
 schema.index({ 'grants.payments.status': 1 })
+schema.index({ 'grants.payments.invoiceLines.schemeCode': 1 })
 schema.index({ 'grants.payments.invoiceLines.fundCode': 1 })
 
 // Compound indexes — ordered to match filter + sort patterns used in queries
