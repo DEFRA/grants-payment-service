@@ -4,32 +4,32 @@ import { getNextDay } from './date.js'
 import { wrapWithPagination } from './pagination.js'
 import { getActionCodeByName } from '#~/common/helpers/config-mapper/index.js'
 
-const getDisabledSchemeCodes = () => {
-  const disabledSchemeCodes = config.get('disabledSchemeCodes')
+const getDisabledSchemeActionCodes = () => {
+  const disabledActionCodes = config.get('disabledActionCodes')
   return [
-    ...disabledSchemeCodes,
-    ...disabledSchemeCodes.map(getActionCodeByName)
+    ...disabledActionCodes,
+    ...disabledActionCodes.map(getActionCodeByName)
   ]
 }
 
-const getDisabledSchemeCodesFilter = () => ({
+const getDisabledActionCodesFilter = () => ({
   invoiceLines: {
     $not: {
       $elemMatch: {
-        schemeCode: { $in: getDisabledSchemeCodes() }
+        schemeCode: { $in: getDisabledSchemeActionCodes() }
       }
     }
   }
 })
 
-const getDisabledSchemeCodesProjectFilter = () => ({
+const getDisabledActionCodesProjectFilter = () => ({
   $not: {
     $anyElementTrue: {
       $map: {
         input: '$$p.invoiceLines',
         as: 'il',
         in: {
-          $in: ['$$il.schemeCode', getDisabledSchemeCodes()]
+          $in: ['$$il.schemeCode', getDisabledSchemeActionCodes()]
         }
       }
     }
@@ -92,7 +92,7 @@ const buildGrantPaymentsAggregationPipeline = (date, status, limit, page) => {
   const nextDay = getNextDay(date)
   const paymentMatch = {
     dueDate: { $lte: nextDay },
-    ...getDisabledSchemeCodesFilter()
+    ...getDisabledActionCodesFilter()
   }
 
   const filters = [{ $lte: ['$$p.dueDate', nextDay] }]
@@ -123,7 +123,7 @@ const buildGrantPaymentsAggregationPipeline = (date, status, limit, page) => {
     pipeline.push({ $limit: limit }, { $sort: { createdAt: -1 } })
   }
 
-  filters.push(getDisabledSchemeCodesProjectFilter())
+  filters.push(getDisabledActionCodesProjectFilter())
   pipeline.push(buildProjectStage(filters), buildFinalMatchStage())
 
   return { pipeline, match }
@@ -159,7 +159,7 @@ export const streamGrantPaymentsByDate = (date, status, limit, page) => {
 const buildPaymentMatchForCorrelationIds = (correlationIds, status) => {
   const paymentMatch = {
     correlationId: { $in: correlationIds },
-    ...getDisabledSchemeCodesFilter()
+    ...getDisabledActionCodesFilter()
   }
 
   if (status) {
@@ -173,7 +173,7 @@ const buildProjectStageForCorrelationIds = (correlationIds, status) => {
   const filters = [
     { $in: ['$$p.correlationId', correlationIds] },
     status ? { $eq: ['$$p.status', status] } : true,
-    getDisabledSchemeCodesProjectFilter()
+    getDisabledActionCodesProjectFilter()
   ]
   return buildProjectStage(filters)
 }

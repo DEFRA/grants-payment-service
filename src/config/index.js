@@ -322,11 +322,11 @@ const config = convict({
       env: 'WAIT_TIME_SECONDS'
     }
   },
-  disabledSchemeCodes: {
+  disabledActionCodes: {
     doc: 'Comma-separated list of action/scheme codes to disable processing for',
     format: 'array-allow-empty',
     default: ['PA3'],
-    env: 'DISABLED_SCHEME_CODES'
+    env: 'DISABLED_ACTION_CODES'
   }
 })
 

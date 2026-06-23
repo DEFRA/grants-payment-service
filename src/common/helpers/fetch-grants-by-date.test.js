@@ -10,7 +10,7 @@ vi.mock('#~/api/common/models/grant_payments.js')
 vi.mock('#~/config/index.js', () => ({
   config: {
     get: vi.fn((key) => {
-      if (key === 'disabledSchemeCodes') return ['PA3']
+      if (key === 'disabledActionCodes') return ['PA3']
       return 10
     })
   }
