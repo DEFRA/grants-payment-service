@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { handleCreatePaymentEvent } from './handle-create-payment.js'
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
-import { transformFpttPaymentDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/fptt-data-transformer.js'
+import { transformDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/data-transformer.js'
 import sampleData from '#~/api/common/helpers/sample-data/index.js'
 
 vi.mock('#~/common/helpers/create-grant-payment.js', () => {
@@ -11,9 +11,9 @@ vi.mock('#~/common/helpers/create-grant-payment.js', () => {
   }
 })
 
-vi.mock('#~/common/helpers/payment-hub/fptt-data-transformer.js', () => {
+vi.mock('#~/common/helpers/payment-hub/data-transformer.js', () => {
   return {
-    transformFpttPaymentDataToPaymentHubFormat: vi.fn()
+    transformDataToPaymentHubFormat: vi.fn()
   }
 })
 
@@ -60,11 +60,11 @@ describe('handleCreatePaymentEvent', () => {
       sbi: '106284736'
     }
     createGrantPayment.mockResolvedValue(grantPayment)
-    transformFpttPaymentDataToPaymentHubFormat.mockReturnValue(paymentHubData)
+    transformDataToPaymentHubFormat.mockReturnValue(paymentHubData)
 
     await handleCreatePaymentEvent('msg-1', validPayload, logger)
 
-    expect(transformFpttPaymentDataToPaymentHubFormat).toHaveBeenCalledWith(
+    expect(transformDataToPaymentHubFormat).toHaveBeenCalledWith(
       { sbi: '106284736', frn: '12544567', claimId: 'R00000004' },
       grantPayment.grants[0],
       grantPayment.grants[0].payments[0]
@@ -86,7 +86,7 @@ describe('handleCreatePaymentEvent', () => {
 
     await handleCreatePaymentEvent('msg-1', validPayload, logger)
 
-    expect(transformFpttPaymentDataToPaymentHubFormat).not.toHaveBeenCalled()
+    expect(transformDataToPaymentHubFormat).not.toHaveBeenCalled()
   })
 
   it('handles grants with no payments array', async () => {
@@ -101,7 +101,7 @@ describe('handleCreatePaymentEvent', () => {
 
     await handleCreatePaymentEvent('msg-1', validPayload, logger)
 
-    expect(transformFpttPaymentDataToPaymentHubFormat).not.toHaveBeenCalled()
+    expect(transformDataToPaymentHubFormat).not.toHaveBeenCalled()
   })
 
   it('logs an error if createGrantPayment fails', async () => {

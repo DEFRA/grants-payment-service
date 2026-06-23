@@ -9,7 +9,10 @@ import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 vi.mock('#~/api/common/models/grant_payments.js')
 vi.mock('#~/config/index.js', () => ({
   config: {
-    get: vi.fn().mockReturnValue(10)
+    get: vi.fn((key) => {
+      if (key === 'disabledActionCodes') return ['PA3']
+      return 10
+    })
   }
 }))
 
@@ -34,7 +37,16 @@ describe('fetchGrantPaymentsByDate', () => {
       grants: {
         $elemMatch: {
           payments: {
-            $elemMatch: { dueDate: { $lte: nextDay } }
+            $elemMatch: {
+              dueDate: { $lte: nextDay },
+              invoiceLines: {
+                $not: {
+                  $elemMatch: {
+                    schemeCode: { $in: ['PA3', '82555'] }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -60,7 +72,22 @@ describe('fetchGrantPaymentsByDate', () => {
                         input: '$$g.payments',
                         as: 'p',
                         cond: {
-                          $and: [{ $lte: ['$$p.dueDate', nextDay] }]
+                          $and: [
+                            { $lte: ['$$p.dueDate', nextDay] },
+                            {
+                              $not: {
+                                $anyElementTrue: {
+                                  $map: {
+                                    input: '$$p.invoiceLines',
+                                    as: 'il',
+                                    in: {
+                                      $in: ['$$il.schemeCode', ['PA3', '82555']]
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -101,7 +128,14 @@ describe('fetchGrantPaymentsByDate', () => {
           payments: {
             $elemMatch: {
               dueDate: { $lte: nextDay },
-              status: 'pending'
+              status: 'pending',
+              invoiceLines: {
+                $not: {
+                  $elemMatch: {
+                    schemeCode: { $in: ['PA3', '82555'] }
+                  }
+                }
+              }
             }
           }
         }
@@ -130,7 +164,20 @@ describe('fetchGrantPaymentsByDate', () => {
                         cond: {
                           $and: [
                             { $lte: ['$$p.dueDate', nextDay] },
-                            { $eq: ['$$p.status', 'pending'] }
+                            { $eq: ['$$p.status', 'pending'] },
+                            {
+                              $not: {
+                                $anyElementTrue: {
+                                  $map: {
+                                    input: '$$p.invoiceLines',
+                                    as: 'il',
+                                    in: {
+                                      $in: ['$$il.schemeCode', ['PA3', '82555']]
+                                    }
+                                  }
+                                }
+                              }
+                            }
                           ]
                         }
                       }
@@ -211,7 +258,16 @@ describe('streamGrantPaymentsByDate', () => {
       grants: {
         $elemMatch: {
           payments: {
-            $elemMatch: { dueDate: { $lte: nextDay } }
+            $elemMatch: {
+              dueDate: { $lte: nextDay },
+              invoiceLines: {
+                $not: {
+                  $elemMatch: {
+                    schemeCode: { $in: ['PA3', '82555'] }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -237,7 +293,22 @@ describe('streamGrantPaymentsByDate', () => {
                         input: '$$g.payments',
                         as: 'p',
                         cond: {
-                          $and: [{ $lte: ['$$p.dueDate', nextDay] }]
+                          $and: [
+                            { $lte: ['$$p.dueDate', nextDay] },
+                            {
+                              $not: {
+                                $anyElementTrue: {
+                                  $map: {
+                                    input: '$$p.invoiceLines',
+                                    as: 'il',
+                                    in: {
+                                      $in: ['$$il.schemeCode', ['PA3', '82555']]
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -270,7 +341,14 @@ describe('streamGrantPaymentsByDate', () => {
           payments: {
             $elemMatch: {
               dueDate: { $lte: nextDay },
-              status: 'pending'
+              status: 'pending',
+              invoiceLines: {
+                $not: {
+                  $elemMatch: {
+                    schemeCode: { $in: ['PA3', '82555'] }
+                  }
+                }
+              }
             }
           }
         }
@@ -299,7 +377,20 @@ describe('streamGrantPaymentsByDate', () => {
                         cond: {
                           $and: [
                             { $lte: ['$$p.dueDate', nextDay] },
-                            { $eq: ['$$p.status', 'pending'] }
+                            { $eq: ['$$p.status', 'pending'] },
+                            {
+                              $not: {
+                                $anyElementTrue: {
+                                  $map: {
+                                    input: '$$p.invoiceLines',
+                                    as: 'il',
+                                    in: {
+                                      $in: ['$$il.schemeCode', ['PA3', '82555']]
+                                    }
+                                  }
+                                }
+                              }
+                            }
                           ]
                         }
                       }
@@ -362,7 +453,16 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
       grants: {
         $elemMatch: {
           payments: {
-            $elemMatch: { correlationId: { $in: correlationIds } }
+            $elemMatch: {
+              correlationId: { $in: correlationIds },
+              invoiceLines: {
+                $not: {
+                  $elemMatch: {
+                    schemeCode: { $in: ['PA3', '82555'] }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -390,7 +490,20 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
                         cond: {
                           $and: [
                             { $in: ['$$p.correlationId', correlationIds] },
-                            true
+                            true,
+                            {
+                              $not: {
+                                $anyElementTrue: {
+                                  $map: {
+                                    input: '$$p.invoiceLines',
+                                    as: 'il',
+                                    in: {
+                                      $in: ['$$il.schemeCode', ['PA3', '82555']]
+                                    }
+                                  }
+                                }
+                              }
+                            }
                           ]
                         }
                       }
@@ -423,7 +536,14 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
           payments: {
             $elemMatch: {
               correlationId: { $in: correlationIds },
-              status: 'pending'
+              status: 'pending',
+              invoiceLines: {
+                $not: {
+                  $elemMatch: {
+                    schemeCode: { $in: ['PA3', '82555'] }
+                  }
+                }
+              }
             }
           }
         }
@@ -452,7 +572,20 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
                         cond: {
                           $and: [
                             { $in: ['$$p.correlationId', correlationIds] },
-                            { $eq: ['$$p.status', 'pending'] }
+                            { $eq: ['$$p.status', 'pending'] },
+                            {
+                              $not: {
+                                $anyElementTrue: {
+                                  $map: {
+                                    input: '$$p.invoiceLines',
+                                    as: 'il',
+                                    in: {
+                                      $in: ['$$il.schemeCode', ['PA3', '82555']]
+                                    }
+                                  }
+                                }
+                              }
+                            }
                           ]
                         }
                       }

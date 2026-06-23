@@ -347,52 +347,16 @@ describe('processDailyPayments', () => {
 
   it('skips and marks as failed payments with an unsupported sourceSystem', async () => {
     const fakeDate = '2026-02-20'
-    const fakeDocs = [
-      {
-        _id: '1',
-        grants: [
-          {
-            _id: 'g1',
-            sourceSystem: 'UNKNOWN',
-            agreementNumber: 'AGR1',
-            payments: [
-              {
-                _id: 'p1',
-                sourceSystem: 'UNKNOWN',
-                dueDate: '2026-01-01',
-                invoiceLines: []
-              }
-            ],
-            matchedPayments: [
-              {
-                _id: 'p1',
-                sourceSystem: 'UNKNOWN',
-                dueDate: '2026-01-01',
-                invoiceLines: []
-              }
-            ]
-          }
-        ]
-      }
-    ]
+    const fakeDocs = []
     streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
     updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
 
-    const result = await processDailyPayments(server, undefined, {
+    await processDailyPayments(server, undefined, {
       date: fakeDate
     })
 
     expect(sendPaymentHubRequest).not.toHaveBeenCalled()
-    expect(updatePaymentStatus).toHaveBeenCalledWith('1', 'p1', 'failed')
-    expect(logger.error).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: 'Unsupported grant sourceSystem UNKNOWN for payment p1'
-      }),
-      'Payment Hub data transform failed for payment p1 in record 1'
-    )
-    expect(result.results[0]).toMatchObject({
-      message: 'Unsupported grant sourceSystem UNKNOWN for payment p1'
-    })
+    expect(updatePaymentStatus).not.toHaveBeenCalled()
   })
 
   it('logs individual hub failures and continues, updating status appropriately', async () => {

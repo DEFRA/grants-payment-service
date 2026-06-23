@@ -20,17 +20,6 @@ const validateDebtType = (debtType) => {
   return debtType
 }
 
-const REMITTANCE_DESCRIPTION_MAX_LENGTH = 60
-
-const validateRemittanceDescription = (remittanceDescription) => {
-  if (remittanceDescription.length > REMITTANCE_DESCRIPTION_MAX_LENGTH) {
-    throw new Error(
-      `value of ${remittanceDescription} must be no more than ${REMITTANCE_DESCRIPTION_MAX_LENGTH} characters`
-    )
-  }
-  return remittanceDescription
-}
-
 const buildInvoiceLines = (grant, payment) =>
   payment.invoiceLines.map((invoiceLine) => ({
     schemeCode: getActionCodeByName(invoiceLine.schemeCode),
@@ -72,18 +61,18 @@ const updateQuarter = (invoiceNumber, payments, currentPayment) => {
 }
 
 /**
- * Transforms SFI payment data into the format required by Payment Hub
+ * Transforms data into the format required by Payment Hub
  * @param {schema} identifiers
  * @param {Grant} grant
  * @param {Payment} payment
  * @returns {PaymentHubRequest}
  */
-export const transformFpttPaymentDataToPaymentHubFormat = (
+export const transformDataToPaymentHubFormat = (
   identifiers,
   grant,
   payment
 ) => ({
-  sourceSystem: 'FPTT', // Farm Payments Technical Test
+  sourceSystem: grant.sourceSystem,
   ledger: grant.ledger,
   deliveryBody: grant.deliveryBody,
   invoiceNumber: updateQuarter(grant.invoiceNumber, grant?.payments, payment),
@@ -96,9 +85,7 @@ export const transformFpttPaymentDataToPaymentHubFormat = (
   contractNumber: identifiers.claimId,
   currency: payment.currency || 'GBP',
   dueDate: formatPaymentDate(payment.dueDate),
-  remittanceDescription: validateRemittanceDescription(
-    'Farm Payments Technical Test Payment'
-  ),
+  remittanceDescription: grant.remittanceDescription,
   invoiceLines: buildInvoiceLines(grant, payment),
   correlationId: payment.correlationId,
 
