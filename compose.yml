@@ -30,7 +30,7 @@ services:
     env_file:
       - 'compose/aws.env'
     volumes:
-      - ./compose/start-floci.sh:/setup/start-floci.sh
+      - ./compose/start-floci.sh:/setup/start-floci.sh:z
     networks:
       - cdp-tenant
 
@@ -90,8 +90,8 @@ services:
     networks:
       - cdp-tenant
     volumes:
-      - ./src:/home/node/src
-      - ./package.json:/home/node/package.json
+      - ./src:/home/node/src:z
+      - ./package.json:/home/node/package.json:z
 
 ################################################################################
 
