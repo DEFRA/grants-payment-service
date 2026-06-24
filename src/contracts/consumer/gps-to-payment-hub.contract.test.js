@@ -128,7 +128,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
     global.fetchMock.enableMocks()
   })
 
-  it('should send a request to payment hub to setup a new payment schedule', async () => {
+  it('should send a request to payment hub to setup new payment schedules', async () => {
     provider
       .addInteraction()
       .given('A customer has an active WMP grant')
@@ -188,6 +188,16 @@ describe('cron job schedule sending a POST request to payment hub', () => {
             sendDuration: expect.any(String)
           })
         )
+
+        expect(actual.results).toHaveLength(2)
+
+        const backgroundTasksResult = await Promise.all(actual.backgroundTasks)
+        const paymentSourceSystems = backgroundTasksResult.map(
+          (task) => task.body.sourceSystem
+        )
+        expect(paymentSourceSystems).toEqual(
+          expect.arrayContaining(['FPTT', 'WMP'])
+        )
       })
   })
 
@@ -224,7 +234,10 @@ describe('cron job schedule sending a POST request to payment hub', () => {
         })
 
         // When PA3 is disabled, only FPTT payment should be processed
-        expect(actual.results.length).toBeGreaterThan(0)
+        expect(actual.results).toHaveLength(1)
+
+        const backgroundTasksResult = await Promise.all(actual.backgroundTasks)
+        expect(backgroundTasksResult[0].body.sourceSystem).toBe('FPTT')
       })
   })
 })
