@@ -60,7 +60,8 @@ describe('#healthController', () => {
           enableBackups: false,
           resendFailedPaymentsEnabled: false,
           requestLoggerDebug: false
-        }
+        },
+        disabledActionCodes: ['PA3']
       })
       expect(statusCode).toBe(statusCodes.ok)
     })
@@ -122,7 +123,8 @@ describe('#healthController', () => {
           enableBackups: false,
           resendFailedPaymentsEnabled: false,
           requestLoggerDebug: false
-        }
+        },
+        disabledActionCodes: ['PA3']
       })
       expect(response.statusCode).toBe(statusCodes.ok)
     })

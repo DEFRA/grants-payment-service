@@ -26,7 +26,8 @@ const health = {
     return h.response({
       message: 'success',
       version: config.get('serviceVersion') ?? 'dev',
-      featureFlags: config.get('featureFlags')
+      featureFlags: config.get('featureFlags'),
+      disabledActionCodes: config.get('disabledActionCodes')
     })
   }
 }
