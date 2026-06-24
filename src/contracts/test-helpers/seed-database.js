@@ -38,10 +38,14 @@ export async function seedDatabase(
 
   for (const [name, model] of Object.entries(models)) {
     try {
-      await model.db.dropCollection(name)
-      logger.info(`Dropped collection '${name}'`)
+      await model.collection.drop()
+      await model.syncIndexes()
+      logger.info(`Dropped and re-synced collection '${name}'`)
     } catch (e) {
-      logger.warn(`Error dropping collection '${name}': ${e.message}`)
+      // Ignore namespace not found errors (collection doesn't exist yet)
+      if (e.code !== 26) {
+        logger.warn(`Error dropping collection '${name}': ${e.message}`)
+      }
     }
   }
 
