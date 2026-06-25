@@ -202,7 +202,6 @@ describe('cron job schedule sending a POST request to payment hub', () => {
   })
 
   it('should not send WMP request when PA3 action code is disabled', async () => {
-    config.set('disabledActionCodes', ['PA3'])
     await seedDatabase()
 
     await provider
