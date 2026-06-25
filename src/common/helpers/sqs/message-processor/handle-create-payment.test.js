@@ -133,7 +133,7 @@ describe('handleCreatePaymentEvent', () => {
 
     expect(logger.warn).toHaveBeenCalledWith(
       error,
-      'Duplicate grant payment entry received for message msg-1: SBI: 106284736 FRN: 12544567 correlation IDs: grant-correlation-id, payment-correlation-id'
+      'Duplicate grant payment entry received for message msg-1: SBI: 106284736 FRN: 12544567 correlation IDs: sfi-grant-correlation-id, sfi-payment-correlation-id'
     )
     expect(logger.error).not.toHaveBeenCalled()
   })

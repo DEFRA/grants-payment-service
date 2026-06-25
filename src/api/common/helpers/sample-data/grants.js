@@ -8,7 +8,7 @@ export default [
       {
         sourceSystem: 'FPTT',
         paymentRequestNumber: 1,
-        correlationId: 'grant-correlation-id',
+        correlationId: 'sfi-grant-correlation-id',
         invoiceNumber: 'R00000004-V001',
         originalInvoiceNumber: '',
         agreementNumber: 'FPTT264870631',
@@ -22,7 +22,7 @@ export default [
           {
             dueDate: '2026-06-05',
             totalAmountPence: '1263',
-            correlationId: 'payment-correlation-id',
+            correlationId: 'sfi-payment-correlation-id',
             status: 'pending',
             invoiceLines: [
               {
@@ -37,6 +37,38 @@ export default [
               }
             ]
             // status will default to 'pending'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    sbi: '123456789',
+    frn: '987654321',
+    claimId: 'R00000001',
+    scheme: 'WMP',
+    grants: [
+      {
+        paymentRequestNumber: 1,
+        correlationId: 'wmp-grant-correlation-id',
+        invoiceNumber: 'R00000001-V001QX',
+        agreementNumber: 'WPM123456789',
+        totalAmountPence: '1234',
+        currency: 'GBP',
+        marketingYear: '2026',
+        payments: [
+          {
+            dueDate: '2026-06-05',
+            totalAmountPence: '1234',
+            status: 'pending',
+            invoiceLines: [
+              {
+                schemeCode: 'PA3',
+                amountPence: '1234',
+                description: 'Woodland Management Plan'
+              }
+            ],
+            correlationId: 'wmp-payment-correlation-id'
           }
         ]
       }
