@@ -6,8 +6,13 @@ updates:
     directory: /
     open-pull-requests-limit: 10
 
-    # Group packages into shared PR
+    # Group packages into shared PRs
     groups:
+      aws-sdk:
+        patterns:
+          - '@aws-sdk/*'
+          - 'aws*'
+
       core:
         patterns:
           - '@defra/*'
@@ -38,19 +43,25 @@ updates:
           - '*-pino-format'
           - 'pino'
           - 'pino-*'
+          - '@elastic/*'
 
-      tools:
+      testing:
         patterns:
-          - '@aws-sdk/*'
-          - 'aws*'
-          - 'convict'
-          - 'convict*'
-          - 'husky'
+          - '@pact-foundation/*'
           - 'vitest'
           - 'vitest-*'
           - '@vitest/*'
+          - 'vitest-fetch-mock'
+          - 'vitest-mongodb'
+
+      tools:
+        patterns:
+          - 'convict'
+          - 'convict*'
+          - 'husky'
           - 'nodemon'
           - 'npm-run-all'
+          - 'proxy-chain'
 
       types:
         patterns:
