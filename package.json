@@ -62,7 +62,7 @@
     "@babel/core": "8.0.1",
     "@babel/preset-env": "8.0.2",
     "@commitlint/cli": "21.1.0",
-    "@pact-foundation/pact": "16.5.0",
+    "@pact-foundation/pact": "17.0.0",
     "@vitest/coverage-v8": "4.1.9",
     "autoprefixer": "10.5.2",
     "aws-sdk-client-mock": "4.1.0",
