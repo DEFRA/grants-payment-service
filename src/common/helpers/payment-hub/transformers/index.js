@@ -1,3 +1,4 @@
+import * as transformers from './schemes/index.js'
 import { formatPaymentDate } from '#~/common/helpers/format-payment-date.js'
 import { getActionCodeByName } from '#~/common/helpers/config-mapper/index.js'
 
@@ -110,7 +111,12 @@ export const transformDataToPaymentHubFormat = (
   ),
   ...(grant.totalAmountPence != null && {
     annualValue: valueFormatter.format(Number(grant.totalAmountPence) / 100)
-  })
+  }),
+
+  // Transform the data based on the scheme using the appropriate transformer
+  ...(transformers[grant.sourceSystem]
+    ? transformers[grant.sourceSystem](grant, payment)
+    : {})
 })
 
 /** @import { schema, Grant, Payment } from '#~/api/common/models/grant_payments.js' */

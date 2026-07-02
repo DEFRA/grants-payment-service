@@ -10,7 +10,7 @@ import {
   updatePaymentStatus,
   markAllStaleLockedPaymentsAsFailed
 } from '#~/common/helpers/update-payment-status.js'
-import { transformDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/data-transformer.js'
+import { transformDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/transformers/index.js'
 import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js'
 

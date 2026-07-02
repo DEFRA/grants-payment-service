@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 import { vi } from 'vitest'
-import { transformDataToPaymentHubFormat } from './data-transformer.js'
+import { transformDataToPaymentHubFormat } from './index.js'
+import * as schemeTransformers from './schemes/index.js'
 
 vi.mock('#~/common/helpers/logging/logger.js', () => ({
   getLogger: vi.fn().mockReturnValue({
@@ -228,6 +229,32 @@ describe('transformDataToPaymentHubFormat', () => {
       minimalPayment
     )
     expect(out.currency).toBe('GBP')
+  })
+
+  it('calls scheme transformer for WMP with grant and payment', () => {
+    const paymentId = new mongoose.Types.ObjectId()
+    const payment = { _id: paymentId, dueDate: '2026-06-05', invoiceLines: [] }
+    const grant = {
+      ...baseGrant,
+      sourceSystem: 'WMP',
+      invoiceNumber: 'INV-2026Q2',
+      payments: [payment]
+    }
+
+    const spy = vi.spyOn(schemeTransformers, 'WMP')
+    try {
+      const out = transformDataToPaymentHubFormat(
+        baseIdentifiers,
+        grant,
+        payment
+      )
+      expect(spy).toHaveBeenCalledWith(grant, payment)
+      // Real transformer should strip quarter suffix and set empty dueDate
+      expect(out.invoiceNumber).toBe('INV-2026')
+      expect(out.dueDate).toBe('')
+    } finally {
+      spy.mockRestore()
+    }
   })
 
   it('throws when payment _id is missing', () => {
