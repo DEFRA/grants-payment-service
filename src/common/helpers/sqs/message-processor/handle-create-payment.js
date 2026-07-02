@@ -53,7 +53,6 @@ export async function handleCreatePaymentEvent(messageId, payload, logger) {
           .join(', ')}`
       )
     } else {
-      console.log(err, grafanaLogMessages.error.createPayment)
       logger.error(err, grafanaLogMessages.error.createPayment)
     }
   }
