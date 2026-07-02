@@ -32,7 +32,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
     sourceSystem: 'WMP',
     ledger: 'AP',
     deliveryBody: 'RP10',
-    invoiceNumber: 'R00000001-V001Q1',
+    invoiceNumber: 'R00000001-V001',
     frn: '987654321',
     sbi: '123456789',
     fesCode: 'FALS_WMP',
@@ -41,7 +41,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
     agreementNumber: '123456789',
     contractNumber: 'R00000001',
     currency: 'GBP',
-    dueDate: '05/06/2026',
+    dueDate: '',
     remittanceDescription: 'Woodland Management Plan Payment',
     invoiceLines: [
       {

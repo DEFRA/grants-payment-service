@@ -1,6 +1,6 @@
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
 import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js'
-import { transformDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/data-transformer.js'
+import { transformDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/transformers/index.js'
 
 /**
  * Inbound create_payment event handler

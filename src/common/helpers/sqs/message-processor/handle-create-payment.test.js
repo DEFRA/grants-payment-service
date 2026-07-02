@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { handleCreatePaymentEvent } from './handle-create-payment.js'
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
-import { transformDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/data-transformer.js'
+import { transformDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/transformers/index.js'
 import sampleData from '#~/api/common/helpers/sample-data/index.js'
 
 vi.mock('#~/common/helpers/create-grant-payment.js', () => {
@@ -11,7 +11,7 @@ vi.mock('#~/common/helpers/create-grant-payment.js', () => {
   }
 })
 
-vi.mock('#~/common/helpers/payment-hub/data-transformer.js', () => {
+vi.mock('#~/common/helpers/payment-hub/transformers/index.js', () => {
   return {
     transformDataToPaymentHubFormat: vi.fn()
   }
