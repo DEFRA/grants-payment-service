@@ -23,6 +23,7 @@ describe('#healthController', () => {
     config.set('featureFlags.isPaymentHubEnabled', false)
     config.set('featureFlags.enableBackups', false)
     config.set('featureFlags.requestLoggerDebug', false)
+    config.set('disabledActionCodes', ['PA3'])
 
     // import createServer after mongoose is mocked so controllers picks up the mock
     const { createServer } = await import('../../server.js')
