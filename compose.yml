@@ -1,6 +1,6 @@
 services:
   grants-payment-floci:
-    image: hectorvent/floci:1.1.0
+    image: hectorvent/floci:1.5.5
     ports:
       - '4569:4566' # Floci Gateway
       - '4570-4619:4510-4559' # external services port range
