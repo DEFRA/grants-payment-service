@@ -71,7 +71,7 @@ updates:
       - dependency-name: 'eslint-*'
       - dependency-name: 'eslint'
       - dependency-name: "@types/node"
-        versions: [">=25"]
+        versions: [">=25"] # Use Node LTS
 
     # Schedule run every Monday, local time
     schedule:
@@ -96,7 +96,9 @@ updates:
 
     ignore:
       - dependency-name: "node"
-        versions: [">=25"]
+        versions: [">=25"] # Use Node LTS
+      - dependency-name: "mongo"
+        versions: [">=7.1"] # CDP uses MongoDB 7.0
 
     # Schedule run every Monday, local time
     schedule:
@@ -115,7 +117,9 @@ updates:
 
     ignore:
       - dependency-name: "node"
-        versions: [">=25"]
+        versions: [">=25"] # Use Node LTS
+      - dependency-name: "mongo"
+        versions: [">=7.1"] # CDP uses MongoDB 7.0
 
     # Schedule run every Monday, local time
     schedule:
