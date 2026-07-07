@@ -35,7 +35,7 @@ services:
       - cdp-tenant
 
   mongodb:
-    image: mongo:6.0.13
+    image: mongo:7.0.37
     command: ['mongod', '--replSet', 'rs0', '--bind_ip_all']
     networks:
       - cdp-tenant
@@ -52,7 +52,7 @@ services:
       retries: 10
 
   mongodb-init:
-    image: mongo:6.0.13
+    image: mongo:7.0.37
     depends_on:
       mongodb:
         condition: service_healthy
