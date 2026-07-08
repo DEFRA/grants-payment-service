@@ -65,9 +65,10 @@ const createGrantPaymentPayload = (index, dueDate) => {
     ledger: 'AP',
     fesCode: 'FALS_FPTT',
     deliveryBody: 'RP00',
-    payments: paymentDueDates.map((paymentDueDate) => ({
+    payments: paymentDueDates.map((paymentDueDate, pIndex) => ({
       dueDate: paymentDueDate,
       totalAmountPence: String(quarterAmount),
+      correlationId: `correlation-${timestamp}-${index}-${pIndex}`,
       status: 'pending',
       invoiceLines: [
         {
