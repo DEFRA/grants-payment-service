@@ -41,7 +41,6 @@ describe('cron job schedule sending a POST request to payment hub', () => {
     agreementNumber: '123456789',
     contractNumber: 'R00000001',
     currency: 'GBP',
-    dueDate: '',
     remittanceDescription: 'Woodland Management Plan Payment',
     invoiceLines: [
       {

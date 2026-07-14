@@ -1,4 +1,4 @@
 export const transformWmpPayment = (grant, _payment) => ({
-  dueDate: '',
+  dueDate: undefined,
   invoiceNumber: grant.invoiceNumber.replace(/Q[1-4X]$/i, '')
 })
