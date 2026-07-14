@@ -1,4 +1,4 @@
 export const transformWmpPayment = (grant, _payment) => ({
-  dueDate: '',
+  dueDate: undefined, // NOSONAR undefined is required for JSON.stringify to remove the dueDate field when POSTing WMP payments
   invoiceNumber: grant.invoiceNumber.replace(/Q[1-4X]$/i, '')
 })
