@@ -219,6 +219,12 @@ const config = convict({
       default: false,
       env: 'ENABLE_PAYMENT_HUB'
     },
+    isMetricsEnabled: {
+      doc: 'Enable metrics reporting',
+      format: Boolean,
+      default: isProduction,
+      env: 'ENABLE_METRICS'
+    },
     enableBackups: {
       doc: 'Enable MongoDB backups',
       format: 'Boolean',

@@ -5,6 +5,7 @@ import {
 } from '#~/common/helpers/payment-processor.js'
 import { getStats } from '#~/common/helpers/get-stats.js'
 import { config } from '#~/config/index.js'
+import { metricsCounter } from '#~/common/helpers/metrics.js'
 
 const cron = {
   plugin: {
@@ -42,6 +43,33 @@ const cron = {
       const statsSchedule = new Cron(statsScheduleCron, options, async () => {
         const stats = await getStats()
         server.logger.info(`Stats: ${JSON.stringify(stats, null, 2)}`)
+
+        await Promise.all([
+          metricsCounter('AccountsCount', Number(stats.accounts)),
+          metricsCounter('GrantsCount', Number(stats.grants)),
+          metricsCounter('PaymentsTotalCount', Number(stats.payments.total)),
+          metricsCounter(
+            'PaymentsPendingCount',
+            Number(stats.payments.pending.total)
+          ),
+          metricsCounter(
+            'PaymentsLockedCount',
+            Number(stats.payments.locked)
+          ),
+          metricsCounter(
+            'PaymentsSubmittedCount',
+            Number(stats.payments.submitted)
+          ),
+          metricsCounter(
+            'PaymentsOverdueCount',
+            Number(stats.payments.pending.overdue)
+          ),
+          metricsCounter(
+            'PaymentsCancelledCount',
+            Number(stats.payments.cancelled)
+          ),
+          metricsCounter('PaymentsFailedCount', Number(stats.payments.failed))
+        ])
       })
 
       server.logger.info(
