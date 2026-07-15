@@ -58,7 +58,6 @@ describe('#healthController', () => {
         featureFlags: {
           testEndpoints: true,
           isPaymentHubEnabled: false,
-          isMetricsEnabled: false,
           enableBackups: false,
           resendFailedPaymentsEnabled: false,
           requestLoggerDebug: false
@@ -122,7 +121,6 @@ describe('#healthController', () => {
         featureFlags: {
           testEndpoints: true,
           isPaymentHubEnabled: false,
-          isMetricsEnabled: false,
           enableBackups: false,
           resendFailedPaymentsEnabled: false,
           requestLoggerDebug: false
