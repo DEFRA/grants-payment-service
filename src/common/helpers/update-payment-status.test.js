@@ -96,8 +96,39 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
       withTransaction: vi.fn(),
       endSession: vi.fn()
     }
+    const staleDate = new Date('2026-01-01T00:00:00Z')
+    const staleDocuments = [
+      {
+        sbi: '106284736',
+        frn: '12544567',
+        claimId: 'R00000004',
+        grants: [
+          {
+            invoiceNumber: 'INV-001',
+            agreementNumber: 'AGR-001',
+            payments: [
+              {
+                correlationId: 'corr-1',
+                status: 'locked',
+                updatedAt: staleDate,
+                dueDate: '2026-06-05',
+                totalAmountPence: '1263'
+              },
+              {
+                correlationId: 'corr-2',
+                status: 'submitted',
+                updatedAt: staleDate,
+                dueDate: '2026-06-05',
+                totalAmountPence: '1263'
+              }
+            ]
+          }
+        ]
+      }
+    ]
 
     GrantPaymentsModel.startSession.mockResolvedValue(mockSession)
+    GrantPaymentsModel.find.mockResolvedValue(staleDocuments)
     GrantPaymentsModel.updateMany.mockResolvedValue({
       acknowledged: true,
       modifiedCount: 2
@@ -109,7 +140,19 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
 
     const result = await markAllStaleLockedPaymentsAsFailed()
 
-    expect(result).toBe(2)
+    expect(result.modifiedCount).toBe(2)
+    expect(result.affectedPayments).toEqual([
+      {
+        sbi: '106284736',
+        frn: '12544567',
+        claimId: 'R00000004',
+        correlationId: 'corr-1',
+        invoiceNumber: 'INV-001',
+        agreementNumber: 'AGR-001',
+        dueDate: '2026-06-05',
+        totalAmountPence: '1263'
+      }
+    ])
     expect(mockSession.withTransaction).toHaveBeenCalledWith(
       expect.any(Function),
       { readPreference: 'primary' }
@@ -148,6 +191,7 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
     }
 
     GrantPaymentsModel.startSession.mockResolvedValue(mockSession)
+    GrantPaymentsModel.find.mockResolvedValue([])
     GrantPaymentsModel.updateMany.mockResolvedValue({
       acknowledged: true,
       modifiedCount: 0
@@ -159,7 +203,8 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
 
     const result = await markAllStaleLockedPaymentsAsFailed()
 
-    expect(result).toBe(0)
+    expect(result.modifiedCount).toBe(0)
+    expect(result.affectedPayments).toEqual([])
     expect(mockSession.withTransaction).toHaveBeenCalledWith(
       expect.any(Function),
       { readPreference: 'primary' }

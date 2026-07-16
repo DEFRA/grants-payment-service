@@ -1,6 +1,10 @@
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
 import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js'
 import { transformDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/transformers/index.js'
+import {
+  auditEvent,
+  AuditEvent
+} from '#~/common/helpers/payment-hub/audit-event.js'
 
 /**
  * Inbound create_payment event handler
@@ -33,6 +37,20 @@ export async function handleCreatePaymentEvent(messageId, payload, logger) {
         logger.info(
           `Dry run: Payment ${payment._id} due date ${payment.dueDate} Payment Hub data: ${JSON.stringify(paymentHubData, null, 2)}`
         )
+
+        await auditEvent(AuditEvent.GRANT_PAYMENT_CREATED, {
+          correlationId: payment.correlationId,
+          contractNumber: grant.agreementNumber,
+          invoiceNumber: grant.invoiceNumber,
+          agreementNumber: grant.agreementNumber,
+          sbi: grantPayment.sbi,
+          frn: grantPayment.frn,
+          identifiers: {
+            sbi: grantPayment.sbi,
+            frn: grantPayment.frn,
+            crn: grantPayment.claimId
+          }
+        })
       }
     }
   } catch (err) {

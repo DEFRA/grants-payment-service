@@ -20,6 +20,18 @@ const { like, iso8601DateTimeWithMillis } = MatchersV2
 
 vi.unmock('mongoose')
 
+// Audit events publish over the network (SNS); stub them out so contract tests
+// exercise only the Agreements message payload contract, not real audit publishing.
+vi.mock('#~/common/helpers/payment-hub/audit-event.js', async () => {
+  const actual = await vi.importActual(
+    '#~/common/helpers/payment-hub/audit-event.js'
+  )
+  return {
+    ...actual,
+    auditEvent: vi.fn().mockResolvedValue(undefined)
+  }
+})
+
 let server
 
 const messagePact = new MessageConsumerPact({

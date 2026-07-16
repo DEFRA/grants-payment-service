@@ -49,6 +49,14 @@ describe('AuditEvent', () => {
 
   test('contains expected event keys', () => {
     expect(AuditEvent.PAYMENT_HUB_REQUEST_SENT).toBe('PAYMENT_HUB_REQUEST_SENT')
+    expect(AuditEvent.GRANT_PAYMENT_CREATED).toBe('GRANT_PAYMENT_CREATED')
+    expect(AuditEvent.GRANT_PAYMENT_CANCELLED).toBe('GRANT_PAYMENT_CANCELLED')
+    expect(AuditEvent.GRANT_PAYMENT_STALE_LOCK_FAILED).toBe(
+      'GRANT_PAYMENT_STALE_LOCK_FAILED'
+    )
+    expect(AuditEvent.GRANT_PAYMENTS_RESET_TO_PENDING).toBe(
+      'GRANT_PAYMENTS_RESET_TO_PENDING'
+    )
   })
 
   test('cannot be mutated', () => {
@@ -213,7 +221,8 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
       'submitted',
       'accepted',
       'rejected',
-      'withdrawn'
+      'withdrawn',
+      'cancelled'
     ]
 
     await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
@@ -287,6 +296,98 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
 
     const [publishCommandInstance] = mockSend.mock.calls[0]
     expect(() => JSON.parse(publishCommandInstance.input.Message)).not.toThrow()
+  })
+})
+
+describe.each([
+  {
+    eventKey: 'GRANT_PAYMENT_CREATED',
+    eventtype: 'GrantsPaymentCreated',
+    action: 'created'
+  },
+  {
+    eventKey: 'GRANT_PAYMENT_CANCELLED',
+    eventtype: 'GrantsPaymentCancelled',
+    action: 'cancelled'
+  },
+  {
+    eventKey: 'GRANT_PAYMENT_STALE_LOCK_FAILED',
+    eventtype: 'GrantsPaymentStaleLockFailed',
+    action: 'updated'
+  },
+  {
+    eventKey: 'GRANT_PAYMENTS_RESET_TO_PENDING',
+    eventtype: 'GrantsPaymentsResetToPending',
+    action: 'updated'
+  }
+])('auditEvent - $eventKey', ({ eventKey, eventtype, action }) => {
+  let auditEvent
+  let AuditEvent
+  let mockSend
+
+  beforeEach(async () => {
+    vi.resetModules()
+    mockSend = vi.fn().mockResolvedValue({})
+    mockNetworkInterfaces.mockReturnValue({
+      eth0: [{ address: '192.168.1.100', family: 'IPv4', internal: false }]
+    })
+    vi.doMock('@aws-sdk/client-sns', () => ({
+      SNSClient: vi.fn().mockImplementation(function () {
+        this.send = mockSend
+      }),
+      PublishCommand: vi.fn().mockImplementation(function (input) {
+        this.input = input
+      })
+    }))
+    ;({ auditEvent, AuditEvent } = await import('./audit-event.js'))
+  })
+
+  afterEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
+  const getPublishedPayload = () => {
+    const [publishCommandInstance] = mockSend.mock.calls[0]
+    return JSON.parse(publishCommandInstance.input.Message)
+  }
+
+  test('publishes correct eventtype and entity action', async () => {
+    const context = {
+      correlationId: 'corr-xyz',
+      sbi: 123456789,
+      frn: 1234567890,
+      identifiers: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
+    }
+
+    await auditEvent(AuditEvent[eventKey], context)
+
+    expect(getPublishedPayload().audit).toMatchObject({
+      eventtype,
+      entities: [{ entity: 'payment', action, entityId: 'corr-xyz' }],
+      status: 'success',
+      accounts: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
+    })
+  })
+
+  test('audit.entities action is part of the allowed vocabulary', async () => {
+    const validActions = [
+      'created',
+      'read',
+      'updated',
+      'deleted',
+      'submitted',
+      'accepted',
+      'rejected',
+      'withdrawn',
+      'cancelled'
+    ]
+
+    await auditEvent(AuditEvent[eventKey], {})
+
+    for (const entry of getPublishedPayload().audit.entities) {
+      expect(validActions).toContain(entry.action)
+    }
   })
 })
 
