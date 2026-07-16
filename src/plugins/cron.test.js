@@ -1,5 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+const { mockMetricsCounter } = vi.hoisted(() => ({
+  mockMetricsCounter: vi.fn()
+}))
+
+vi.mock('@defra/cdp-metrics', () => ({
+  Metrics: vi.fn().mockImplementation(function () {
+    this.counter = mockMetricsCounter
+  })
+}))
+
 // import the mocks so we can inspect them in our tests
 import { Cron } from 'croner'
 import {
@@ -19,7 +29,21 @@ vi.mock('#~/common/helpers/payment-processor.js', () => ({
 }))
 
 vi.mock('#~/common/helpers/get-stats.js', () => ({
-  getStats: vi.fn().mockResolvedValue({ test: 'value' })
+  getStats: vi.fn().mockResolvedValue({
+    grants: 9,
+    accounts: 8,
+    payments: {
+      total: 7,
+      pending: {
+        total: 6,
+        overdue: 5
+      },
+      locked: 4,
+      submitted: 3,
+      cancelled: 2,
+      failed: 1
+    }
+  })
 }))
 
 describe('cron plugin', () => {
@@ -105,7 +129,43 @@ describe('cron plugin', () => {
 
     expect(getStats).toHaveBeenCalled()
     expect(mockServer.logger.info).toHaveBeenCalledWith(
-      `Stats: ${JSON.stringify({ test: 'value' }, null, 2)}`
+      `Stats: ${JSON.stringify(
+        {
+          grants: 9,
+          accounts: 8,
+          payments: {
+            total: 7,
+            pending: {
+              total: 6,
+              overdue: 5
+            },
+            locked: 4,
+            submitted: 3,
+            cancelled: 2,
+            failed: 1
+          }
+        },
+        null,
+        2
+      )}`
     )
+  })
+
+  it('calls metrics counter for each stat when the stats callback runs', async () => {
+    cron.plugin.register(mockServer)
+
+    // capture the second callback
+    const statsFn = Cron.mock.calls[2][2]
+    await statsFn()
+
+    expect(mockMetricsCounter).toHaveBeenCalledWith('GrantsCount', 9)
+    expect(mockMetricsCounter).toHaveBeenCalledWith('AccountsCount', 8)
+    expect(mockMetricsCounter).toHaveBeenCalledWith('PaymentsTotalCount', 7)
+    expect(mockMetricsCounter).toHaveBeenCalledWith('PaymentsPendingCount', 6)
+    expect(mockMetricsCounter).toHaveBeenCalledWith('PaymentsOverdueCount', 5)
+    expect(mockMetricsCounter).toHaveBeenCalledWith('PaymentsLockedCount', 4)
+    expect(mockMetricsCounter).toHaveBeenCalledWith('PaymentsSubmittedCount', 3)
+    expect(mockMetricsCounter).toHaveBeenCalledWith('PaymentsCancelledCount', 2)
+    expect(mockMetricsCounter).toHaveBeenCalledWith('PaymentsFailedCount', 1)
   })
 })
