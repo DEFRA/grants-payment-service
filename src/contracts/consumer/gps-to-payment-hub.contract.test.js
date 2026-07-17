@@ -18,6 +18,18 @@ vi.mock('#~/api/common/helpers/sns-publisher.js', () => ({
   publishEvent: vi.fn().mockResolvedValue(true)
 }))
 
+// Audit events publish over the network (SNS); stub them out so contract tests
+// exercise only the Payment Hub interaction, not real audit publishing.
+vi.mock('#~/common/helpers/payment-hub/audit-event.js', async () => {
+  const actual = await vi.importActual(
+    '#~/common/helpers/payment-hub/audit-event.js'
+  )
+  return {
+    ...actual,
+    auditEvent: vi.fn().mockResolvedValue(undefined)
+  }
+})
+
 let server
 let httpProxyServer
 

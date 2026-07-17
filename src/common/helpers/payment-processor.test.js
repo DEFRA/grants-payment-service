@@ -9,6 +9,10 @@ import {
   updatePaymentStatus,
   markAllStaleLockedPaymentsAsFailed
 } from '#~/common/helpers/update-payment-status.js'
+import {
+  auditEvent,
+  AuditEvent
+} from '#~/common/helpers/payment-hub/audit-event.js'
 import { getTodaysDate, getNextDay } from './date.js'
 
 vi.mock('#~/common/helpers/fetch-grants-by-date.js', () => ({
@@ -23,6 +27,15 @@ vi.mock('#~/common/helpers/update-payment-status.js', () => ({
   updatePaymentStatus: vi.fn(),
   markAllStaleLockedPaymentsAsFailed: vi.fn()
 }))
+vi.mock('#~/common/helpers/payment-hub/audit-event.js', async () => {
+  const actual = await vi.importActual(
+    '#~/common/helpers/payment-hub/audit-event.js'
+  )
+  return {
+    ...actual,
+    auditEvent: vi.fn()
+  }
+})
 vi.mock('#~/api/common/models/grant_payments.js', () => ({
   default: {
     findOne: vi.fn(),
@@ -602,12 +615,42 @@ describe('processStaleLockedPayments', () => {
     vi.resetAllMocks()
   })
 
-  it('calls markAllStaleLockedPaymentsAsFailed and logs if any were marked', async () => {
-    markAllStaleLockedPaymentsAsFailed.mockResolvedValue(5)
+  it('calls markAllStaleLockedPaymentsAsFailed, audits, and logs if any were marked', async () => {
+    const affectedPayments = [
+      {
+        sbi: '106284736',
+        frn: '12544567',
+        claimId: 'R00000004',
+        correlationId: 'corr-1',
+        invoiceNumber: 'INV-001',
+        agreementNumber: 'AGR-001',
+        dueDate: '2026-06-05',
+        totalAmountPence: '1263'
+      }
+    ]
+    markAllStaleLockedPaymentsAsFailed.mockResolvedValue({
+      modifiedCount: 5,
+      affectedPayments
+    })
 
     const result = await processStaleLockedPayments(server)
 
     expect(markAllStaleLockedPaymentsAsFailed).toHaveBeenCalled()
+    expect(auditEvent).toHaveBeenCalledWith(
+      AuditEvent.GRANT_PAYMENT_STALE_LOCK_FAILED,
+      {
+        correlationId: 'corr-1',
+        invoiceNumber: 'INV-001',
+        agreementNumber: 'AGR-001',
+        sbi: '106284736',
+        frn: '12544567',
+        identifiers: {
+          sbi: '106284736',
+          frn: '12544567',
+          crn: 'R00000004'
+        }
+      }
+    )
     expect(logger.info).toHaveBeenCalledWith('Processing stale locked payments')
     expect(logger.error).toHaveBeenCalledWith(
       'Payment remained locked beyond timeout threshold: marked 5 stale locked payment(s) as failed'
@@ -615,12 +658,16 @@ describe('processStaleLockedPayments', () => {
     expect(result).toEqual(5)
   })
 
-  it('does not log error if no stale payments', async () => {
-    markAllStaleLockedPaymentsAsFailed.mockResolvedValue(0)
+  it('does not log error or audit if no stale payments', async () => {
+    markAllStaleLockedPaymentsAsFailed.mockResolvedValue({
+      modifiedCount: 0,
+      affectedPayments: []
+    })
 
     const result = await processStaleLockedPayments(server)
 
     expect(markAllStaleLockedPaymentsAsFailed).toHaveBeenCalled()
+    expect(auditEvent).not.toHaveBeenCalled()
     expect(logger.info).toHaveBeenCalledWith('Processing stale locked payments')
     expect(logger.info).toHaveBeenCalledWith('No stale locked payments found')
     expect(logger.error).not.toHaveBeenCalled()

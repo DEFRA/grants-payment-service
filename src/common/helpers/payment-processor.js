@@ -13,6 +13,10 @@ import {
 import { transformDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/transformers/index.js'
 import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js'
+import {
+  auditEvent,
+  AuditEvent
+} from '#~/common/helpers/payment-hub/audit-event.js'
 
 const processSinglePayment = async (
   server,
@@ -194,15 +198,32 @@ export const processStaleLockedPayments = async (server) => {
   logger.info('Processing stale locked payments')
 
   try {
-    const staleLockedPayments = await markAllStaleLockedPaymentsAsFailed()
-    if (staleLockedPayments > 0) {
+    const { modifiedCount, affectedPayments } =
+      await markAllStaleLockedPaymentsAsFailed()
+
+    for (const payment of affectedPayments) {
+      await auditEvent(AuditEvent.GRANT_PAYMENT_STALE_LOCK_FAILED, {
+        correlationId: payment.correlationId,
+        invoiceNumber: payment.invoiceNumber,
+        agreementNumber: payment.agreementNumber,
+        sbi: payment.sbi,
+        frn: payment.frn,
+        identifiers: {
+          sbi: payment.sbi,
+          frn: payment.frn,
+          crn: payment.claimId
+        }
+      })
+    }
+
+    if (modifiedCount > 0) {
       logger.error(
-        `${grafanaLogMessages.error.staleLockPaymentTimeout}: marked ${staleLockedPayments} stale locked payment(s) as failed`
+        `${grafanaLogMessages.error.staleLockPaymentTimeout}: marked ${modifiedCount} stale locked payment(s) as failed`
       )
     } else {
       logger.info('No stale locked payments found')
     }
-    return staleLockedPayments
+    return modifiedCount
   } catch (err) {
     logger.error(err, 'Failed to process stale locked payments')
     throw err

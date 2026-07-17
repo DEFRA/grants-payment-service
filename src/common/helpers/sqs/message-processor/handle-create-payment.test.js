@@ -3,6 +3,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { handleCreatePaymentEvent } from './handle-create-payment.js'
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
 import { transformDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/transformers/index.js'
+import {
+  auditEvent,
+  AuditEvent
+} from '#~/common/helpers/payment-hub/audit-event.js'
 import sampleData from '#~/api/common/helpers/sample-data/index.js'
 
 vi.mock('#~/common/helpers/create-grant-payment.js', () => {
@@ -14,6 +18,16 @@ vi.mock('#~/common/helpers/create-grant-payment.js', () => {
 vi.mock('#~/common/helpers/payment-hub/transformers/index.js', () => {
   return {
     transformDataToPaymentHubFormat: vi.fn()
+  }
+})
+
+vi.mock('#~/common/helpers/payment-hub/audit-event.js', async () => {
+  const actual = await vi.importActual(
+    '#~/common/helpers/payment-hub/audit-event.js'
+  )
+  return {
+    ...actual,
+    auditEvent: vi.fn()
   }
 })
 
@@ -48,8 +62,15 @@ describe('handleCreatePaymentEvent', () => {
       grants: [
         {
           sourceSystem: 'FPTT',
+          invoiceNumber: 'INV-001',
+          agreementNumber: 'AGR-001',
           payments: [
-            { _id: 'payment-123', dueDate: '2026-06-05', invoiceLines: [] }
+            {
+              _id: 'payment-123',
+              correlationId: 'payment-correlation-id',
+              dueDate: '2026-06-05',
+              invoiceLines: []
+            }
           ]
         }
       ]
@@ -72,6 +93,15 @@ describe('handleCreatePaymentEvent', () => {
     expect(logger.info).toHaveBeenCalledWith(
       `Dry run: Payment payment-123 due date 2026-06-05 Payment Hub data: ${JSON.stringify(paymentHubData, null, 2)}`
     )
+    expect(auditEvent).toHaveBeenCalledWith(AuditEvent.GRANT_PAYMENT_CREATED, {
+      correlationId: 'payment-correlation-id',
+      contractNumber: 'AGR-001',
+      invoiceNumber: 'INV-001',
+      agreementNumber: 'AGR-001',
+      sbi: '106284736',
+      frn: '12544567',
+      identifiers: { sbi: '106284736', frn: '12544567', crn: 'R00000004' }
+    })
   })
 
   it('handles grant payment with no grants array', async () => {
@@ -87,6 +117,7 @@ describe('handleCreatePaymentEvent', () => {
     await handleCreatePaymentEvent('msg-1', validPayload, logger)
 
     expect(transformDataToPaymentHubFormat).not.toHaveBeenCalled()
+    expect(auditEvent).not.toHaveBeenCalled()
   })
 
   it('handles grants with no payments array', async () => {
@@ -102,6 +133,7 @@ describe('handleCreatePaymentEvent', () => {
     await handleCreatePaymentEvent('msg-1', validPayload, logger)
 
     expect(transformDataToPaymentHubFormat).not.toHaveBeenCalled()
+    expect(auditEvent).not.toHaveBeenCalled()
   })
 
   it('logs an error if createGrantPayment fails', async () => {
@@ -117,6 +149,7 @@ describe('handleCreatePaymentEvent', () => {
       'Error creating grant payment'
     )
     expect(logger.warn).not.toHaveBeenCalled()
+    expect(auditEvent).not.toHaveBeenCalled()
   })
 
   it('logs a warning if createGrantPayment fails with a duplicate key error', async () => {

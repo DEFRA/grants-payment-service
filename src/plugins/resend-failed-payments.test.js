@@ -1,15 +1,27 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { AuditEvent } from '#~/common/helpers/payment-hub/audit-event.js'
 
 const updateManyMock = vi.fn()
+const leanMock = vi.fn()
+const findMock = vi.fn(() => ({ lean: leanMock }))
 const onceMock = vi.fn()
 const getMock = vi.fn()
 const processDailyPaymentsMock = vi.fn()
 const getStatsMock = vi.fn()
+const auditEventMock = vi.hoisted(() => vi.fn())
 
 vi.mock('#~/api/common/models/grant_payments.js', () => ({
   default: {
-    updateMany: updateManyMock
+    updateMany: updateManyMock,
+    find: findMock
   }
+}))
+
+vi.mock('#~/common/helpers/payment-hub/audit-event.js', () => ({
+  AuditEvent: {
+    GRANT_PAYMENTS_RESET_TO_PENDING: 'GRANT_PAYMENTS_RESET_TO_PENDING'
+  },
+  auditEvent: auditEventMock
 }))
 
 const mongooseMock = {
@@ -39,6 +51,10 @@ describe('resend-failed-payments plugin', () => {
     mongooseMock.default.connection.readyState = 1
     onceMock.mockReset()
     updateManyMock.mockReset()
+    findMock.mockClear()
+    leanMock.mockReset()
+    leanMock.mockResolvedValue([])
+    auditEventMock.mockReset()
     processDailyPaymentsMock.mockReset()
     getStatsMock.mockReset()
     getMock.mockReset()
@@ -54,6 +70,27 @@ describe('resend-failed-payments plugin', () => {
 
   it('updates failed payments to pending and triggers processDailyPayments when failed payments exist', async () => {
     updateManyMock.mockResolvedValue({ modifiedCount: 5 })
+    leanMock.mockResolvedValue([
+      {
+        sbi: '106284736',
+        frn: '12544567',
+        claimId: 'R00000004',
+        grants: [
+          {
+            invoiceNumber: 'INV-001',
+            agreementNumber: 'AGR-001',
+            payments: [
+              {
+                correlationId: 'corr-1',
+                status: 'failed',
+                dueDate: '2026-06-05',
+                totalAmountPence: '1263'
+              }
+            ]
+          }
+        ]
+      }
+    ])
     processDailyPaymentsMock.mockResolvedValue({
       results: [],
       fetchDuration: 100,
@@ -103,6 +140,21 @@ describe('resend-failed-payments plugin', () => {
         ]
       }
     )
+    expect(auditEventMock).toHaveBeenCalledWith(
+      AuditEvent.GRANT_PAYMENTS_RESET_TO_PENDING,
+      {
+        correlationId: 'corr-1',
+        invoiceNumber: 'INV-001',
+        agreementNumber: 'AGR-001',
+        sbi: '106284736',
+        frn: '12544567',
+        identifiers: {
+          sbi: '106284736',
+          frn: '12544567',
+          crn: 'R00000004'
+        }
+      }
+    )
     expect(processDailyPaymentsMock).toHaveBeenCalledWith(fakeServer)
     expect(getStatsMock).toHaveBeenCalled()
     expect(fakeServer.logger.info).toHaveBeenCalledWith(
@@ -123,6 +175,7 @@ describe('resend-failed-payments plugin', () => {
     await plugin.plugin.register(fakeServer)
 
     expect(updateManyMock).toHaveBeenCalled()
+    expect(auditEventMock).not.toHaveBeenCalled()
     expect(processDailyPaymentsMock).not.toHaveBeenCalled()
     expect(getStatsMock).not.toHaveBeenCalled()
     expect(fakeServer.logger.info).toHaveBeenCalledWith(

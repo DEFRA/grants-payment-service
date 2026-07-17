@@ -30,11 +30,21 @@ describe('cancelGrantPayments', () => {
       frn,
       grants: [
         {
+          invoiceNumber: 'INV-001',
+          agreementNumber: 'AGR-001',
           payments: [
-            { dueDate: futureDate, status: 'pending' },
-            { dueDate: today, status: 'pending' },
-            { dueDate: pastDate, status: 'pending' },
-            { dueDate: futureDate, status: 'paid' }
+            {
+              correlationId: 'corr-future',
+              dueDate: futureDate,
+              status: 'pending'
+            },
+            { correlationId: 'corr-today', dueDate: today, status: 'pending' },
+            {
+              correlationId: 'corr-past',
+              dueDate: pastDate,
+              status: 'pending'
+            },
+            { correlationId: 'corr-paid', dueDate: futureDate, status: 'paid' }
           ]
         }
       ],
@@ -52,7 +62,19 @@ describe('cancelGrantPayments', () => {
     expect(mockGrantPayment.grants[0].payments[3].status).toBe('paid') // non-pending not cancelled
     expect(mockSave).toHaveBeenCalled()
     expect(result.updatedPayments).toHaveLength(1)
-    expect(result.updatedPayments[0]).toBe(mockGrantPayment)
+    expect(result.updatedPayments[0].grantPayment).toBe(mockGrantPayment)
+    expect(result.updatedPayments[0].cancelledPayments).toEqual([
+      {
+        correlationId: 'corr-future',
+        invoiceNumber: 'INV-001',
+        agreementNumber: 'AGR-001'
+      },
+      {
+        correlationId: 'corr-today',
+        invoiceNumber: 'INV-001',
+        agreementNumber: 'AGR-001'
+      }
+    ])
   })
 
   it('should not call save if no payments were updated', async () => {
