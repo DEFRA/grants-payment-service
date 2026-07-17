@@ -3,22 +3,55 @@ import GrantPayments from '#~/api/common/models/grant_payments.js'
 import { config } from '#~/config/index.js'
 import { processDailyPayments } from '#~/common/helpers/payment-processor.js'
 import { getStats } from '#~/common/helpers/get-stats.js'
+import {
+  auditEvent,
+  AuditEvent
+} from '#~/common/helpers/payment-hub/audit-event.js'
 
 const pluginName = 'resend-failed-payments'
 
+const toAffectedPayment = (doc, grant, payment) => ({
+  sbi: doc.sbi,
+  frn: doc.frn,
+  claimId: doc.claimId,
+  correlationId: payment.correlationId,
+  invoiceNumber: grant.invoiceNumber,
+  agreementNumber: grant.agreementNumber,
+  dueDate: payment.dueDate,
+  totalAmountPence: payment.totalAmountPence
+})
+
+const extractFailedPaymentsFromGrant = (doc, grant) =>
+  (grant.payments || [])
+    .filter((payment) => payment.status === 'failed')
+    .map((payment) => toAffectedPayment(doc, grant, payment))
+
+const extractFailedPaymentsFromDocument = (doc) =>
+  (doc.grants || []).flatMap((grant) =>
+    extractFailedPaymentsFromGrant(doc, grant)
+  )
+
 const updateFailedPaymentsToPending = async (server) => {
-  const result = await GrantPayments.updateMany(
-    {
-      grants: {
-        $elemMatch: {
-          payments: {
-            $elemMatch: {
-              status: 'failed'
-            }
+  const failedFilter = {
+    grants: {
+      $elemMatch: {
+        payments: {
+          $elemMatch: {
+            status: 'failed'
           }
         }
       }
-    },
+    }
+  }
+
+  // Capture identifiers of the payments about to be reset, for audit purposes
+  const failedDocuments = await GrantPayments.find(failedFilter).lean()
+  const affectedPayments = failedDocuments.flatMap((doc) =>
+    extractFailedPaymentsFromDocument(doc)
+  )
+
+  const result = await GrantPayments.updateMany(
+    failedFilter,
     {
       $set: {
         'grants.$[].payments.$[p].status': 'pending',
@@ -38,13 +71,29 @@ const updateFailedPaymentsToPending = async (server) => {
     `${pluginName}: updated ${result.modifiedCount} failed payment(s) to pending`
   )
 
-  return result.modifiedCount
+  return { modifiedCount: result.modifiedCount, affectedPayments }
 }
 
 const runResendFailedPayments = async (server) => {
-  const updatedCount = await updateFailedPaymentsToPending(server)
+  const { modifiedCount: updatedCount, affectedPayments } =
+    await updateFailedPaymentsToPending(server)
 
   if (updatedCount > 0) {
+    for (const payment of affectedPayments) {
+      await auditEvent(AuditEvent.GRANT_PAYMENTS_RESET_TO_PENDING, {
+        correlationId: payment.correlationId,
+        invoiceNumber: payment.invoiceNumber,
+        agreementNumber: payment.agreementNumber,
+        sbi: payment.sbi,
+        frn: payment.frn,
+        identifiers: {
+          sbi: payment.sbi,
+          frn: payment.frn,
+          crn: payment.claimId
+        }
+      })
+    }
+
     server.logger.info(
       `${pluginName}: triggering processDailyPayments to process updated payments`
     )

@@ -9,7 +9,7 @@ export const cancelGrantPayments = async (sbi, frn) => {
   const updatedPayments = []
 
   for (const grantPayment of grantPayments) {
-    let hasChanges = false
+    const cancelledPayments = []
     grantPayment.grants.forEach((grant) => {
       grant.payments.forEach((payment) => {
         if (
@@ -17,14 +17,18 @@ export const cancelGrantPayments = async (sbi, frn) => {
           new Date(payment.dueDate) >= new Date(today)
         ) {
           payment.status = 'cancelled'
-          hasChanges = true
+          cancelledPayments.push({
+            correlationId: payment.correlationId,
+            invoiceNumber: grant.invoiceNumber,
+            agreementNumber: grant.agreementNumber
+          })
         }
       })
     })
 
-    if (hasChanges) {
+    if (cancelledPayments.length) {
       await grantPayment.save()
-      updatedPayments.push(grantPayment)
+      updatedPayments.push({ grantPayment, cancelledPayments })
     }
   }
 

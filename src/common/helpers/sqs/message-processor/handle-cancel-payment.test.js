@@ -2,11 +2,25 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { handleCancelPaymentEvent } from './handle-cancel-payment.js'
 import { cancelGrantPayments } from '#~/common/helpers/cancel-grant-payment.js'
+import {
+  auditEvent,
+  AuditEvent
+} from '#~/common/helpers/payment-hub/audit-event.js'
 import sampleData from '#~/api/common/helpers/sample-data/index.js'
 
 vi.mock('#~/common/helpers/cancel-grant-payment.js', () => {
   return {
     cancelGrantPayments: vi.fn()
+  }
+})
+
+vi.mock('#~/common/helpers/payment-hub/audit-event.js', async () => {
+  const actual = await vi.importActual(
+    '#~/common/helpers/payment-hub/audit-event.js'
+  )
+  return {
+    ...actual,
+    auditEvent: vi.fn()
   }
 })
 
@@ -30,10 +44,22 @@ const validPayload = {
 describe('handleCancelPaymentEvent', () => {
   it('logs receipt of a cancel_payment message', async () => {
     const logger = { info: vi.fn(), error: vi.fn() }
-    const { sbi, frn } = sampleData.grants[0]
+    const { sbi, frn, claimId } = sampleData.grants[0]
+    const [grant] = sampleData.grants[0].grants
+    const [payment] = grant.payments
+    const cancelledPayments = [
+      {
+        correlationId: payment.correlationId,
+        invoiceNumber: grant.invoiceNumber,
+        agreementNumber: grant.agreementNumber
+      }
+    ]
+    const updatedPayments = [
+      { grantPayment: sampleData.grants[0], cancelledPayments }
+    ]
 
     cancelGrantPayments.mockResolvedValue({
-      updatedPayments: [sampleData.grants[0]],
+      updatedPayments,
       foundGrantPayments: []
     })
 
@@ -42,7 +68,18 @@ describe('handleCancelPaymentEvent', () => {
     expect(cancelGrantPayments).toHaveBeenCalledWith(sbi, frn)
     expect(logger.info).toHaveBeenCalledWith(
       { messageId: 'msg-1', sbi },
-      `Successfully cancelled grant payment entry for message msg-1: ${JSON.stringify([sampleData.grants[0]])}`
+      `Successfully cancelled grant payment entry for message msg-1: ${JSON.stringify(updatedPayments)}`
+    )
+    expect(auditEvent).toHaveBeenCalledWith(
+      AuditEvent.GRANT_PAYMENT_CANCELLED,
+      {
+        correlationId: payment.correlationId,
+        invoiceNumber: grant.invoiceNumber,
+        agreementNumber: grant.agreementNumber,
+        sbi,
+        frn,
+        identifiers: { sbi, frn, crn: claimId }
+      }
     )
   })
 
@@ -61,6 +98,7 @@ describe('handleCancelPaymentEvent', () => {
     expect(logger.warn).toHaveBeenCalledWith(
       `Warning: No grant payment entry found to cancel for message msg-1: sbi ${sbi} and frn ${frn}`
     )
+    expect(auditEvent).not.toHaveBeenCalled()
   })
 
   it('logs an error if cancelGrantPayments fails', async () => {
@@ -77,6 +115,7 @@ describe('handleCancelPaymentEvent', () => {
       error,
       'Error cancelling grant payment'
     )
+    expect(auditEvent).not.toHaveBeenCalled()
   })
 
   it('logs a warning if grant payments are found but none are in pending state to be cancelled', async () => {
@@ -95,5 +134,6 @@ describe('handleCancelPaymentEvent', () => {
       { messageId: 'msg-1', sbi },
       `Found grant payment entries for message msg-1: sbi ${sbi} and frn ${frn}, but none were in a pending state to be cancelled`
     )
+    expect(auditEvent).not.toHaveBeenCalled()
   })
 })

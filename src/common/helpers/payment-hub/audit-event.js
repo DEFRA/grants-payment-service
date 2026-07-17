@@ -24,34 +24,68 @@ const getLocalIp = (request) => {
  * @enum {string}
  */
 export const AuditEvent = Object.freeze({
-  PAYMENT_HUB_REQUEST_SENT: 'PAYMENT_HUB_REQUEST_SENT'
+  PAYMENT_HUB_REQUEST_SENT: 'PAYMENT_HUB_REQUEST_SENT',
+  GRANT_PAYMENT_CREATED: 'GRANT_PAYMENT_CREATED',
+  GRANT_PAYMENT_CANCELLED: 'GRANT_PAYMENT_CANCELLED',
+  GRANT_PAYMENT_STALE_LOCK_FAILED: 'GRANT_PAYMENT_STALE_LOCK_FAILED',
+  GRANT_PAYMENTS_RESET_TO_PENDING: 'GRANT_PAYMENTS_RESET_TO_PENDING'
 })
 
 // Human-readable description for each audit event, used in security.details.message
 const eventMessages = {
-  [AuditEvent.PAYMENT_HUB_REQUEST_SENT]: 'Payment request sent to payment hub'
+  [AuditEvent.PAYMENT_HUB_REQUEST_SENT]: 'Payment request sent to payment hub',
+  [AuditEvent.GRANT_PAYMENT_CREATED]: 'Grant payment created',
+  [AuditEvent.GRANT_PAYMENT_CANCELLED]: 'Grant payment cancelled',
+  [AuditEvent.GRANT_PAYMENT_STALE_LOCK_FAILED]:
+    'Grant payment failed due to stale lock timeout',
+  [AuditEvent.GRANT_PAYMENTS_RESET_TO_PENDING]:
+    'Failed grant payment reset to pending'
 }
 
 // Transaction code for each audit event, used in security.details.transactioncode
 const eventTransactionCodes = {
-  [AuditEvent.PAYMENT_HUB_REQUEST_SENT]: '2310'
+  [AuditEvent.PAYMENT_HUB_REQUEST_SENT]: '2310',
+  [AuditEvent.GRANT_PAYMENT_CREATED]: '2314',
+  [AuditEvent.GRANT_PAYMENT_CANCELLED]: '2315',
+  [AuditEvent.GRANT_PAYMENT_STALE_LOCK_FAILED]: '2316',
+  [AuditEvent.GRANT_PAYMENTS_RESET_TO_PENDING]: '2315'
 }
 
 // PMC code for each audit event, used in security.pmccode
 const eventPmcCodes = {
-  [AuditEvent.PAYMENT_HUB_REQUEST_SENT]: '0706' // Consider all actions an internal or external user can execute, for example the menu options available to them
+  [AuditEvent.PAYMENT_HUB_REQUEST_SENT]: '0706', // Consider all actions an internal or external user/service can execute
+  [AuditEvent.GRANT_PAYMENT_CREATED]: '0706',
+  [AuditEvent.GRANT_PAYMENT_CANCELLED]: '0706',
+  [AuditEvent.GRANT_PAYMENT_STALE_LOCK_FAILED]: '0706',
+  [AuditEvent.GRANT_PAYMENTS_RESET_TO_PENDING]: '0706'
 }
 
 // Audit event type for each audit event, used in audit.eventtype
 const eventTypes = {
-  [AuditEvent.PAYMENT_HUB_REQUEST_SENT]: 'GrantsPaymentHubRequest'
+  [AuditEvent.PAYMENT_HUB_REQUEST_SENT]: 'GrantsPaymentHubRequest',
+  [AuditEvent.GRANT_PAYMENT_CREATED]: 'GrantsPaymentCreated',
+  [AuditEvent.GRANT_PAYMENT_CANCELLED]: 'GrantsPaymentCancelled',
+  [AuditEvent.GRANT_PAYMENT_STALE_LOCK_FAILED]: 'GrantsPaymentStaleLockFailed',
+  [AuditEvent.GRANT_PAYMENTS_RESET_TO_PENDING]: 'GrantsPaymentsResetToPending'
 }
 
 // Entities for each audit event, used in audit.entities
-// action must be one of: created, read, updated, deleted, submitted, accepted, rejected, withdrawn
+// action must be one of: created, read, updated, deleted, submitted, accepted, rejected, withdrawn, cancelled
 const eventEntities = {
   [AuditEvent.PAYMENT_HUB_REQUEST_SENT]: (context) => [
     { entity: 'payment', action: 'submitted', entityId: context.invoiceNumber }
+  ],
+  [AuditEvent.GRANT_PAYMENT_CREATED]: (context) => [
+    { entity: 'payment', action: 'created', entityId: context.correlationId }
+  ],
+  [AuditEvent.GRANT_PAYMENT_CANCELLED]: (context) => [
+    { entity: 'payment', action: 'cancelled', entityId: context.correlationId }
+  ],
+  [AuditEvent.GRANT_PAYMENT_STALE_LOCK_FAILED]: (context) => [
+    { entity: 'payment', action: 'updated', entityId: context.correlationId }
+  ],
+  [AuditEvent.GRANT_PAYMENTS_RESET_TO_PENDING]: (context) => [
+    { entity: 'payment', action: 'updated', entityId: context.correlationId }
   ]
 }
 

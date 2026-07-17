@@ -181,8 +181,16 @@ marks any payments that have been in `locked` status for longer than `LOCKED_PAY
 
 ### Audit events
 
-All payment submissions (successful or failed) are published to an SNS audit topic
-(`SNS_TOPIC_ARN_AUDIT`). Events include SBI, FRN, invoice number, agreement number, and a correlation ID for tracing.
+Key payment lifecycle changes are published to an SNS audit topic (`SNS_TOPIC_ARN_AUDIT`). Events
+include SBI, FRN, invoice number, agreement number, and a correlation ID for tracing.
+
+| Event                             | Trigger                                                                                | Action    |
+| :-------------------------------- | :------------------------------------------------------------------------------------- | :-------- |
+| `PAYMENT_HUB_REQUEST_SENT`        | Payment submitted to Payment Hub (successful or failed) during daily processing        | submitted |
+| `GRANT_PAYMENT_CREATED`           | New payment schedule received via the `create_payment` SQS message                     | created   |
+| `GRANT_PAYMENT_CANCELLED`         | Payment cancelled via the `cancel_payment` SQS message                                 | withdrawn |
+| `GRANT_PAYMENT_STALE_LOCK_FAILED` | Payment stuck in `locked` beyond the TTL, marked failed by the stale lock cleanup cron | updated   |
+| `GRANT_PAYMENTS_RESET_TO_PENDING` | Failed payment reset to `pending` by the resend-failed-payments startup job            | updated   |
 
 ## API endpoints
 
