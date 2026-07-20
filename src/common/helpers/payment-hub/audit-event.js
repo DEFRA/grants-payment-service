@@ -161,8 +161,13 @@ export const auditEvent = async (
         )
       })
     )
-    logger.info('Audit event successfully published')
+    logger.info(
+      `Audit event successfully published: ${event}, context: ${JSON.stringify(context)}`
+    )
   } catch (error) {
-    logger.warn(error, 'Failed to publish audit event')
+    logger.warn(
+      error,
+      `Failed to publish audit event: ${event}, context: ${JSON.stringify(context)}`
+    )
   }
 }
