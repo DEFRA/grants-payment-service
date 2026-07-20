@@ -435,7 +435,7 @@ describe('auditEvent error handling', () => {
 
     expect(mockLogger.warn).toHaveBeenCalledWith(
       testError,
-      'Failed to publish audit event'
+      `Failed to publish audit event: ${AuditEvent.PAYMENT_HUB_REQUEST_SENT}, context: ${JSON.stringify({})}`
     )
   })
 
@@ -456,7 +456,7 @@ describe('auditEvent error handling', () => {
 
     expect(mockLogger.warn).toHaveBeenCalledWith(
       awsError,
-      'Failed to publish audit event'
+      `Failed to publish audit event: ${AuditEvent.PAYMENT_HUB_REQUEST_SENT}, context: ${JSON.stringify({})}`
     )
   })
 })
