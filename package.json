@@ -64,7 +64,7 @@
     "@commitlint/cli": "21.2.1",
     "@pact-foundation/pact": "17.0.1",
     "@vitest/coverage-v8": "4.1.10",
-    "autoprefixer": "10.5.2",
+    "autoprefixer": "10.5.3",
     "aws-sdk-client-mock": "4.1.0",
     "eslint": "9.39.4",
     "eslint-plugin-import-x": "4.16.2",
