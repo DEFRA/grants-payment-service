@@ -249,9 +249,10 @@ describe('transformDataToPaymentHubFormat', () => {
         payment
       )
       expect(spy).toHaveBeenCalledWith(grant, payment)
-      // Real transformer should strip quarter suffix and remove dueDate
+      // Real transformer should strip quarter suffix and remove dueDate/annualValue
       expect(out.invoiceNumber).toBe('INV-2026')
       expect(out.dueDate).toBeUndefined()
+      expect(out.annualValue).toBeUndefined()
     } finally {
       spy.mockRestore()
     }
