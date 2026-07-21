@@ -7,7 +7,7 @@ describe('config-mapper', () => {
       ['UPL1', '84021'],
       ['UPL2', '84023'],
       ['UPL3', '84025'],
-      ['PA3', '82555'],
+      ['PA3', '51840'],
       ['UNKNOWN', undefined]
     ])('given name %s it returns code %s', (name, expectedCode) => {
       expect(getActionCodeByName(name)).toBe(expectedCode)
