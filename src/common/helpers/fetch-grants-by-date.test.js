@@ -42,7 +42,7 @@ describe('fetchGrantPaymentsByDate', () => {
               invoiceLines: {
                 $not: {
                   $elemMatch: {
-                    schemeCode: { $in: ['PA3', '82555'] }
+                    schemeCode: { $in: ['PA3', '51840'] }
                   }
                 }
               }
@@ -81,7 +81,7 @@ describe('fetchGrantPaymentsByDate', () => {
                                     input: '$$p.invoiceLines',
                                     as: 'il',
                                     in: {
-                                      $in: ['$$il.schemeCode', ['PA3', '82555']]
+                                      $in: ['$$il.schemeCode', ['PA3', '51840']]
                                     }
                                   }
                                 }
@@ -132,7 +132,7 @@ describe('fetchGrantPaymentsByDate', () => {
               invoiceLines: {
                 $not: {
                   $elemMatch: {
-                    schemeCode: { $in: ['PA3', '82555'] }
+                    schemeCode: { $in: ['PA3', '51840'] }
                   }
                 }
               }
@@ -172,7 +172,7 @@ describe('fetchGrantPaymentsByDate', () => {
                                     input: '$$p.invoiceLines',
                                     as: 'il',
                                     in: {
-                                      $in: ['$$il.schemeCode', ['PA3', '82555']]
+                                      $in: ['$$il.schemeCode', ['PA3', '51840']]
                                     }
                                   }
                                 }
@@ -263,7 +263,7 @@ describe('streamGrantPaymentsByDate', () => {
               invoiceLines: {
                 $not: {
                   $elemMatch: {
-                    schemeCode: { $in: ['PA3', '82555'] }
+                    schemeCode: { $in: ['PA3', '51840'] }
                   }
                 }
               }
@@ -302,7 +302,7 @@ describe('streamGrantPaymentsByDate', () => {
                                     input: '$$p.invoiceLines',
                                     as: 'il',
                                     in: {
-                                      $in: ['$$il.schemeCode', ['PA3', '82555']]
+                                      $in: ['$$il.schemeCode', ['PA3', '51840']]
                                     }
                                   }
                                 }
@@ -345,7 +345,7 @@ describe('streamGrantPaymentsByDate', () => {
               invoiceLines: {
                 $not: {
                   $elemMatch: {
-                    schemeCode: { $in: ['PA3', '82555'] }
+                    schemeCode: { $in: ['PA3', '51840'] }
                   }
                 }
               }
@@ -385,7 +385,7 @@ describe('streamGrantPaymentsByDate', () => {
                                     input: '$$p.invoiceLines',
                                     as: 'il',
                                     in: {
-                                      $in: ['$$il.schemeCode', ['PA3', '82555']]
+                                      $in: ['$$il.schemeCode', ['PA3', '51840']]
                                     }
                                   }
                                 }
@@ -458,7 +458,7 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
               invoiceLines: {
                 $not: {
                   $elemMatch: {
-                    schemeCode: { $in: ['PA3', '82555'] }
+                    schemeCode: { $in: ['PA3', '51840'] }
                   }
                 }
               }
@@ -498,7 +498,7 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
                                     input: '$$p.invoiceLines',
                                     as: 'il',
                                     in: {
-                                      $in: ['$$il.schemeCode', ['PA3', '82555']]
+                                      $in: ['$$il.schemeCode', ['PA3', '51840']]
                                     }
                                   }
                                 }
@@ -540,7 +540,7 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
               invoiceLines: {
                 $not: {
                   $elemMatch: {
-                    schemeCode: { $in: ['PA3', '82555'] }
+                    schemeCode: { $in: ['PA3', '51840'] }
                   }
                 }
               }
@@ -580,7 +580,7 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
                                     input: '$$p.invoiceLines',
                                     as: 'il',
                                     in: {
-                                      $in: ['$$il.schemeCode', ['PA3', '82555']]
+                                      $in: ['$$il.schemeCode', ['PA3', '51840']]
                                     }
                                   }
                                 }
