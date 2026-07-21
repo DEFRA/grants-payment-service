@@ -56,7 +56,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
     remittanceDescription: 'Woodland Management Plan Payment',
     invoiceLines: [
       {
-        schemeCode: '82555',
+        schemeCode: '51840',
         accountCode: 'SOS710',
         fundCode: 'DRD10',
         agreementNumber: '123456789',

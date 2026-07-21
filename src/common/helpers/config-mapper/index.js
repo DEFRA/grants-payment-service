@@ -18,7 +18,7 @@ const actions = {
     },
     {
       name: 'PA3', // WMP
-      code: '82555'
+      code: '51840'
     }
   ]
 }
