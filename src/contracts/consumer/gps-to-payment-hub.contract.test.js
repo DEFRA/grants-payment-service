@@ -67,8 +67,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
       }
     ],
     correlationId: 'wmp-payment-correlation-id',
-    value: '-12.34',
-    annualValue: '12.34'
+    value: '-12.34'
   }
 
   const fpttPaymentRequestBody = {
