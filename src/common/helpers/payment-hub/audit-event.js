@@ -133,10 +133,18 @@ const buildAuditPayload = (
   }
 })
 
-const snsClient = new SNSClient({
-  region: config.get('aws.region'),
-  endpoint: config.get('sns.endpoint')
-})
+/** @type {import('@aws-sdk/client-sns').SNSClient|null} */
+let snsClient = null
+
+const getSnsClient = () => {
+  if (!snsClient) {
+    snsClient = new SNSClient({
+      region: config.get('aws.region'),
+      endpoint: config.get('sns.endpoint')
+    })
+  }
+  return snsClient
+}
 
 /**
  * Records a payment hub request audit event.
@@ -153,7 +161,7 @@ export const auditEvent = async (
 ) => {
   const logger = getLogger()
   try {
-    await snsClient.send(
+    await getSnsClient().send(
       new PublishCommand({
         TopicArn: config.get('sns.auditTopicArn'),
         Message: JSON.stringify(
