@@ -133,6 +133,11 @@ const buildAuditPayload = (
   }
 })
 
+const snsClient = new SNSClient({
+  region: config.get('aws.region'),
+  endpoint: config.get('sns.endpoint')
+})
+
 /**
  * Records a payment hub request audit event.
  * @param {AuditEvent} event
@@ -148,12 +153,7 @@ export const auditEvent = async (
 ) => {
   const logger = getLogger()
   try {
-    const client = new SNSClient({
-      region: config.get('aws.region'),
-      endpoint: config.get('sns.endpoint')
-    })
-
-    await client.send(
+    await snsClient.send(
       new PublishCommand({
         TopicArn: config.get('sns.auditTopicArn'),
         Message: JSON.stringify(
