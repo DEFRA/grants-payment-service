@@ -14,12 +14,12 @@ const mockConfigGet = vi.hoisted(() =>
   })
 )
 
-const mockNetworkInterfaces = vi.hoisted(() => vi.fn())
+const mockGetLocalIp = vi.hoisted(() => vi.fn())
 
 vi.mock('#~/config/index.js', () => ({ config: { get: mockConfigGet } }))
 
-vi.mock('node:os', () => ({
-  networkInterfaces: mockNetworkInterfaces
+vi.mock('#~/common/helpers/request-ip.js', () => ({
+  getLocalIp: mockGetLocalIp
 }))
 
 describe('AuditEvent', () => {
@@ -77,9 +77,7 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
   beforeEach(async () => {
     vi.resetModules()
     mockSend = vi.fn().mockResolvedValue({})
-    mockNetworkInterfaces.mockReturnValue({
-      eth0: [{ address: '192.168.1.100', family: 'IPv4', internal: false }]
-    })
+    mockGetLocalIp.mockReturnValue('192.168.1.100')
     vi.doMock('@aws-sdk/client-sns', () => ({
       SNSClient: vi.fn().mockImplementation(function () {
         this.send = mockSend
@@ -240,30 +238,25 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
     ).toBe(true)
   })
 
-  test('ip is populated from request.server.info.host when available', async () => {
+  test('ip is populated from getLocalIp(request)', async () => {
+    mockGetLocalIp.mockReturnValue('10.0.0.5')
     const mockRequest = { server: { info: { host: '10.0.0.5' } } }
+
     await auditEvent(
       AuditEvent.PAYMENT_HUB_REQUEST_SENT,
       {},
       'success',
       mockRequest
     )
+
+    expect(mockGetLocalIp).toHaveBeenCalledWith(mockRequest)
     expect(getPublishedPayload().ip).toBe('10.0.0.5')
   })
 
-  test('ip falls back to os.networkInterfaces() when no request is available', async () => {
+  test('ip is populated from getLocalIp(null) when no request is available', async () => {
     await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {})
-    expect(getPublishedPayload().ip).toBe('192.168.1.100')
-  })
 
-  test('ip falls back to os.networkInterfaces() when server host is 0.0.0.0', async () => {
-    const mockRequest = { server: { info: { host: '0.0.0.0' } } }
-    await auditEvent(
-      AuditEvent.PAYMENT_HUB_REQUEST_SENT,
-      {},
-      'success',
-      mockRequest
-    )
+    expect(mockGetLocalIp).toHaveBeenCalledWith(null)
     expect(getPublishedPayload().ip).toBe('192.168.1.100')
   })
 
@@ -328,9 +321,7 @@ describe.each([
   beforeEach(async () => {
     vi.resetModules()
     mockSend = vi.fn().mockResolvedValue({})
-    mockNetworkInterfaces.mockReturnValue({
-      eth0: [{ address: '192.168.1.100', family: 'IPv4', internal: false }]
-    })
+    mockGetLocalIp.mockReturnValue('192.168.1.100')
     vi.doMock('@aws-sdk/client-sns', () => ({
       SNSClient: vi.fn().mockImplementation(function () {
         this.send = mockSend
@@ -401,9 +392,7 @@ describe('auditEvent error handling', () => {
     vi.resetModules()
     mockSend = vi.fn()
     mockLogger = { warn: vi.fn() }
-    mockNetworkInterfaces.mockReturnValue({
-      eth0: [{ address: '192.168.1.100', family: 'IPv4', internal: false }]
-    })
+    mockGetLocalIp.mockReturnValue('192.168.1.100')
 
     const mockGetLogger = vi.fn(() => mockLogger)
 
