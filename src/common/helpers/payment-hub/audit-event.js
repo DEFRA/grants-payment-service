@@ -1,23 +1,7 @@
-import { networkInterfaces } from 'node:os'
-
 import { PublishCommand, SNSClient } from '@aws-sdk/client-sns'
 import { config } from '#~/config/index.js'
 import { getLogger } from '#~/common/helpers/logging/logger.js'
-
-const getLocalIp = (request) => {
-  const hapiHost = request?.server?.info?.host
-  if (hapiHost && hapiHost !== '0.0.0.0') {
-    return hapiHost
-  }
-  for (const iface of Object.values(networkInterfaces())) {
-    for (const addr of iface) {
-      if (!addr.internal && addr.family === 'IPv4') {
-        return addr.address
-      }
-    }
-  }
-  return ''
-}
+import { getLocalIp } from '#~/common/helpers/request-ip.js'
 
 /**
  * Audit event types.
@@ -133,6 +117,19 @@ const buildAuditPayload = (
   }
 })
 
+/** @type {import('@aws-sdk/client-sns').SNSClient|null} */
+let snsClient = null
+
+const getSnsClient = () => {
+  if (!snsClient) {
+    snsClient = new SNSClient({
+      region: config.get('aws.region'),
+      endpoint: config.get('sns.endpoint')
+    })
+  }
+  return snsClient
+}
+
 /**
  * Records a payment hub request audit event.
  * @param {AuditEvent} event
@@ -148,12 +145,7 @@ export const auditEvent = async (
 ) => {
   const logger = getLogger()
   try {
-    const client = new SNSClient({
-      region: config.get('aws.region'),
-      endpoint: config.get('sns.endpoint')
-    })
-
-    await client.send(
+    await getSnsClient().send(
       new PublishCommand({
         TopicArn: config.get('sns.auditTopicArn'),
         Message: JSON.stringify(
