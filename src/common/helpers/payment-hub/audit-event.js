@@ -1,23 +1,7 @@
-import { networkInterfaces } from 'node:os'
-
 import { PublishCommand, SNSClient } from '@aws-sdk/client-sns'
 import { config } from '#~/config/index.js'
 import { getLogger } from '#~/common/helpers/logging/logger.js'
-
-const getLocalIp = (request) => {
-  const hapiHost = request?.server?.info?.host
-  if (hapiHost && hapiHost !== '0.0.0.0') {
-    return hapiHost
-  }
-  for (const iface of Object.values(networkInterfaces())) {
-    for (const addr of iface) {
-      if (!addr.internal && addr.family === 'IPv4') {
-        return addr.address
-      }
-    }
-  }
-  return ''
-}
+import { getLocalIp } from '#~/common/helpers/request-ip.js'
 
 /**
  * Audit event types.
