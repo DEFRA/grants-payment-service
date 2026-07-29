@@ -128,7 +128,7 @@ const postTestProcessPaymentsController = {
 const postTestProcessPaymentsBySbiController = {
   handler: async (request, h) => {
     try {
-      const { sbi } = request.params
+      const sbi = request.params.sbi
 
       const correlationIds = await fetchCorrelationIdsBySbi(sbi, request.logger)
 
