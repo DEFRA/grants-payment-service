@@ -1,8 +1,8 @@
-import { SQSClient } from '@aws-sdk/client-sqs'
-import Boom from '@hapi/boom'
-import { Consumer } from 'sqs-consumer'
+import { SQSClient } from '@aws-sdk/client-sqs';
+import Boom from '@hapi/boom';
+import { Consumer } from 'sqs-consumer';
 
-import { config } from '#~/config/index.js'
+import { config } from '#~/config/index.js';
 
 /**
  * Parse and process a single SQS message.
@@ -15,37 +15,37 @@ const processMessage = async (handler, message, logger) => {
   if (!message?.Body) {
     throw Boom.badData(
       `SQS message missing Body for message ${message.MessageId}`
-    )
+    );
   }
 
   try {
-    const messageBody = JSON.parse(message.Body)
+    const messageBody = JSON.parse(message.Body);
 
     // Handle both SNS-wrapped messages and raw messages (AWS production)
-    let payload = messageBody
+    let payload = messageBody;
     if (messageBody.Type === 'Notification' && messageBody.Message) {
-      payload = JSON.parse(messageBody.Message)
+      payload = JSON.parse(messageBody.Message);
     }
 
-    const messageId = message.MessageId ?? 'unknown-message-id'
+    const messageId = message.MessageId ?? 'unknown-message-id';
 
     logger.info(
       { messageId, eventType: payload.type, sbi: payload?.data?.sbi },
       `Received message ${messageId}: ${payload.type} event with payload ${JSON.stringify(payload, null, 2)}`
-    )
+    );
 
-    await handler(messageId, payload, logger)
+    await handler(messageId, payload, logger);
   } catch (error) {
     if (error?.name === 'SyntaxError') {
       throw Boom.badData(
         `Invalid message format: ${message.Body} for message ${message.MessageId}`,
         error
-      )
+      );
     }
 
-    throw Boom.boomify(error)
+    throw Boom.boomify(error);
   }
-}
+};
 
 /**
  * Hapi plugin factory to start an SQS consumer.
@@ -66,12 +66,12 @@ export const createSqsConsumerPlugin = ({ tag, queueUrl, handler }) => ({
     register: async (server) => {
       server.logger.info(
         `Setting up SQS consumer (${tag}) for queueUrl: ${queueUrl}`
-      )
+      );
 
       const sqsClient = new SQSClient({
         region: config.get('aws.region'),
         endpoint: config.get('sqs.endpoint')
-      })
+      });
 
       const consumer = Consumer.create({
         queueUrl,
@@ -85,41 +85,41 @@ export const createSqsConsumerPlugin = ({ tag, queueUrl, handler }) => ({
         handleMessage: async (message) => {
           server.logger.info(
             `SQS consumer (${tag}) handling message (MessageId: ${message.MessageId})`
-          )
+          );
 
-          await processMessage(handler, message, server.logger)
+          await processMessage(handler, message, server.logger);
 
           server.logger.info(
             `SQS consumer (${tag}) message processed successfully (MessageId: ${message.MessageId}) - deleting message from queue`
-          )
+          );
 
-          return message
+          return message;
         }
-      })
+      });
 
       consumer.on('started', () => {
-        server.logger.info(`SQS consumer (${tag}) started`)
-      })
+        server.logger.info(`SQS consumer (${tag}) started`);
+      });
 
       consumer.on('error', (err) => {
-        server.logger.error(err, `SQS consumer (${tag}) error: ${err.message}`)
-      })
+        server.logger.error(err, `SQS consumer (${tag}) error: ${err.message}`);
+      });
 
       consumer.on('processing_error', (err) => {
         server.logger.error(
           err,
           `SQS consumer (${tag}) processing error: ${err.message} - message will be returned to queue for retry`
-        )
-      })
+        );
+      });
 
-      consumer.start()
+      consumer.start();
 
       server.events.on('stop', async () => {
-        server.logger.info(`Stopping SQS consumer (${tag})`)
-        consumer.stop()
-        server.logger.info(`Closing SQS client (${tag})`)
-        sqsClient.destroy()
-      })
+        server.logger.info(`Stopping SQS consumer (${tag})`);
+        consumer.stop();
+        server.logger.info(`Closing SQS client (${tag})`);
+        sqsClient.destroy();
+      });
     }
   }
-})
+});

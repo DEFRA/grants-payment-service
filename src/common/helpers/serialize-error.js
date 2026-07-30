@@ -6,19 +6,19 @@
  */
 export const serializeError = (error) => {
   if (!(error instanceof Error)) {
-    return error
+    return error;
   }
 
   const serializable = {
     name: error.name,
     message: error.message,
     stack: error.stack
-  }
+  };
 
   // Copy any custom enumerable properties
   Object.getOwnPropertyNames(error).forEach((key) => {
-    serializable[key] = error[key]
-  })
+    serializable[key] = error[key];
+  });
 
-  return serializable
-}
+  return serializable;
+};

@@ -1,20 +1,20 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('#~/api/common/models/grant_payments.js', () => ({
   default: {
     create: vi.fn(),
     findOne: vi.fn()
   }
-}))
+}));
 
-import { createGrantPayment } from './create-grant-payment.js'
-import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
+import { createGrantPayment } from './create-grant-payment.js';
+import GrantPaymentsModel from '#~/api/common/models/grant_payments.js';
 
 describe('createGrantPayment', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    GrantPaymentsModel.findOne.mockResolvedValue(null)
-  })
+    vi.clearAllMocks();
+    GrantPaymentsModel.findOne.mockResolvedValue(null);
+  });
 
   it('creates a grant payment with the provided payload', async () => {
     const payload = {
@@ -22,12 +22,12 @@ describe('createGrantPayment', () => {
       frn: '987654321',
       claimId: 'R00000001',
       grants: []
-    }
-    const createdDoc = { _id: 'abc123', ...payload }
-    GrantPaymentsModel.findOne.mockResolvedValue(null)
-    GrantPaymentsModel.create.mockResolvedValue(createdDoc)
+    };
+    const createdDoc = { _id: 'abc123', ...payload };
+    GrantPaymentsModel.findOne.mockResolvedValue(null);
+    GrantPaymentsModel.create.mockResolvedValue(createdDoc);
 
-    const result = await createGrantPayment(payload)
+    const result = await createGrantPayment(payload);
 
     expect(GrantPaymentsModel.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -35,7 +35,7 @@ describe('createGrantPayment', () => {
         frn: '987654321',
         claimId: 'R00000001'
       })
-    )
-    expect(result).toBe(createdDoc)
-  })
-})
+    );
+    expect(result).toBe(createdDoc);
+  });
+});

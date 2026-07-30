@@ -1,22 +1,22 @@
-import { afterAll } from 'vitest'
-import mongoose from 'mongoose'
-import GrantPaymentsModel from './grant_payments.js'
+import { afterAll } from 'vitest';
+import mongoose from 'mongoose';
+import GrantPaymentsModel from './grant_payments.js';
 
 describe('grant_payments schema', () => {
   afterAll(() => {
-    delete mongoose.connection.models.grant_payments
-  })
+    delete mongoose.connection.models.grant_payments;
+  });
 
   test('should fail validation when required fields are missing', () => {
-    const doc = new GrantPaymentsModel({})
-    const err = doc.validateSync()
+    const doc = new GrantPaymentsModel({});
+    const err = doc.validateSync();
 
-    expect(err).toBeTruthy()
-    expect(err.errors).toBeTruthy()
-    expect(err.errors.sbi).toBeTruthy()
-    expect(err.errors.frn).toBeTruthy()
-    expect(err.errors.claimId).toBeTruthy()
-  })
+    expect(err).toBeTruthy();
+    expect(err.errors).toBeTruthy();
+    expect(err.errors.sbi).toBeTruthy();
+    expect(err.errors.frn).toBeTruthy();
+    expect(err.errors.claimId).toBeTruthy();
+  });
 
   test('should pass validation with required fields present', () => {
     const valid = {
@@ -57,11 +57,11 @@ describe('grant_payments schema', () => {
           ]
         }
       ]
-    }
+    };
 
-    const doc = new GrantPaymentsModel(valid)
-    expect(doc.validateSync()).toBeUndefined()
-  })
+    const doc = new GrantPaymentsModel(valid);
+    expect(doc.validateSync()).toBeUndefined();
+  });
 
   test('should pass validation with failed status', () => {
     const valid = {
@@ -102,12 +102,12 @@ describe('grant_payments schema', () => {
           ]
         }
       ]
-    }
+    };
 
-    const doc = new GrantPaymentsModel(valid)
-    expect(doc.validateSync()).toBeUndefined()
-  })
-})
+    const doc = new GrantPaymentsModel(valid);
+    expect(doc.validateSync()).toBeUndefined();
+  });
+});
 
 test('should fail validation when grant or payment correlationId is missing or empty', () => {
   const base = {
@@ -146,12 +146,12 @@ test('should fail validation when grant or payment correlationId is missing or e
         ]
       }
     ]
-  }
+  };
 
-  const doc = new GrantPaymentsModel(base)
-  const err = doc.validateSync()
+  const doc = new GrantPaymentsModel(base);
+  const err = doc.validateSync();
 
-  expect(err).toBeTruthy()
-  expect(err.errors['grants.0.correlationId']).toBeTruthy()
-  expect(err.errors['grants.0.payments.0.correlationId']).toBeTruthy()
-})
+  expect(err).toBeTruthy();
+  expect(err.errors['grants.0.correlationId']).toBeTruthy();
+  expect(err.errors['grants.0.payments.0.correlationId']).toBeTruthy();
+});
