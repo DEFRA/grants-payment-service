@@ -1,118 +1,128 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getTestDailyPaymentsController } from './get-test-daily-payments.controller.js'
-import { statusCodes } from '#~/common/constants/status-codes.js'
-import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
-import { getTomorrowsDate } from '#~/common/helpers/date.js'
-import { serializeError } from '#~/common/helpers/serialize-error.js'
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { getTestDailyPaymentsController } from './get-test-daily-payments.controller.js';
+import { statusCodes } from '#~/common/constants/status-codes.js';
+import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js';
+import { getTomorrowsDate } from '#~/common/helpers/date.js';
+import { serializeError } from '#~/common/helpers/serialize-error.js';
 
 vi.mock('#~/common/helpers/fetch-grants-by-date.js', () => ({
   fetchGrantPaymentsByDate: vi.fn()
-}))
+}));
 
 describe('getTestDailyPaymentsController', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-  })
+    vi.clearAllMocks();
+  });
 
   const makeH = () => {
-    const res = { statusCode: 200, source: undefined }
+    const res = { statusCode: 200, source: undefined };
     return {
       response: (payload) => ({
         code: (status) => {
-          res.statusCode = status
-          res.source = payload
-          return res
+          res.statusCode = status;
+          res.source = payload;
+          return res;
         }
       })
-    }
-  }
+    };
+  };
 
   it('returns docs for provided date', async () => {
-    const fakeDate = '2026-02-20'
-    const fakeDocs = [{ _id: '1' }]
-    const pagination = { page: 1, total: 1 }
+    const fakeDate = '2026-02-20';
+    const fakeDocs = [{ _id: '1' }];
+    const pagination = { page: 1, total: 1 };
     fetchGrantPaymentsByDate.mockResolvedValue({
       docs: fakeDocs,
       totalDocs: 1,
       pagination
-    })
+    });
 
-    const h = makeH()
+    const h = makeH();
     const result = await getTestDailyPaymentsController.handler(
       { params: { date: fakeDate }, logger: { error: vi.fn() } },
       h
-    )
+    );
 
-    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(fakeDate, null, 10, 1)
-    expect(result.statusCode).toBe(statusCodes.ok)
+    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(
+      fakeDate,
+      null,
+      10,
+      1
+    );
+    expect(result.statusCode).toBe(statusCodes.ok);
     expect(result.source).toEqual({
       date: fakeDate,
       docs: fakeDocs,
       pagination
-    })
-  })
+    });
+  });
 
   it('defaults to tomorrow when no date supplied', async () => {
-    const tomorrow = getTomorrowsDate()
-    const fakeDocs = []
-    const pagination = { page: 1, total: 1 }
+    const tomorrow = getTomorrowsDate();
+    const fakeDocs = [];
+    const pagination = { page: 1, total: 1 };
     fetchGrantPaymentsByDate.mockResolvedValue({
       docs: fakeDocs,
       totalDocs: 0,
       pagination
-    })
+    });
 
-    const h = makeH()
+    const h = makeH();
     const result = await getTestDailyPaymentsController.handler(
       { params: {}, logger: { error: vi.fn() } },
       h
-    )
+    );
 
-    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(tomorrow, null, 10, 1)
+    expect(fetchGrantPaymentsByDate).toHaveBeenCalledWith(
+      tomorrow,
+      null,
+      10,
+      1
+    );
     expect(result.source).toEqual({
       date: tomorrow,
       docs: fakeDocs,
       pagination
-    })
-  })
+    });
+  });
 
   it('handles non-boom errors and returns 500', async () => {
-    const error = new Error('oops')
-    fetchGrantPaymentsByDate.mockRejectedValue(error)
-    const h = makeH()
-    const logger = { error: vi.fn() }
+    const error = new Error('oops');
+    fetchGrantPaymentsByDate.mockRejectedValue(error);
+    const h = makeH();
+    const logger = { error: vi.fn() };
 
     const result = await getTestDailyPaymentsController.handler(
       { params: { date: '2026-02-20' }, logger },
       h
-    )
+    );
 
     expect(logger.error).toHaveBeenCalledWith(
       error,
       `Error getting test daily payments`
-    )
-    expect(result.statusCode).toBe(statusCodes.internalServerError)
+    );
+    expect(result.statusCode).toBe(statusCodes.internalServerError);
     expect(result.source).toMatchObject({
       message: 'Failed to get test daily payments',
       error: serializeError(error)
-    })
-  })
+    });
+  });
 
   it('returns boom errors unchanged', async () => {
     const boomError = {
       isBoom: true,
       output: { statusCode: 400 },
       message: 'bad'
-    }
-    fetchGrantPaymentsByDate.mockRejectedValue(boomError)
-    const h = makeH()
-    const logger = { error: vi.fn() }
+    };
+    fetchGrantPaymentsByDate.mockRejectedValue(boomError);
+    const h = makeH();
+    const logger = { error: vi.fn() };
 
     const result = await getTestDailyPaymentsController.handler(
       { params: { date: '2026-02-20' }, logger },
       h
-    )
+    );
 
-    expect(result).toBe(boomError)
-  })
-})
+    expect(result).toBe(boomError);
+  });
+});

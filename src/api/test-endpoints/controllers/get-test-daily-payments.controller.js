@@ -1,8 +1,8 @@
-import { serializeError } from '#~/common/helpers/serialize-error.js'
-import { statusCodes } from '#~/common/constants/status-codes.js'
-import { getTomorrowsDate } from '#~/common/helpers/date.js'
-import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
-import { config } from '#~/config/index.js'
+import { serializeError } from '#~/common/helpers/serialize-error.js';
+import { statusCodes } from '#~/common/constants/status-codes.js';
+import { getTomorrowsDate } from '#~/common/helpers/date.js';
+import { fetchGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js';
+import { config } from '#~/config/index.js';
 
 /**
  * Controller to get test daily payments for a specific date, or the current date if no date is provided.
@@ -11,33 +11,33 @@ import { config } from '#~/config/index.js'
 const getTestDailyPaymentsController = {
   handler: async (request, h) => {
     try {
-      const { date = getTomorrowsDate() } = request.params
-      const page = Number.parseInt(request.query?.page) || 1
+      const { date = getTomorrowsDate() } = request.params;
+      const page = Number.parseInt(request.query?.page) || 1;
       const { docs, pagination } = await fetchGrantPaymentsByDate(
         date,
         null,
         config.get('paginationLimit'),
         page
-      )
+      );
 
-      return h.response({ date, docs, pagination }).code(statusCodes.ok)
+      return h.response({ date, docs, pagination }).code(statusCodes.ok);
     } catch (error) {
       if (error.isBoom) {
-        return error
+        return error;
       }
 
-      request.logger.error(error, `Error getting test daily payments`)
+      request.logger.error(error, `Error getting test daily payments`);
       return h
         .response({
           message: 'Failed to get test daily payments',
           error: serializeError(error)
         })
-        .code(statusCodes.internalServerError)
+        .code(statusCodes.internalServerError);
     }
   }
-}
+};
 
-export { getTestDailyPaymentsController }
+export { getTestDailyPaymentsController };
 
 /**
  * @import { ServerRoute } from '@hapi/hapi'

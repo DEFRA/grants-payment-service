@@ -1,7 +1,7 @@
-import mongoose from 'mongoose'
-import models from '#~/api/common/models/index.js'
-import sampleData from '#~/api/common/helpers/sample-data/index.js'
-import { handleCreatePaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-create-payment.js'
+import mongoose from 'mongoose';
+import models from '#~/api/common/models/index.js';
+import sampleData from '#~/api/common/helpers/sample-data/index.js';
+import { handleCreatePaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-create-payment.js';
 
 async function publishSampleGrantEvents(tableData, logger) {
   for (const row of tableData) {
@@ -10,15 +10,15 @@ async function publishSampleGrantEvents(tableData, logger) {
       type: 'cloud.defra.dev.farming-grants-agreements-api.payment.create',
       time: new Date().toISOString(),
       data: row
-    }
+    };
 
     await handleCreatePaymentEvent(
       event.data.notificationMessageId,
       event,
       logger
-    )
+    );
   }
-  logger.info(`Successfully published ${tableData.length} 'grants' documents`)
+  logger.info(`Successfully published ${tableData.length} 'grants' documents`);
 }
 
 export async function seedDatabase(
@@ -26,32 +26,32 @@ export async function seedDatabase(
   tableData = sampleData.grants
 ) {
   if (process.env.NODE_ENV !== 'test') {
-    throw new Error('Database seeding is only allowed during contract tests')
+    throw new Error('Database seeding is only allowed during contract tests');
   }
 
   while (mongoose.connection.readyState !== mongoose.STATES.connected) {
-    logger.info('Waiting for mongoose to connect...')
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    logger.info('Waiting for mongoose to connect...');
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
-  logger.info('Seeding database')
+  logger.info('Seeding database');
 
   for (const [name, model] of Object.entries(models)) {
     try {
-      await model.collection.drop()
-      await model.syncIndexes()
-      logger.info(`Dropped and re-synced collection '${name}'`)
+      await model.collection.drop();
+      await model.syncIndexes();
+      logger.info(`Dropped and re-synced collection '${name}'`);
     } catch (e) {
       // Ignore namespace not found errors (collection doesn't exist yet)
       if (e.code !== 26) {
-        logger.warn(`Error dropping collection '${name}': ${e.message}`)
+        logger.warn(`Error dropping collection '${name}': ${e.message}`);
       }
     }
   }
 
   try {
-    await publishSampleGrantEvents(tableData, logger)
+    await publishSampleGrantEvents(tableData, logger);
   } catch (e) {
-    logger.error(e)
+    logger.error(e);
   }
 }

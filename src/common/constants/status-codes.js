@@ -14,4 +14,4 @@ export const statusCodes = {
   notFound: 404,
   internalServerError: 500,
   serviceUnavailable: 503
-}
+};

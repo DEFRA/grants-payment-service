@@ -1,23 +1,23 @@
-import GrantPayments from '#~/api/common/models/grant_payments.js'
-import { getTodaysDate } from './date.js'
+import GrantPayments from '#~/api/common/models/grant_payments.js';
+import { getTodaysDate } from './date.js';
 
-const GRANTS_PAYMENTS = '$grants.payments'
+const GRANTS_PAYMENTS = '$grants.payments';
 
 export const getStats = async () => {
-  const accounts = await GrantPayments.countDocuments()
+  const accounts = await GrantPayments.countDocuments();
 
   const grantStats = await GrantPayments.aggregate([
     { $unwind: '$grants' },
     { $group: { _id: null, count: { $sum: 1 } } }
-  ])
+  ]);
 
-  const grants = grantStats.length > 0 ? grantStats[0].count : 0
+  const grants = grantStats.length > 0 ? grantStats[0].count : 0;
 
   const paymentStats = await GrantPayments.aggregate([
     { $unwind: '$grants' },
     { $unwind: GRANTS_PAYMENTS },
     { $group: { _id: '$grants.payments.status', count: { $sum: 1 } } }
-  ])
+  ]);
 
   const pendingOverdueStats = await GrantPayments.aggregate([
     { $unwind: '$grants' },
@@ -29,7 +29,7 @@ export const getStats = async () => {
       }
     },
     { $count: 'count' }
-  ])
+  ]);
 
   const pendingByDueDateStats = await GrantPayments.aggregate([
     { $unwind: '$grants' },
@@ -45,7 +45,7 @@ export const getStats = async () => {
       }
     },
     { $sort: { '_id.dueDate': 1 } }
-  ])
+  ]);
 
   const pendingPaymentsByDueDate = pendingByDueDateStats.reduce(
     (result, stat) => ({
@@ -56,21 +56,21 @@ export const getStats = async () => {
       }
     }),
     {}
-  )
+  );
 
-  let totalPayments = 0
+  let totalPayments = 0;
   const statusCounts = {
     pending: 0,
     submitted: 0,
     cancelled: 0,
     locked: 0,
     failed: 0
-  }
+  };
 
   paymentStats.forEach((stat) => {
-    statusCounts[stat._id] = stat.count
-    totalPayments += stat.count
-  })
+    statusCounts[stat._id] = stat.count;
+    totalPayments += stat.count;
+  });
 
   return {
     accounts,
@@ -85,5 +85,5 @@ export const getStats = async () => {
         byDueDate: pendingPaymentsByDueDate
       }
     }
-  }
-}
+  };
+};

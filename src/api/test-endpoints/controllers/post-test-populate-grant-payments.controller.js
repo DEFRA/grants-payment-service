@@ -1,27 +1,27 @@
-import crypto from 'node:crypto'
-import { config } from '#~/config/index.js'
-import Joi from 'joi'
-import { statusCodes } from '#~/common/constants/status-codes.js'
-import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
-import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
+import crypto from 'node:crypto';
+import { config } from '#~/config/index.js';
+import Joi from 'joi';
+import { statusCodes } from '#~/common/constants/status-codes.js';
+import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js';
+import GrantPaymentsModel from '#~/api/common/models/grant_payments.js';
 
-const SBI_MIN = 100000000
-const SBI_MOD = 900000000
-const FRN_MIN = 1000000000
-const FRN_MOD = 9000000000
-const PAYMENT_REQ_START = 1000000
-const AMOUNT_MIN = 10000
-const AMOUNT_MAX = 1000000
-const MAX_ERRORS_IN_RESPONSE = 100
-const AGREEMENT_NUMBER_PADDING = 9
-const INVOICE_NUMBER_PADDING = 3
+const SBI_MIN = 100000000;
+const SBI_MOD = 900000000;
+const FRN_MIN = 1000000000;
+const FRN_MOD = 9000000000;
+const PAYMENT_REQ_START = 1000000;
+const AMOUNT_MIN = 10000;
+const AMOUNT_MAX = 1000000;
+const MAX_ERRORS_IN_RESPONSE = 100;
+const AGREEMENT_NUMBER_PADDING = 9;
+const INVOICE_NUMBER_PADDING = 3;
 
 /**
  * Generate a random amount in pence
  */
 const getRandomAmount = (min, max) => {
-  return crypto.randomInt(min, max + 1)
-}
+  return crypto.randomInt(min, max + 1);
+};
 
 /**
  * Calculate payment due dates based on a starting date
@@ -32,25 +32,25 @@ const getRandomAmount = (min, max) => {
  */
 const calculatePaymentDueDates = (startDate, count = 4, intervalMonths = 3) =>
   Array.from({ length: count }, (_, i) => {
-    const date = new Date(startDate)
-    date.setMonth(date.getMonth() + i * intervalMonths)
-    return date.toISOString().split('T')[0]
-  })
+    const date = new Date(startDate);
+    date.setMonth(date.getMonth() + i * intervalMonths);
+    return date.toISOString().split('T')[0];
+  });
 
 /**
  * Create a random grant payment payload
  */
 const createGrantPaymentPayload = (index, dueDate) => {
-  const timestamp = Date.now()
-  const sbi = SBI_MIN + (index % SBI_MOD)
-  const frn = FRN_MIN + (index % FRN_MOD)
-  const claimId = `R${String(index + 1).padStart(8, '0')}`
-  const scheme = 'SFI'
+  const timestamp = Date.now();
+  const sbi = SBI_MIN + (index % SBI_MOD);
+  const frn = FRN_MIN + (index % FRN_MOD);
+  const claimId = `R${String(index + 1).padStart(8, '0')}`;
+  const scheme = 'SFI';
 
-  const totalAmount = getRandomAmount(AMOUNT_MIN, AMOUNT_MAX)
-  const quarterAmount = Math.floor(totalAmount / 4)
+  const totalAmount = getRandomAmount(AMOUNT_MIN, AMOUNT_MAX);
+  const quarterAmount = Math.floor(totalAmount / 4);
 
-  const paymentDueDates = calculatePaymentDueDates(dueDate)
+  const paymentDueDates = calculatePaymentDueDates(dueDate);
 
   const grant = {
     sourceSystem: 'FPTT',
@@ -81,7 +81,7 @@ const createGrantPaymentPayload = (index, dueDate) => {
         }
       ]
     }))
-  }
+  };
 
   return {
     sbi: String(sbi),
@@ -89,18 +89,18 @@ const createGrantPaymentPayload = (index, dueDate) => {
     claimId,
     scheme, // Used by prepareWithPaymentHubConfig
     grants: [grant]
-  }
-}
+  };
+};
 
 /**
  * Process a batch of grant payments
  */
 const processBatch = async (startIndex, batchSize, dueDate, logger) => {
-  const promises = []
-  const errors = []
+  const promises = [];
+  const errors = [];
 
   for (let i = startIndex; i < startIndex + batchSize; i++) {
-    const payload = createGrantPaymentPayload(i, dueDate)
+    const payload = createGrantPaymentPayload(i, dueDate);
 
     promises.push(
       createGrantPayment(payload).catch((err) => {
@@ -108,21 +108,21 @@ const processBatch = async (startIndex, batchSize, dueDate, logger) => {
           index: i,
           claimId: payload.claimId,
           error: err.message
-        })
+        });
         logger.error(
           { err, claimId: payload.claimId },
           `Error creating grant payment for claim ${payload.claimId}`
-        )
-        return null
+        );
+        return null;
       })
-    )
+    );
   }
 
-  const results = await Promise.all(promises)
-  const successCount = results.filter((r) => r !== null).length
+  const results = await Promise.all(promises);
+  const successCount = results.filter((r) => r !== null).length;
 
-  return { successCount, errorCount: errors.length, errors }
-}
+  return { successCount, errorCount: errors.length, errors };
+};
 
 async function populateDataInBatches(
   targetCount,
@@ -130,40 +130,40 @@ async function populateDataInBatches(
   logger,
   dueDate
 ) {
-  let totalCreated = 0
-  let totalErrors = 0
-  const allErrors = []
+  let totalCreated = 0;
+  let totalErrors = 0;
+  const allErrors = [];
 
-  const totalBatches = Math.ceil(targetCount / calculatedBatchSize)
+  const totalBatches = Math.ceil(targetCount / calculatedBatchSize);
 
   for (let batchNum = 0; batchNum < totalBatches; batchNum++) {
-    const startIndex = batchNum * calculatedBatchSize
+    const startIndex = batchNum * calculatedBatchSize;
     const currentBatchSize = Math.min(
       calculatedBatchSize,
       targetCount - startIndex
-    )
+    );
 
     logger.info(
       `Processing batch ${batchNum + 1}/${totalBatches} (startIndex: ${startIndex}, batchSize: ${currentBatchSize})`
-    )
+    );
 
     const { successCount, errorCount, errors } = await processBatch(
       startIndex,
       currentBatchSize,
       dueDate,
       logger
-    )
-    totalCreated += successCount
-    totalErrors += errorCount
+    );
+    totalCreated += successCount;
+    totalErrors += errorCount;
     if (errors.length > 0) {
-      allErrors.push(...errors)
+      allErrors.push(...errors);
     }
   }
 
   logger.info(
     `Population complete: ${totalCreated} created, ${totalErrors} errors`
-  )
-  return { totalCreated, totalErrors, allErrors }
+  );
+  return { totalCreated, totalErrors, allErrors };
 }
 
 /**
@@ -186,34 +186,34 @@ const postTestPopulateGrantPaymentController = {
     }
   },
   handler: async (req, res) => {
-    let { targetCount, dueDate } = req.payload
+    let { targetCount, dueDate } = req.payload;
 
     // Ensure dueDate is only the date part YYYY-MM-DD
     if (dueDate?.includes('T')) {
-      dueDate = dueDate.split('T')[0]
+      dueDate = dueDate.split('T')[0];
     }
 
     // Calculate batchSize based on targetCount
     // For small targetCount (< 100), use smaller batch size (e.g., 10)
     // For larger targetCount, use larger batch size (up to 100)
-    const { minBatchSize, maxBatchSize } = config.get('paymentProcessor')
+    const { minBatchSize, maxBatchSize } = config.get('paymentProcessor');
     const calculatedBatchSize = Math.max(
       minBatchSize,
       Math.min(maxBatchSize, Math.ceil(targetCount / 10))
-    )
+    );
 
     setImmediate(async () => {
       try {
-        const logger = req.logger
+        const logger = req.logger;
 
         logger.info(
           `Starting test database population: targetCount=${targetCount}, batchSize=${calculatedBatchSize}, dueDate=${dueDate}`
-        )
+        );
 
-        const existingCount = await GrantPaymentsModel.countDocuments()
+        const existingCount = await GrantPaymentsModel.countDocuments();
         logger.info(
           `Existing grant payments in database before creation: ${existingCount}`
-        )
+        );
 
         const { totalCreated, totalErrors, allErrors } =
           await populateDataInBatches(
@@ -221,23 +221,23 @@ const postTestPopulateGrantPaymentController = {
             calculatedBatchSize,
             logger,
             dueDate
-          )
+          );
 
-        const finalCount = await GrantPaymentsModel.countDocuments()
+        const finalCount = await GrantPaymentsModel.countDocuments();
         logger.info(
           `Total grant payments in database after creation: ${finalCount}`
-        )
+        );
 
         logger.info({
           message: 'Population complete',
           totalCreated,
           totalErrors,
           errors: allErrors.slice(0, MAX_ERRORS_IN_RESPONSE) // Limit errors returned in response
-        })
+        });
       } catch (error) {
-        req.logger.error(error, `Error during test population`)
+        req.logger.error(error, `Error during test population`);
       }
-    })
+    });
 
     return res
       .response({
@@ -246,11 +246,11 @@ const postTestPopulateGrantPaymentController = {
         batchSize: calculatedBatchSize,
         dueDate
       })
-      .code(statusCodes.accepted)
+      .code(statusCodes.accepted);
   }
-}
+};
 
-export { postTestPopulateGrantPaymentController }
+export { postTestPopulateGrantPaymentController };
 
 /**
  * @import { ServerRoute } from '@hapi/hapi'

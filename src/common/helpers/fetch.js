@@ -1,4 +1,4 @@
-import { config } from '#~/config/index.js'
+import { config } from '#~/config/index.js';
 
 /**
  * Make fetch requests with exponential back-off and timeout support
@@ -11,29 +11,29 @@ import { config } from '#~/config/index.js'
  * @returns {Promise<Response>} The fetch response
  */
 export const fetchWithRetry = async (url, options, logger) => {
-  const urlStr = url instanceof URL ? url.toString() : url
-  const maxAttempts = config.get('fetch.maxAttempts')
-  let attempt = 0
-  let lastError
+  const urlStr = url instanceof URL ? url.toString() : url;
+  const maxAttempts = config.get('fetch.maxAttempts');
+  let attempt = 0;
+  let lastError;
 
   while (attempt < maxAttempts) {
-    const controller = new AbortController()
+    const controller = new AbortController();
     const timeoutId = setTimeout(
       () =>
         controller.abort(new Error('Network timed out while fetching data')),
       config.get('fetch.timeout')
-    )
+    );
 
     try {
       const response = await fetch(urlStr, {
         ...options,
         signal: controller.signal
-      })
-      clearTimeout(timeoutId)
-      return response
+      });
+      clearTimeout(timeoutId);
+      return response;
     } catch (err) {
-      clearTimeout(timeoutId)
-      lastError = err
+      clearTimeout(timeoutId);
+      lastError = err;
       const isRetryable =
         [
           'TimeoutError',
@@ -44,7 +44,7 @@ export const fetchWithRetry = async (url, options, logger) => {
         ].includes(err?.name) ||
         ['ECONNRESET', 'ECONNREFUSED', 'ENOTFOUND'].includes(err?.code) ||
         err?.message?.includes('network') ||
-        err?.message?.includes('timeout')
+        err?.message?.includes('timeout');
 
       logger.error(
         {
@@ -74,19 +74,19 @@ export const fetchWithRetry = async (url, options, logger) => {
           },
           ...(config.get('featureFlags.testEndpoints') ? { options } : {})
         })}`
-      )
+      );
 
       if (!isRetryable || attempt === maxAttempts - 1) {
-        break
+        break;
       }
 
       // exponential backoff
-      const waitTime = 5000
-      const backoffMs = Math.min(1000 * 2 ** attempt, waitTime)
-      await new Promise((resolve) => setTimeout(resolve, backoffMs))
-      attempt += 1
+      const waitTime = 5000;
+      const backoffMs = Math.min(1000 * 2 ** attempt, waitTime);
+      await new Promise((resolve) => setTimeout(resolve, backoffMs));
+      attempt += 1;
     }
   }
 
-  throw lastError
-}
+  throw lastError;
+};

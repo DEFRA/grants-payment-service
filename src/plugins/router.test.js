@@ -1,34 +1,34 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { router } from './router.js'
-import { config } from '#~/config/index.js'
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { router } from './router.js';
+import { config } from '#~/config/index.js';
 
-vi.mock('#~/config/index.js')
+vi.mock('#~/config/index.js');
 // stub the imported routes so we can inspect them
 vi.mock('#~/api/health/index.js', () => ({
   health: { method: 'GET', path: '/health', handler: () => {} },
   stats: { method: 'GET', path: '/health/stats', handler: () => {} }
-}))
+}));
 vi.mock('#~/api/test-endpoints/index.js', () => ({
   testEndpoints: { plugin: { name: 'testEndpoints' } }
-}))
+}));
 
 describe('router plugin', () => {
-  let server
-  let healthRoute
-  let statsRoute
+  let server;
+  let healthRoute;
+  let statsRoute;
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    vi.clearAllMocks();
     healthRoute = {
       method: 'GET',
       path: '/health',
       handler: expect.any(Function)
-    }
+    };
     statsRoute = {
       method: 'GET',
       path: '/health/stats',
       handler: expect.any(Function)
-    }
+    };
 
     server = {
       route: vi.fn(),
@@ -36,7 +36,7 @@ describe('router plugin', () => {
       logger: {
         warn: vi.fn()
       }
-    }
+    };
 
     // default config.get behavior
     config.get = vi.fn((key) => {
@@ -45,35 +45,37 @@ describe('router plugin', () => {
         log: { isEnabled: false, redact: [], level: 'info', format: 'ecs' },
         serviceName: 'test',
         serviceVersion: '1'
-      }
-      return values[key]
-    })
-  })
+      };
+      return values[key];
+    });
+  });
 
   it('always registers health route', async () => {
-    await router.plugin.register(server)
-    expect(server.route).toHaveBeenCalledWith([healthRoute, statsRoute])
-  })
+    await router.plugin.register(server);
+    expect(server.route).toHaveBeenCalledWith([healthRoute, statsRoute]);
+  });
 
   it('does not register test endpoints when flag is false', async () => {
-    config.get.mockReturnValue(false)
-    await router.plugin.register(server)
-    expect(server.register).not.toHaveBeenCalled()
-    expect(server.logger.warn).not.toHaveBeenCalled()
-  })
+    config.get.mockReturnValue(false);
+    await router.plugin.register(server);
+    expect(server.register).not.toHaveBeenCalled();
+    expect(server.logger.warn).not.toHaveBeenCalled();
+  });
 
   it('warns and registers test endpoints when flag is true', async () => {
     // return true only for the specific key
-    config.get.mockImplementation((key) => key === 'featureFlags.testEndpoints')
+    config.get.mockImplementation(
+      (key) => key === 'featureFlags.testEndpoints'
+    );
 
-    const { router: subRouter } = await import('./router.js')
-    await subRouter.plugin.register(server)
+    const { router: subRouter } = await import('./router.js');
+    await subRouter.plugin.register(server);
 
     expect(server.logger.warn).toHaveBeenCalledWith(
       'Test endpoints are enabled. These should not be used in production.'
-    )
-    expect(server.register).toHaveBeenCalled()
-    const [[arg]] = server.register.mock.calls
-    expect(arg).toEqual([expect.any(Object)])
-  })
-})
+    );
+    expect(server.register).toHaveBeenCalled();
+    const [[arg]] = server.register.mock.calls;
+    expect(arg).toEqual([expect.any(Object)]);
+  });
+});

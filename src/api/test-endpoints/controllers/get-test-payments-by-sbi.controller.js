@@ -1,6 +1,6 @@
-import { fetchGrantPaymentsBySbi } from '#~/common/helpers/fetch-grant-payments-by-sbi.js'
-import { serializeError } from '#~/common/helpers/serialize-error.js'
-import { statusCodes } from '#~/common/constants/status-codes.js'
+import { fetchGrantPaymentsBySbi } from '#~/common/helpers/fetch-grant-payments-by-sbi.js';
+import { serializeError } from '#~/common/helpers/serialize-error.js';
+import { statusCodes } from '#~/common/constants/status-codes.js';
 
 const getTestPaymentsBySbiController = {
   options: {
@@ -15,27 +15,27 @@ const getTestPaymentsBySbiController = {
   },
   handler: async (req, res) => {
     try {
-      const { sbi, fundCode } = req.params
-      const page = Number.parseInt(req.query?.page) || 1
+      const { sbi, fundCode } = req.params;
+      const page = Number.parseInt(req.query?.page) || 1;
       const { docs, pagination } = await fetchGrantPaymentsBySbi(
         sbi,
         fundCode,
         page
-      )
+      );
 
       return res
         .response({ sbi, ...(fundCode && { fundCode }), docs, pagination })
-        .code(statusCodes.ok)
+        .code(statusCodes.ok);
     } catch (err) {
-      req.log(['error'], err)
+      req.log(['error'], err);
       return res
         .response({
           message: 'Internal Server Error',
           error: serializeError(err)
         })
-        .code(statusCodes.internalServerError)
+        .code(statusCodes.internalServerError);
     }
   }
-}
+};
 
-export { getTestPaymentsBySbiController }
+export { getTestPaymentsBySbiController };

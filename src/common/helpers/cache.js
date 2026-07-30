@@ -1,4 +1,4 @@
-import { config } from '#~/config/index.js'
+import { config } from '#~/config/index.js';
 
 /**
  *
@@ -15,5 +15,5 @@ export function initCache(server, segment, generateFunc, options = {}) {
     generateTimeout: 2000,
     generateFunc,
     ...options
-  })
+  });
 }

@@ -1,12 +1,12 @@
-import { ecsFormat } from '@elastic/ecs-pino-format'
-import { config } from '#~/config/index.js'
-import { getTraceId } from '@defra/hapi-tracing'
+import { ecsFormat } from '@elastic/ecs-pino-format';
+import { config } from '#~/config/index.js';
+import { getTraceId } from '@defra/hapi-tracing';
 
-const logConfig = config.get('log') || {}
-const serviceName = config.get('serviceName') || ''
-const serviceVersion = config.get('serviceVersion') || ''
+const logConfig = config.get('log') || {};
+const serviceName = config.get('serviceName') || '';
+const serviceVersion = config.get('serviceVersion') || '';
 const requestLoggerDebugEnabled =
-  config.get('featureFlags.requestLoggerDebug') === true
+  config.get('featureFlags.requestLoggerDebug') === true;
 
 const formatters = {
   ecs: {
@@ -16,7 +16,7 @@ const formatters = {
     })
   },
   'pino-pretty': { transport: { target: 'pino-pretty' } }
-}
+};
 
 export const loggerOptions = {
   enabled: logConfig.isEnabled ?? false,
@@ -32,11 +32,11 @@ export const loggerOptions = {
   nesting: true,
   logPayload: requestLoggerDebugEnabled,
   mixin() {
-    const mixinValues = {}
-    const traceId = getTraceId()
+    const mixinValues = {};
+    const traceId = getTraceId();
     if (traceId) {
-      mixinValues.trace = { id: traceId }
+      mixinValues.trace = { id: traceId };
     }
-    return mixinValues
+    return mixinValues;
   }
-}
+};

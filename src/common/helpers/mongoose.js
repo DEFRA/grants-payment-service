@@ -1,7 +1,7 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 
-import { config } from '#~/config/index.js'
-import { syncModelIndexes } from '#~/common/helpers/sync-model-indexes.js'
+import { config } from '#~/config/index.js';
+import { syncModelIndexes } from '#~/common/helpers/sync-model-indexes.js';
 
 /**
  * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<*> }
@@ -17,28 +17,28 @@ export const mongooseDb = {
      * @returns {void}
      */
     register: async function (server, options = {}) {
-      server.logger.info('Setting up Mongoose')
+      server.logger.info('Setting up Mongoose');
 
-      const mongoUrl = options.mongoUrl ?? config.get('mongo.uri')
-      const databaseName = options.databaseName ?? config.get('mongo.database')
+      const mongoUrl = options.mongoUrl ?? config.get('mongo.uri');
+      const databaseName = options.databaseName ?? config.get('mongo.database');
 
       await mongoose.connect(mongoUrl, {
         dbName: databaseName
-      })
+      });
 
-      server.logger.info('Mongoose connected to MongoDB')
+      server.logger.info('Mongoose connected to MongoDB');
 
-      server.decorate('server', 'mongooseDb', mongoose.connection)
+      server.decorate('server', 'mongooseDb', mongoose.connection);
 
-      await syncModelIndexes('mongoose')
+      await syncModelIndexes('mongoose');
 
       server.events.on('stop', async () => {
-        server.logger.info('Closing Mongoose client')
-        await mongoose.disconnect()
-      })
+        server.logger.info('Closing Mongoose client');
+        await mongoose.disconnect();
+      });
     }
   }
-}
+};
 
 /**
  * To be mixed in with Request|Server to provide the db decorator

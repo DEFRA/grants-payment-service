@@ -1,4 +1,4 @@
-const { NODE_ENV } = process.env
+const { NODE_ENV } = process.env;
 
 module.exports = {
   presets: [
@@ -14,4 +14,4 @@ module.exports = {
       plugins: ['babel-plugin-transform-import-meta']
     }
   }
-}
+};

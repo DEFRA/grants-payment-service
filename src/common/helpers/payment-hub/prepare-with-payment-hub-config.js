@@ -1,13 +1,13 @@
-import { getPaymentHubConfig } from '#~/common/helpers/config-mapper/index.js'
+import { getPaymentHubConfig } from '#~/common/helpers/config-mapper/index.js';
 
 export function prepareWithPaymentHubConfig(grantPayment) {
-  const schemeConfig = getPaymentHubConfig(grantPayment.scheme)
+  const schemeConfig = getPaymentHubConfig(grantPayment.scheme);
   if (!schemeConfig) {
-    return grantPayment
+    return grantPayment;
   }
 
   const { deliveryBody, accountCode, fundCode, ...remainingSchemeConfig } =
-    schemeConfig
+    schemeConfig;
 
   return {
     ...grantPayment,
@@ -26,5 +26,5 @@ export function prepareWithPaymentHubConfig(grantPayment) {
         }))
       }))
     }))
-  }
+  };
 }

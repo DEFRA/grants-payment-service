@@ -1,18 +1,18 @@
-import { vi } from 'vitest'
-import { sendPaymentHubRequest } from './index.js'
-import { config } from '#~/config/index.js'
-import { initCache } from '#~/common/helpers/cache.js'
+import { vi } from 'vitest';
+import { sendPaymentHubRequest } from './index.js';
+import { config } from '#~/config/index.js';
+import { initCache } from '#~/common/helpers/cache.js';
 
-vi.mock('#~/config/index.js')
-vi.mock('#~/common/helpers/cache.js')
+vi.mock('#~/config/index.js');
+vi.mock('#~/common/helpers/cache.js');
 vi.mock('@aws-sdk/client-sns', () => ({
   SNSClient: vi.fn().mockImplementation(function () {
-    this.send = vi.fn().mockResolvedValue({})
+    this.send = vi.fn().mockResolvedValue({});
   }),
   PublishCommand: vi.fn().mockImplementation(function (input) {
-    this.input = input
+    this.input = input;
   })
-}))
+}));
 vi.mock('crypto', () => ({
   __esModule: true,
   default: {
@@ -21,7 +21,7 @@ vi.mock('crypto', () => ({
       digest: vi.fn().mockReturnValue('mockedHash')
     }))
   }
-}))
+}));
 
 vi.mock('#~/api/common/helpers/logging/logger-options.js', () => ({
   loggerOptions: {
@@ -31,7 +31,7 @@ vi.mock('#~/api/common/helpers/logging/logger-options.js', () => ({
       paths: ['password']
     }
   }
-}))
+}));
 
 vi.mock('#~/api/common/helpers/logging/logger.js', () => ({
   getLogger: vi.fn().mockReturnValue({
@@ -40,22 +40,22 @@ vi.mock('#~/api/common/helpers/logging/logger.js', () => ({
     debug: vi.fn(),
     warn: vi.fn()
   })
-}))
+}));
 
-const globalFetch = global.fetch
+const globalFetch = global.fetch;
 
 describe('Payment Hub Helper', () => {
-  let server
-  let logger
-  let mockCache
-  let cachedToken
+  let server;
+  let logger;
+  let mockCache;
+  let cachedToken;
 
   beforeAll(() => {
-    global.fetch = vi.fn()
-  })
+    global.fetch = vi.fn();
+  });
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    vi.clearAllMocks();
 
     // Setup config mock
     config.get = vi.fn((key) => {
@@ -73,22 +73,22 @@ describe('Payment Hub Helper', () => {
           format: 'json',
           redact: ['password']
         }
-      }
-      return configValues[key]
-    })
+      };
+      return configValues[key];
+    });
 
     // Setup cache mock
-    cachedToken = 'test-access-token'
+    cachedToken = 'test-access-token';
     mockCache = {
       get: vi.fn().mockResolvedValue(cachedToken)
-    }
-    initCache.mockReturnValue(mockCache)
+    };
+    initCache.mockReturnValue(mockCache);
 
     // Setup server mock, include logger property
     server = {
       cache: vi.fn().mockReturnValue({ policy: vi.fn() }),
       logger: null
-    }
+    };
 
     // Setup logger mock
     logger = {
@@ -96,20 +96,20 @@ describe('Payment Hub Helper', () => {
       error: vi.fn(),
       debug: vi.fn(),
       warn: vi.fn()
-    }
+    };
 
-    server.logger = logger
+    server.logger = logger;
 
     // Setup fetch mock
     global.fetch.mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue({ success: true })
-    })
-  })
+    });
+  });
 
   afterAll(() => {
-    global.fetch = globalFetch
-  })
+    global.fetch = globalFetch;
+  });
 
   describe('sendPaymentHubRequest', () => {
     it('should send a request to payment hub with correct parameters', async () => {
@@ -118,10 +118,10 @@ describe('Payment Hub Helper', () => {
         frn: 'mock-frn',
         correlationId: 'mock-correlationId',
         data: 'test-data'
-      }
-      const result = await sendPaymentHubRequest(server, payload)
+      };
+      const result = await sendPaymentHubRequest(server, payload);
 
-      expect(mockCache.get).toHaveBeenCalledWith('token')
+      expect(mockCache.get).toHaveBeenCalledWith('token');
 
       expect(global.fetch).toHaveBeenCalledWith(
         expect.any(String),
@@ -133,74 +133,74 @@ describe('Payment Hub Helper', () => {
           }),
           body: JSON.stringify(payload)
         })
-      )
+      );
 
       expect(logger.info).toHaveBeenCalledWith(
         'Request successfully sent to Payment Hub for SBI: mock-sbi FRN: mock-frn (correlation ID: mock-correlationId)'
-      )
+      );
 
       expect(result).toEqual(
         expect.objectContaining({
           message: 'Payload sent to payment hub successfully',
           status: 'success'
         })
-      )
-    })
+      );
+    });
 
     it('should throw an error when fetch response is not ok', async () => {
-      const errorMessage = 'Bad Request'
+      const errorMessage = 'Bad Request';
       global.fetch.mockResolvedValue({
         ok: false,
         statusText: errorMessage
-      })
+      });
 
-      const payload = { data: 'test-data' }
+      const payload = { data: 'test-data' };
 
       await expect(sendPaymentHubRequest(server, payload)).rejects.toThrow(
         `Payment hub request failed: ${errorMessage}`
-      )
+      );
 
-      expect(global.fetch).toHaveBeenCalled()
-    })
+      expect(global.fetch).toHaveBeenCalled();
+    });
 
     it('should throw an error when fetch fails', async () => {
-      const networkError = new Error('Network error')
-      global.fetch.mockRejectedValue(networkError)
+      const networkError = new Error('Network error');
+      global.fetch.mockRejectedValue(networkError);
 
-      const payload = { data: 'test-data' }
+      const payload = { data: 'test-data' };
 
       await expect(sendPaymentHubRequest(server, payload)).rejects.toThrow(
         networkError
-      )
+      );
 
-      expect(global.fetch).toHaveBeenCalled()
-    })
+      expect(global.fetch).toHaveBeenCalled();
+    });
 
     it('should throw an error if the keyname or key is not set', async () => {
       config.get.mockImplementation((key) => {
         if (key === 'paymentHub.keyName' || key === 'paymentHub.key') {
-          return undefined
+          return undefined;
         }
-        return 'test-value'
-      })
+        return 'test-value';
+      });
 
-      const payload = { data: 'test-data' }
+      const payload = { data: 'test-data' };
 
       await expect(sendPaymentHubRequest(server, payload)).rejects.toThrow(
         'Payment Hub keyname or key is not set'
-      )
+      );
 
-      expect(config.get).toHaveBeenCalled()
-    })
+      expect(config.get).toHaveBeenCalled();
+    });
 
     it('should initialize cache only once', async () => {
       // reset the module to clear internal cache variable
-      vi.resetModules()
+      vi.resetModules();
       const { sendPaymentHubRequest: freshSendRequest } =
-        await import('./index.js')
+        await import('./index.js');
 
-      await freshSendRequest(server, { data: 'test-data' })
-      expect(initCache).toHaveBeenCalledTimes(1)
+      await freshSendRequest(server, { data: 'test-data' });
+      expect(initCache).toHaveBeenCalledTimes(1);
       expect(initCache).toHaveBeenCalledWith(
         server,
         'paymentHubToken',
@@ -208,31 +208,31 @@ describe('Payment Hub Helper', () => {
         {
           expiresIn: '3600'
         }
-      )
+      );
 
-      const generator = initCache.mock.calls[0][2]
-      const token = generator()
+      const generator = initCache.mock.calls[0][2];
+      const token = generator();
 
-      expect(token).toContain('SharedAccessSignature sr=')
-      expect(token).toContain('&sig=')
-      expect(token).toContain('&se=')
-      expect(token).toContain('&skn=test-key-name')
+      expect(token).toContain('SharedAccessSignature sr=');
+      expect(token).toContain('&sig=');
+      expect(token).toContain('&se=');
+      expect(token).toContain('&skn=test-key-name');
 
-      await freshSendRequest(server, { data: 'test-data' })
-      expect(initCache).toHaveBeenCalledTimes(1)
-    })
-  })
+      await freshSendRequest(server, { data: 'test-data' });
+      expect(initCache).toHaveBeenCalledTimes(1);
+    });
+  });
 
   it('should return warning when payment hub feature flag disabled', async () => {
     config.get.mockImplementation((key) => {
-      if (key === 'featureFlags.isPaymentHubEnabled') return false
-      return 'test-value'
-    })
+      if (key === 'featureFlags.isPaymentHubEnabled') return false;
+      return 'test-value';
+    });
 
-    const payload = { foo: 'bar' }
-    const result = await sendPaymentHubRequest(server, payload)
+    const payload = { foo: 'bar' };
+    const result = await sendPaymentHubRequest(server, payload);
 
-    expect(logger.warn).toHaveBeenCalled()
+    expect(logger.warn).toHaveBeenCalled();
     expect(result).toEqual(
       expect.objectContaining({
         status: 'warning',
@@ -240,6 +240,6 @@ describe('Payment Hub Helper', () => {
         body: payload,
         response: null
       })
-    )
-  })
-})
+    );
+  });
+});

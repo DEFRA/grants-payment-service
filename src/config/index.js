@@ -1,27 +1,27 @@
-import { loadEnvFile } from 'node:process'
+import { loadEnvFile } from 'node:process';
 
-import convict from 'convict'
-import convictFormatWithValidator from 'convict-format-with-validator'
+import convict from 'convict';
+import convictFormatWithValidator from 'convict-format-with-validator';
 
-import { convictValidateMongoUri } from '#~/common/helpers/convict/validate-mongo-uri.js'
-import { convictArrayAllowEmpty } from '#~/common/helpers/convict/array-allow-empty.js'
+import { convictValidateMongoUri } from '#~/common/helpers/convict/validate-mongo-uri.js';
+import { convictArrayAllowEmpty } from '#~/common/helpers/convict/array-allow-empty.js';
 
 try {
-  loadEnvFile()
+  loadEnvFile();
 } catch (error) {
   if (error.code !== 'ENOENT') {
-    throw error
+    throw error;
   }
 }
 
-convict.addFormat(convictValidateMongoUri)
-convict.addFormat(convictArrayAllowEmpty)
-convict.addFormats(convictFormatWithValidator)
+convict.addFormat(convictValidateMongoUri);
+convict.addFormat(convictArrayAllowEmpty);
+convict.addFormats(convictFormatWithValidator);
 
-const isProduction = process.env.NODE_ENV === 'production'
-const isTest = process.env.NODE_ENV === 'test'
+const isProduction = process.env.NODE_ENV === 'production';
+const isTest = process.env.NODE_ENV === 'test';
 
-const FLOCI_ENDPOINT = 'http://localhost:4566'
+const FLOCI_ENDPOINT = 'http://localhost:4566';
 
 const config = convict({
   serviceVersion: {
@@ -329,8 +329,8 @@ const config = convict({
     default: ['PA3'],
     env: 'DISABLED_ACTION_CODES'
   }
-})
+});
 
-config.validate({ allowed: 'strict' })
+config.validate({ allowed: 'strict' });
 
-export { config }
+export { config };

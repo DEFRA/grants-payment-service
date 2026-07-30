@@ -1,7 +1,7 @@
-import mongoose from 'mongoose'
-const collection = 'grant_payments'
+import mongoose from 'mongoose';
+const collection = 'grant_payments';
 
-const { Decimal128 } = mongoose.Types
+const { Decimal128 } = mongoose.Types;
 
 const InvoiceLine = new mongoose.Schema({
   schemeCode: { type: String, required: true },
@@ -10,7 +10,7 @@ const InvoiceLine = new mongoose.Schema({
   accountCode: { type: String, required: true },
   fundCode: { type: String, required: true },
   deliveryBody: { type: String, required: true }
-})
+});
 
 const Payment = new mongoose.Schema(
   {
@@ -26,7 +26,7 @@ const Payment = new mongoose.Schema(
     }
   },
   { timestamps: true }
-)
+);
 
 const Grant = new mongoose.Schema(
   {
@@ -48,7 +48,7 @@ const Grant = new mongoose.Schema(
     payments: [{ type: Payment, required: true }]
   },
   { timestamps: true }
-)
+);
 
 const schema = new mongoose.Schema(
   {
@@ -58,29 +58,29 @@ const schema = new mongoose.Schema(
     grants: [{ type: Grant, required: true }]
   },
   { collection, timestamps: true }
-)
+);
 
 // Single-field indexes
-schema.index({ sbi: 1 })
-schema.index({ frn: 1 })
-schema.index({ 'grants.correlationId': 1 }, { unique: true })
-schema.index({ 'grants.payments.correlationId': 1 }, { unique: true })
-schema.index({ 'grants.payments.dueDate': 1 })
-schema.index({ 'grants.payments.status': 1 })
-schema.index({ 'grants.payments.invoiceLines.schemeCode': 1 })
-schema.index({ 'grants.payments.invoiceLines.fundCode': 1 })
+schema.index({ sbi: 1 });
+schema.index({ frn: 1 });
+schema.index({ 'grants.correlationId': 1 }, { unique: true });
+schema.index({ 'grants.payments.correlationId': 1 }, { unique: true });
+schema.index({ 'grants.payments.dueDate': 1 });
+schema.index({ 'grants.payments.status': 1 });
+schema.index({ 'grants.payments.invoiceLines.schemeCode': 1 });
+schema.index({ 'grants.payments.invoiceLines.fundCode': 1 });
 
 // Compound indexes — ordered to match filter + sort patterns used in queries
 // fetchGrantPaymentsBySbi: filter on sbi, sort by createdAt
-schema.index({ sbi: 1, createdAt: -1 })
+schema.index({ sbi: 1, createdAt: -1 });
 // fetchGrantPaymentsBySbiAndFundCode: filter on sbi + fundCode (fundCode alone is never queried)
-schema.index({ sbi: 1, 'grants.payments.invoiceLines.fundCode': 1 })
+schema.index({ sbi: 1, 'grants.payments.invoiceLines.fundCode': 1 });
 // cancelGrantPayments: filter on { sbi, frn }
-schema.index({ sbi: 1, frn: 1 })
+schema.index({ sbi: 1, frn: 1 });
 // fetchGrantPaymentsByDate (daily cron): filter on dueDate + status
 schema.index({
   'grants.payments.dueDate': 1,
   'grants.payments.status': 1
-})
+});
 
-export default mongoose.model(collection, schema)
+export default mongoose.model(collection, schema);

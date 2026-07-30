@@ -1,1 +1,1 @@
-export { transformWmpPayment as WMP } from './wmp.js'
+export { transformWmpPayment as WMP } from './wmp.js';

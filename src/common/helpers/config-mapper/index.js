@@ -21,7 +21,7 @@ const actions = {
       code: '51840'
     }
   ]
-}
+};
 
 const schemeConfigMapper = {
   SFI: {
@@ -42,13 +42,13 @@ const schemeConfigMapper = {
     accountCode: 'SOS710',
     fundCode: 'DRD10'
   }
-}
+};
 
 export const getPaymentHubConfig = (schemeCode) => {
-  return schemeConfigMapper[schemeCode]
-}
+  return schemeConfigMapper[schemeCode];
+};
 
 export const getActionCodeByName = (name) => {
-  const action = actions.items.find((item) => item.name === name)
-  return action?.code
-}
+  const action = actions.items.find((item) => item.name === name);
+  return action?.code;
+};
