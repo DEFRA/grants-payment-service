@@ -1,25 +1,25 @@
-import * as transformers from './schemes/index.js'
-import { formatPaymentDate } from '#~/common/helpers/format-payment-date.js'
-import { getActionCodeByName } from '#~/common/helpers/config-mapper/index.js'
+import * as transformers from './schemes/index.js';
+import { formatPaymentDate } from '#~/common/helpers/format-payment-date.js';
+import { getActionCodeByName } from '#~/common/helpers/config-mapper/index.js';
 
-const DEBT_TYPE_MAX_LENGTH = 3
+const DEBT_TYPE_MAX_LENGTH = 3;
 
-const asNumbersOnly = (value) => value.replaceAll(/\D/g, '')
+const asNumbersOnly = (value) => value.replaceAll(/\D/g, '');
 
 const valueFormatter = new Intl.NumberFormat('en-GB', {
   useGrouping: false,
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
-})
+});
 
 const validateDebtType = (debtType) => {
   if (debtType.length > DEBT_TYPE_MAX_LENGTH) {
     throw new Error(
       `value of ${debtType} must be no more than ${DEBT_TYPE_MAX_LENGTH} characters`
-    )
+    );
   }
-  return debtType
-}
+  return debtType;
+};
 
 const buildInvoiceLines = (grant, payment) =>
   payment.invoiceLines.map((invoiceLine) => ({
@@ -31,9 +31,9 @@ const buildInvoiceLines = (grant, payment) =>
     value: valueFormatter.format(Number(invoiceLine.amountPence) / 100),
     deliveryBody: invoiceLine.deliveryBody,
     marketingYear: grant.marketingYear
-  }))
+  }));
 
-const paymentId = (id) => id?.toString?.() ?? ''
+const paymentId = (id) => id?.toString?.() ?? '';
 
 /**
  * Calculates the quarter suffix for an invoice number based on the payment index
@@ -43,23 +43,23 @@ const paymentId = (id) => id?.toString?.() ?? ''
  * @returns string
  */
 const updateQuarter = (invoiceNumber, payments, currentPayment) => {
-  const invoiceWithoutQuarter = invoiceNumber.replace(/Q[1-4X]$/i, '')
-  const currentPaymentId = paymentId(currentPayment?._id)
+  const invoiceWithoutQuarter = invoiceNumber.replace(/Q[1-4X]$/i, '');
+  const currentPaymentId = paymentId(currentPayment?._id);
 
   if (!currentPaymentId) {
-    throw new Error('Payment _id is required for quarter calculation')
+    throw new Error('Payment _id is required for quarter calculation');
   }
 
   const paymentIndex = (payments || []).findIndex(
     (p) => paymentId(p._id) === currentPaymentId
-  )
+  );
 
   if (paymentIndex === -1) {
-    throw new Error('Payment not found in the payments array')
+    throw new Error('Payment not found in the payments array');
   }
 
-  return `${invoiceWithoutQuarter}Q${paymentIndex + 1}`
-}
+  return `${invoiceWithoutQuarter}Q${paymentIndex + 1}`;
+};
 
 /**
  * Transforms data into the format required by Payment Hub
@@ -117,7 +117,7 @@ export const transformDataToPaymentHubFormat = (
   ...(transformers[grant.sourceSystem]
     ? transformers[grant.sourceSystem](grant, payment)
     : {})
-})
+});
 
 /** @import { schema, Grant, Payment } from '#~/api/common/models/grant_payments.js' */
 /** @import { PaymentHubRequest } from '#~/common/types/payment-hub.d.js' */

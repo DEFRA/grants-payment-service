@@ -1,37 +1,37 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from 'vitest';
 import {
   fetchGrantPaymentsByDate,
   streamGrantPaymentsByDate,
   streamGrantPaymentsByCorrelationIds
-} from './fetch-grants-by-date.js'
-import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
+} from './fetch-grants-by-date.js';
+import GrantPaymentsModel from '#~/api/common/models/grant_payments.js';
 
-vi.mock('#~/api/common/models/grant_payments.js')
+vi.mock('#~/api/common/models/grant_payments.js');
 vi.mock('#~/config/index.js', () => ({
   config: {
     get: vi.fn((key) => {
-      if (key === 'disabledActionCodes') return ['PA3']
-      return 10
+      if (key === 'disabledActionCodes') return ['PA3'];
+      return 10;
     })
   }
-}))
+}));
 
 describe('fetchGrantPaymentsByDate', () => {
-  let date, fakeDocs
+  let date, fakeDocs;
 
   beforeEach(() => {
-    date = '2026-02-20'
+    date = '2026-02-20';
     fakeDocs = [
       { _id: 'a', grants: [{ payments: [{ dueDate: '2026-02-20' }] }] }
-    ]
+    ];
     // mock behaviour
-    GrantPaymentsModel.aggregate.mockResolvedValue(fakeDocs)
-    GrantPaymentsModel.countDocuments.mockResolvedValue(1)
-  })
+    GrantPaymentsModel.aggregate.mockResolvedValue(fakeDocs);
+    GrantPaymentsModel.countDocuments.mockResolvedValue(1);
+  });
 
   it('builds a simple pipeline when only date is provided', async () => {
-    const result = await fetchGrantPaymentsByDate(date)
-    const nextDay = '2026-02-21'
+    const result = await fetchGrantPaymentsByDate(date);
+    const nextDay = '2026-02-21';
 
     const expectedMatch = {
       grants: {
@@ -50,7 +50,7 @@ describe('fetchGrantPaymentsByDate', () => {
           }
         }
       }
-    }
+    };
 
     expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
       { $match: expectedMatch },
@@ -105,22 +105,22 @@ describe('fetchGrantPaymentsByDate', () => {
           }
         }
       }
-    ])
+    ]);
 
     expect(GrantPaymentsModel.countDocuments).toHaveBeenCalledWith(
       expectedMatch
-    )
+    );
 
     expect(result).toEqual({
       docs: fakeDocs,
       totalDocs: 1,
       pagination: { page: 1, total: 1 }
-    })
-  })
+    });
+  });
 
   it('includes status in the pipeline when provided', async () => {
-    const result = await fetchGrantPaymentsByDate(date, 'pending')
-    const nextDay = '2026-02-21'
+    const result = await fetchGrantPaymentsByDate(date, 'pending');
+    const nextDay = '2026-02-21';
 
     const expectedMatch = {
       grants: {
@@ -140,7 +140,7 @@ describe('fetchGrantPaymentsByDate', () => {
           }
         }
       }
-    }
+    };
 
     expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
       { $match: expectedMatch },
@@ -196,21 +196,21 @@ describe('fetchGrantPaymentsByDate', () => {
           }
         }
       }
-    ])
+    ]);
 
     expect(GrantPaymentsModel.countDocuments).toHaveBeenCalledWith(
       expectedMatch
-    )
+    );
 
     expect(result).toEqual({
       docs: fakeDocs,
       totalDocs: 1,
       pagination: { page: 1, total: 1 }
-    })
-  })
+    });
+  });
 
   it('applies pagination when page is provided', async () => {
-    const result = await fetchGrantPaymentsByDate(date, null, 10, 2)
+    const result = await fetchGrantPaymentsByDate(date, null, 10, 2);
 
     expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith(
       expect.arrayContaining([
@@ -218,41 +218,41 @@ describe('fetchGrantPaymentsByDate', () => {
         { $limit: 10 },
         { $sort: { createdAt: -1 } }
       ])
-    )
+    );
 
     expect(result).toEqual({
       docs: fakeDocs,
       totalDocs: 1,
       pagination: { page: 2, total: 1 }
-    })
-  })
+    });
+  });
 
   it('includes $sort when limit is provided without page', async () => {
-    await fetchGrantPaymentsByDate(date, null, 10)
+    await fetchGrantPaymentsByDate(date, null, 10);
 
     expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith(
       expect.arrayContaining([{ $limit: 10 }, { $sort: { createdAt: -1 } }])
-    )
-  })
-})
+    );
+  });
+});
 
 describe('streamGrantPaymentsByDate', () => {
-  let date
+  let date;
 
   beforeEach(() => {
-    date = '2026-02-20'
+    date = '2026-02-20';
     const mockCursor = {
       next: vi.fn()
-    }
+    };
     GrantPaymentsModel.aggregate.mockReturnValue({
       cursor: vi.fn().mockReturnValue(mockCursor)
-    })
-  })
+    });
+  });
 
   it('builds pipeline with date only', () => {
-    const nextDay = '2026-02-21'
+    const nextDay = '2026-02-21';
 
-    streamGrantPaymentsByDate(date)
+    streamGrantPaymentsByDate(date);
 
     const expectedMatch = {
       grants: {
@@ -271,7 +271,7 @@ describe('streamGrantPaymentsByDate', () => {
           }
         }
       }
-    }
+    };
 
     expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
       { $match: expectedMatch },
@@ -326,14 +326,14 @@ describe('streamGrantPaymentsByDate', () => {
           }
         }
       }
-    ])
-  })
+    ]);
+  });
 
   it('builds pipeline with status', () => {
-    const status = 'pending'
-    const nextDay = '2026-02-21'
+    const status = 'pending';
+    const nextDay = '2026-02-21';
 
-    streamGrantPaymentsByDate(date, status)
+    streamGrantPaymentsByDate(date, status);
 
     const expectedMatch = {
       grants: {
@@ -353,7 +353,7 @@ describe('streamGrantPaymentsByDate', () => {
           }
         }
       }
-    }
+    };
 
     expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
       { $match: expectedMatch },
@@ -409,11 +409,11 @@ describe('streamGrantPaymentsByDate', () => {
           }
         }
       }
-    ])
-  })
+    ]);
+  });
 
   it('builds pipeline with limit and page', () => {
-    streamGrantPaymentsByDate(date, null, 10, 2)
+    streamGrantPaymentsByDate(date, null, 10, 2);
 
     expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith(
       expect.arrayContaining([
@@ -421,33 +421,33 @@ describe('streamGrantPaymentsByDate', () => {
         { $limit: 10 },
         { $sort: { createdAt: -1 } }
       ])
-    )
-  })
+    );
+  });
 
   it('builds pipeline with limit only', () => {
-    streamGrantPaymentsByDate(date, null, 10)
+    streamGrantPaymentsByDate(date, null, 10);
 
     expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith(
       expect.arrayContaining([{ $limit: 10 }, { $sort: { createdAt: -1 } }])
-    )
-  })
-})
+    );
+  });
+});
 
 describe('streamGrantPaymentsByCorrelationIds', () => {
-  let correlationIds
+  let correlationIds;
 
   beforeEach(() => {
-    correlationIds = ['corr1', 'corr2']
+    correlationIds = ['corr1', 'corr2'];
     const mockCursor = {
       next: vi.fn()
-    }
+    };
     GrantPaymentsModel.aggregate.mockReturnValue({
       cursor: vi.fn().mockReturnValue(mockCursor)
-    })
-  })
+    });
+  });
 
   it('builds pipeline with correlationIds only', () => {
-    streamGrantPaymentsByCorrelationIds(correlationIds)
+    streamGrantPaymentsByCorrelationIds(correlationIds);
 
     const expectedMatch = {
       grants: {
@@ -466,7 +466,7 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
           }
         }
       }
-    }
+    };
 
     expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
       { $match: expectedMatch },
@@ -522,13 +522,13 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
           }
         }
       }
-    ])
-  })
+    ]);
+  });
 
   it('builds pipeline with status', () => {
-    const status = 'pending'
+    const status = 'pending';
 
-    streamGrantPaymentsByCorrelationIds(correlationIds, status)
+    streamGrantPaymentsByCorrelationIds(correlationIds, status);
 
     const expectedMatch = {
       grants: {
@@ -548,7 +548,7 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
           }
         }
       }
-    }
+    };
 
     expect(GrantPaymentsModel.aggregate).toHaveBeenCalledWith([
       { $match: expectedMatch },
@@ -604,6 +604,6 @@ describe('streamGrantPaymentsByCorrelationIds', () => {
           }
         }
       }
-    ])
-  })
-})
+    ]);
+  });
+});

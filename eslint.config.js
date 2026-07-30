@@ -1,18 +1,18 @@
-import neostandard from 'neostandard'
-import importX from 'eslint-plugin-import-x'
+import neostandard from 'neostandard';
+import importX from 'eslint-plugin-import-x';
 
 const config = neostandard({
   env: ['node', 'vitest'],
   ignores: [...neostandard.resolveIgnoresFromGitignore()],
   noJsx: true,
   noStyle: true
-})
+});
 
 config.push({
   plugins: {
     'import-x': importX
   }
-})
+});
 
 config.push({
   files: ['**/*.js'],
@@ -25,7 +25,7 @@ config.push({
       }
     ]
   }
-})
+});
 
 config.push({
   files: ['**/*.test.{cjs,js}', '**/__mocks__/**', '**/test-helpers/**'],
@@ -42,6 +42,6 @@ config.push({
       }
     ]
   }
-})
+});
 
-export default config
+export default config;

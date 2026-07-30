@@ -1,20 +1,20 @@
-import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
-import { config } from '#~/config/index.js'
-import { getNextDay } from './date.js'
-import { wrapWithPagination } from './pagination.js'
-import { getActionCodeByName } from '#~/common/helpers/config-mapper/index.js'
+import GrantPaymentsModel from '#~/api/common/models/grant_payments.js';
+import { config } from '#~/config/index.js';
+import { getNextDay } from './date.js';
+import { wrapWithPagination } from './pagination.js';
+import { getActionCodeByName } from '#~/common/helpers/config-mapper/index.js';
 
 /**
  * Gets the list of disabled scheme action codes including both names and their corresponding scheme codes.
  * @returns {string[]} Array of disabled scheme action codes (names and numeric codes)
  */
 const getDisabledSchemeActionCodes = () => {
-  const disabledActionCodes = config.get('disabledActionCodes')
+  const disabledActionCodes = config.get('disabledActionCodes');
   return [
     ...disabledActionCodes,
     ...disabledActionCodes.map(getActionCodeByName)
-  ]
-}
+  ];
+};
 
 /**
  * Builds a MongoDB match filter to exclude payments with disabled action codes in invoice lines.
@@ -29,7 +29,7 @@ const buildInvoiceLinesMatchFilter = () => ({
       }
     }
   }
-})
+});
 
 /**
  * Builds a MongoDB project filter to exclude payments with disabled action codes in invoice lines.
@@ -48,7 +48,7 @@ const buildInvoiceLinesProjectFilter = () => ({
       }
     }
   }
-})
+});
 
 /**
  * Builds a MongoDB $match stage for filtering grant payments.
@@ -65,7 +65,7 @@ const buildMatchStage = (paymentMatch) => ({
       }
     }
   }
-})
+});
 
 /**
  * Builds a MongoDB $project stage to transform grant payment documents.
@@ -101,7 +101,7 @@ const buildProjectStage = (filters) => ({
       }
     }
   }
-})
+});
 
 /**
  * Builds a final MongoDB $match stage to exclude documents with no matched payments.
@@ -115,7 +115,7 @@ const buildFinalMatchStage = () => ({
       }
     }
   }
-})
+});
 
 /**
  * Builds a MongoDB aggregation pipeline for fetching grant payments by date.
@@ -126,17 +126,17 @@ const buildFinalMatchStage = () => ({
  * @returns {object} Object containing the pipeline array and match criteria for counting
  */
 const buildGrantPaymentsAggregationPipeline = (date, status, limit, page) => {
-  const nextDay = getNextDay(date)
+  const nextDay = getNextDay(date);
   const paymentMatch = {
     dueDate: { $lte: nextDay },
     ...buildInvoiceLinesMatchFilter()
-  }
+  };
 
-  const filters = [{ $lte: ['$$p.dueDate', nextDay] }]
+  const filters = [{ $lte: ['$$p.dueDate', nextDay] }];
 
   if (status) {
-    paymentMatch.status = status
-    filters.push({ $eq: ['$$p.status', status] })
+    paymentMatch.status = status;
+    filters.push({ $eq: ['$$p.status', status] });
   }
 
   const match = {
@@ -147,24 +147,24 @@ const buildGrantPaymentsAggregationPipeline = (date, status, limit, page) => {
         }
       }
     }
-  }
-  const matchStage = buildMatchStage(paymentMatch)
-  const pipeline = [matchStage]
+  };
+  const matchStage = buildMatchStage(paymentMatch);
+  const pipeline = [matchStage];
 
   if (limit) {
     if (page) {
-      const skip = (page - 1) * limit
-      pipeline.push({ $skip: skip })
+      const skip = (page - 1) * limit;
+      pipeline.push({ $skip: skip });
     }
 
-    pipeline.push({ $limit: limit }, { $sort: { createdAt: -1 } })
+    pipeline.push({ $limit: limit }, { $sort: { createdAt: -1 } });
   }
 
-  filters.push(buildInvoiceLinesProjectFilter())
-  pipeline.push(buildProjectStage(filters), buildFinalMatchStage())
+  filters.push(buildInvoiceLinesProjectFilter());
+  pipeline.push(buildProjectStage(filters), buildFinalMatchStage());
 
-  return { pipeline, match }
-}
+  return { pipeline, match };
+};
 
 /**
  * Fetches grant payments by date with optional status filter and pagination.
@@ -180,15 +180,15 @@ export const fetchGrantPaymentsByDate = async (date, status, limit, page) => {
     status,
     limit,
     page
-  )
+  );
 
   const [docs, totalDocs] = await Promise.all([
     GrantPaymentsModel.aggregate(pipeline),
     GrantPaymentsModel.countDocuments(match)
-  ])
+  ]);
 
-  return wrapWithPagination(docs, totalDocs, page, limit)
-}
+  return wrapWithPagination(docs, totalDocs, page, limit);
+};
 
 /**
  * Creates a cursor stream for fetching grant payments by date.
@@ -205,10 +205,10 @@ export const streamGrantPaymentsByDate = (date, status, limit, page) => {
     status,
     limit,
     page
-  )
+  );
 
-  return GrantPaymentsModel.aggregate(pipeline).cursor()
-}
+  return GrantPaymentsModel.aggregate(pipeline).cursor();
+};
 
 /**
  * Builds payment match criteria for filtering by correlation IDs.
@@ -220,14 +220,14 @@ const buildPaymentMatchCriteria = (correlationIds, status) => {
   const paymentMatch = {
     correlationId: { $in: correlationIds },
     ...buildInvoiceLinesMatchFilter()
-  }
+  };
 
   if (status) {
-    paymentMatch.status = status
+    paymentMatch.status = status;
   }
 
-  return paymentMatch
-}
+  return paymentMatch;
+};
 
 /**
  * Builds a project stage with filters for correlation ID queries.
@@ -240,9 +240,9 @@ const buildCorrelationIdsProjectStage = (correlationIds, status) => {
     { $in: ['$$p.correlationId', correlationIds] },
     status ? { $eq: ['$$p.status', status] } : true,
     buildInvoiceLinesProjectFilter()
-  ]
-  return buildProjectStage(filters)
-}
+  ];
+  return buildProjectStage(filters);
+};
 
 /**
  * Applies limit and sort stages to an aggregation pipeline.
@@ -251,9 +251,9 @@ const buildCorrelationIdsProjectStage = (correlationIds, status) => {
  */
 const applyLimitAndSortToPipeline = (pipeline, limit) => {
   if (limit) {
-    pipeline.push({ $limit: limit }, { $sort: { createdAt: -1 } })
+    pipeline.push({ $limit: limit }, { $sort: { createdAt: -1 } });
   }
-}
+};
 
 /**
  * Creates a cursor stream for fetching grant payments by correlation IDs.
@@ -268,15 +268,15 @@ export const streamGrantPaymentsByCorrelationIds = (
   status,
   limit
 ) => {
-  const paymentMatch = buildPaymentMatchCriteria(correlationIds, status)
+  const paymentMatch = buildPaymentMatchCriteria(correlationIds, status);
 
   const pipeline = [
     buildMatchStage(paymentMatch),
     buildCorrelationIdsProjectStage(correlationIds, status),
     buildFinalMatchStage()
-  ]
+  ];
 
-  applyLimitAndSortToPipeline(pipeline, limit)
+  applyLimitAndSortToPipeline(pipeline, limit);
 
-  return GrantPaymentsModel.aggregate(pipeline).cursor()
-}
+  return GrantPaymentsModel.aggregate(pipeline).cursor();
+};
