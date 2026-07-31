@@ -1,47 +1,34 @@
-import neostandard from 'neostandard';
-import importX from 'eslint-plugin-import-x';
+import { readFileSync } from 'node:fs';
+import { gitignoreToMinimatch } from '@humanwhocodes/gitignore-to-minimatch';
+import js from '@eslint/js';
+import globals from 'globals';
 
-const config = neostandard({
-  env: ['node', 'vitest'],
-  ignores: [...neostandard.resolveIgnoresFromGitignore()],
-  noJsx: true,
-  noStyle: true
-});
+const ignores = readFileSync(new URL('.gitignore', import.meta.url), 'utf8')
+  .split('\n')
+  .map((line) => line.trim())
+  .filter((line) => line && !line.startsWith('#'))
+  .map(gitignoreToMinimatch);
 
-config.push({
-  plugins: {
-    'import-x': importX
+export default [
+  {
+    ignores
+  },
+  js.configs.recommended,
+  {
+    files: ['**/*.{cjs,js}'],
+    languageOptions: {
+      globals: globals.node
+    }
+  },
+  {
+    files: [
+      '**/*.test.{cjs,js}',
+      '**/__mocks__/**',
+      '**/test-helpers/**',
+      '.vite/**/*.js'
+    ],
+    languageOptions: {
+      globals: globals.vitest
+    }
   }
-});
-
-config.push({
-  files: ['**/*.js'],
-  rules: {
-    'import-x/no-unused-modules': [
-      'error',
-      {
-        unusedExports: true,
-        src: ['src/**/!(*.test).js']
-      }
-    ]
-  }
-});
-
-config.push({
-  files: ['**/*.test.{cjs,js}', '**/__mocks__/**', '**/test-helpers/**'],
-  rules: {
-    'import-x/no-unused-modules': [
-      'error',
-      {
-        unusedExports: true,
-        src: [
-          'src/**/*.test.js',
-          'src/**/__mocks__/**/*.js',
-          'src/**/test-helpers/**/*.js'
-        ]
-      }
-    ]
-  }
-});
-
-export default config;
+];

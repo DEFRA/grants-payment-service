@@ -134,7 +134,7 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
       modifiedCount: 2
     });
 
-    mockSession.withTransaction.mockImplementation(async (fn, options) => {
+    mockSession.withTransaction.mockImplementation(async (fn) => {
       await fn();
     });
 
@@ -197,7 +197,7 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
       modifiedCount: 0
     });
 
-    mockSession.withTransaction.mockImplementation(async (fn, options) => {
+    mockSession.withTransaction.mockImplementation(async (fn) => {
       await fn();
     });
 
