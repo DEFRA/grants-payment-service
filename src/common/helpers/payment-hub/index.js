@@ -85,7 +85,18 @@ export const sendPaymentHubRequest = async (server, body) => {
 
   if (!response.ok) {
     await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, body, 'failure');
-    throw new Error(`Payment hub request failed: ${response.statusText}`);
+
+    let responseBody = '';
+    try {
+      responseBody = await response.text();
+    } catch (err) {
+      logger.error(err, 'Failed to read the response body from payment hub');
+    }
+
+    const details = responseBody ? ` - ${responseBody}` : '';
+    throw new Error(
+      `Payment hub request failed: ${response.status} ${response.statusText}${details}`
+    );
   }
 
   logger.info(
