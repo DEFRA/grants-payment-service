@@ -630,7 +630,7 @@ describe('processStaleLockedPayments', () => {
     const affectedPayments = [
       {
         sbi: '106284736',
-        frn: '12544567',
+        frn: '1234567890',
         claimId: 'R00000004',
         correlationId: 'corr-1',
         invoiceNumber: 'INV-001',
@@ -654,10 +654,10 @@ describe('processStaleLockedPayments', () => {
         invoiceNumber: 'INV-001',
         agreementNumber: 'AGR-001',
         sbi: '106284736',
-        frn: '12544567',
+        frn: '1234567890',
         identifiers: {
           sbi: '106284736',
-          frn: '12544567',
+          frn: '1234567890',
           crn: 'R00000004'
         }
       }

@@ -19,7 +19,7 @@ describe('createGrantPayment', () => {
   it('creates a grant payment with the provided payload', async () => {
     const payload = {
       sbi: '123456789',
-      frn: '987654321',
+      frn: '9876543210',
       claimId: 'R00000001',
       grants: []
     };
@@ -32,7 +32,7 @@ describe('createGrantPayment', () => {
     expect(GrantPaymentsModel.create).toHaveBeenCalledWith(
       expect.objectContaining({
         sbi: '123456789',
-        frn: '987654321',
+        frn: '9876543210',
         claimId: 'R00000001'
       })
     );

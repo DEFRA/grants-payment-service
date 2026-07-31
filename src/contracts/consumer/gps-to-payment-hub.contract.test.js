@@ -45,7 +45,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
     ledger: 'AP',
     deliveryBody: 'RP10',
     invoiceNumber: 'R00000001-V001',
-    frn: '987654321',
+    frn: '9876543210',
     sbi: '123456789',
     fesCode: 'FALS_WMP',
     marketingYear: '2026',
@@ -66,7 +66,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
         marketingYear: '2026'
       }
     ],
-    correlationId: 'wmp-payment-correlation-id',
+    correlationId: '00000000-0000-0000-0000-000000000001',
     value: '-12.34'
   };
 
@@ -75,7 +75,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
     ledger: 'AP',
     deliveryBody: 'RP00',
     invoiceNumber: 'R00000004-V001Q1',
-    frn: '12544567',
+    frn: '1234567890',
     sbi: '106284736',
     fesCode: 'FALS_FPTT',
     marketingYear: '2026',
@@ -97,7 +97,7 @@ describe('cron job schedule sending a POST request to payment hub', () => {
         marketingYear: '2026'
       }
     ],
-    correlationId: 'sfi-payment-correlation-id',
+    correlationId: '00000000-0000-0000-0000-000000000000',
     value: '-12.63',
     annualValue: '702.85'
   };

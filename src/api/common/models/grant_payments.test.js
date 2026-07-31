@@ -21,7 +21,7 @@ describe('grant_payments schema', () => {
   test('should pass validation with required fields present', () => {
     const valid = {
       sbi: '106284736',
-      frn: '12544567',
+      frn: '1234567890',
       claimId: 'R00000004',
       grants: [
         {
@@ -66,7 +66,7 @@ describe('grant_payments schema', () => {
   test('should pass validation with failed status', () => {
     const valid = {
       sbi: '106284736',
-      frn: '12544567',
+      frn: '1234567890',
       claimId: 'R00000004',
       grants: [
         {
@@ -112,7 +112,7 @@ describe('grant_payments schema', () => {
 test('should fail validation when grant or payment correlationId is missing or empty', () => {
   const base = {
     sbi: '106284736',
-    frn: '12544567',
+    frn: '1234567890',
     claimId: 'R00000004',
     grants: [
       {

@@ -57,7 +57,7 @@ describe('handleCreatePaymentEvent', () => {
     const logger = { info: vi.fn() };
     const grantPayment = {
       sbi: '106284736',
-      frn: '12544567',
+      frn: '1234567890',
       claimId: 'R00000004',
       grants: [
         {
@@ -77,7 +77,7 @@ describe('handleCreatePaymentEvent', () => {
     };
     const paymentHubData = {
       sourceSystem: 'FPTT',
-      frn: '12544567',
+      frn: '1234567890',
       sbi: '106284736'
     };
     createGrantPayment.mockResolvedValue(grantPayment);
@@ -86,7 +86,7 @@ describe('handleCreatePaymentEvent', () => {
     await handleCreatePaymentEvent('msg-1', validPayload, logger);
 
     expect(transformDataToPaymentHubFormat).toHaveBeenCalledWith(
-      { sbi: '106284736', frn: '12544567', claimId: 'R00000004' },
+      { sbi: '106284736', frn: '1234567890', claimId: 'R00000004' },
       grantPayment.grants[0],
       grantPayment.grants[0].payments[0]
     );
@@ -99,8 +99,8 @@ describe('handleCreatePaymentEvent', () => {
       invoiceNumber: 'INV-001',
       agreementNumber: 'AGR-001',
       sbi: '106284736',
-      frn: '12544567',
-      identifiers: { sbi: '106284736', frn: '12544567', crn: 'R00000004' }
+      frn: '1234567890',
+      identifiers: { sbi: '106284736', frn: '1234567890', crn: 'R00000004' }
     });
   });
 
@@ -108,7 +108,7 @@ describe('handleCreatePaymentEvent', () => {
     const logger = { info: vi.fn() };
     const grantPayment = {
       sbi: '106284736',
-      frn: '12544567',
+      frn: '1234567890',
       claimId: 'R00000004',
       grants: null
     };
@@ -124,7 +124,7 @@ describe('handleCreatePaymentEvent', () => {
     const logger = { info: vi.fn() };
     const grantPayment = {
       sbi: '106284736',
-      frn: '12544567',
+      frn: '1234567890',
       claimId: 'R00000004',
       grants: [{ sourceSystem: 'FPTT', payments: null }]
     };
@@ -166,7 +166,7 @@ describe('handleCreatePaymentEvent', () => {
 
     expect(logger.warn).toHaveBeenCalledWith(
       error,
-      'Duplicate grant payment entry received for message msg-1: SBI: 106284736 FRN: 12544567 correlation IDs: sfi-grant-correlation-id, sfi-payment-correlation-id'
+      'Duplicate grant payment entry received for message msg-1: SBI: 106284736 FRN: 1234567890 correlation IDs: sfi-grant-correlation-id, 00000000-0000-0000-0000-000000000000'
     );
     expect(logger.error).not.toHaveBeenCalled();
   });

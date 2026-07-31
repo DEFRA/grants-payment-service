@@ -19,7 +19,7 @@ describe('cancelGrantPayments', () => {
 
   it('should cancel pending payments with dueDate >= today', async () => {
     const sbi = '106284736';
-    const frn = '12544567';
+    const frn = '1234567890';
     const today = '2026-03-23';
     const futureDate = '2026-06-05';
     const pastDate = '2026-03-22';
@@ -79,7 +79,7 @@ describe('cancelGrantPayments', () => {
 
   it('should not call save if no payments were updated', async () => {
     const sbi = '106284736';
-    const frn = '12544567';
+    const frn = '1234567890';
     const pastDate = '2026-03-22';
 
     const mockSave = vi.fn();
