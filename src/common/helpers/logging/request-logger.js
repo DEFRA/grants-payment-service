@@ -32,7 +32,9 @@ const customRequestCompleteMessage = (request, responseTime) => {
     if (request?.response?.source) {
       message += `\n response: ${JSON.stringify(request.response.source, null, 2)}`;
     }
-  } catch {}
+  } catch {
+    // ignore
+  }
 
   return message;
 };

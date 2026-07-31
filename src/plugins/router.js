@@ -5,7 +5,7 @@ import { config } from '#~/config/index.js';
 const router = {
   plugin: {
     name: 'router',
-    register: async (server, _options) => {
+    register: async (server) => {
       server.route([health, stats]);
 
       if (config.get('featureFlags.testEndpoints') === true) {
