@@ -100,7 +100,7 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
     const staleDocuments = [
       {
         sbi: '106284736',
-        frn: '12544567',
+        frn: '1234567890',
         claimId: 'R00000004',
         grants: [
           {
@@ -144,7 +144,7 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
     expect(result.affectedPayments).toEqual([
       {
         sbi: '106284736',
-        frn: '12544567',
+        frn: '1234567890',
         claimId: 'R00000004',
         correlationId: 'corr-1',
         invoiceNumber: 'INV-001',

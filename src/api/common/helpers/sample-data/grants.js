@@ -1,7 +1,7 @@
 export default [
   {
     sbi: '106284736',
-    frn: '12544567',
+    frn: '1234567890',
     claimId: 'R00000004',
     scheme: 'SFI',
     grants: [
@@ -22,7 +22,7 @@ export default [
           {
             dueDate: '2026-06-05',
             totalAmountPence: '1263',
-            correlationId: 'sfi-payment-correlation-id',
+            correlationId: '00000000-0000-0000-0000-000000000000',
             status: 'pending',
             invoiceLines: [
               {
@@ -44,7 +44,7 @@ export default [
   },
   {
     sbi: '123456789',
-    frn: '987654321',
+    frn: '9876543210',
     claimId: 'R00000001',
     scheme: 'WMP',
     grants: [
@@ -68,7 +68,7 @@ export default [
                 description: 'Woodland Management Plan'
               }
             ],
-            correlationId: 'wmp-payment-correlation-id'
+            correlationId: '00000000-0000-0000-0000-000000000001'
           }
         ]
       }

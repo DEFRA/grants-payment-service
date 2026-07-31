@@ -73,7 +73,7 @@ describe('resend-failed-payments plugin', () => {
     leanMock.mockResolvedValue([
       {
         sbi: '106284736',
-        frn: '12544567',
+        frn: '1234567890',
         claimId: 'R00000004',
         grants: [
           {
@@ -147,10 +147,10 @@ describe('resend-failed-payments plugin', () => {
         invoiceNumber: 'INV-001',
         agreementNumber: 'AGR-001',
         sbi: '106284736',
-        frn: '12544567',
+        frn: '1234567890',
         identifiers: {
           sbi: '106284736',
-          frn: '12544567',
+          frn: '1234567890',
           crn: 'R00000004'
         }
       }
