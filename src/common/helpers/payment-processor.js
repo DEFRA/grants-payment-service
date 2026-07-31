@@ -71,6 +71,12 @@ const processSinglePayment = async (
           `${grafanaLogMessages.error.sendPaymentHubRequest} for record ${docId}`
         );
         await updatePaymentStatus(docId, payment._id, 'failed');
+        return {
+          status: 'error',
+          message: 'Failed to send request to payment hub',
+          error: serializeError(err),
+          body: paymentHubData
+        };
       });
 
     if (backgroundTasks) {

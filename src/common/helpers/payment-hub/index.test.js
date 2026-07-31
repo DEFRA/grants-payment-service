@@ -147,20 +147,45 @@ describe('Payment Hub Helper', () => {
       );
     });
 
-    it('should throw an error when fetch response is not ok', async () => {
-      const errorMessage = 'Bad Request';
+    it('should throw an error with status and response body when fetch response is not ok', async () => {
+      const status = 404;
+      const errorMessage = 'Not Found';
+      const responseBody = '{"message":"route not found"}';
       global.fetch.mockResolvedValue({
         ok: false,
-        statusText: errorMessage
+        status,
+        statusText: errorMessage,
+        text: vi.fn().mockResolvedValue(responseBody)
       });
 
       const payload = { data: 'test-data' };
 
       await expect(sendPaymentHubRequest(server, payload)).rejects.toThrow(
-        `Payment hub request failed: ${errorMessage}`
+        `Payment hub request failed: ${status} ${errorMessage} - ${responseBody}`
       );
 
       expect(global.fetch).toHaveBeenCalled();
+    });
+
+    it('should throw an error with just the status when the response body cannot be read', async () => {
+      global.fetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: vi.fn().mockRejectedValue(new Error('body read failed'))
+      });
+
+      const payload = { data: 'test-data' };
+
+      await expect(sendPaymentHubRequest(server, payload)).rejects.toThrow(
+        'Payment hub request failed: 500 Internal Server Error'
+      );
+
+      expect(global.fetch).toHaveBeenCalled();
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.any(Error),
+        'Failed to read the response body from payment hub'
+      );
     });
 
     it('should throw an error when fetch fails', async () => {
