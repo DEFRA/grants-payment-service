@@ -68,8 +68,8 @@ updates:
           - '@types/*'
 
     ignore:
-      - dependency-name: 'eslint-*'
       - dependency-name: 'eslint'
+        versions: [">=10"]
       - dependency-name: "@types/node"
         versions: [">=25"] # Use Node LTS
 
