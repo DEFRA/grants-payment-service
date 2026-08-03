@@ -1,6 +1,6 @@
-import { deleteGrantPaymentsBySbi } from '#~/common/helpers/delete-grant-payments-by-sbi.js';
-import { serializeError } from '#~/common/helpers/serialize-error.js';
-import { statusCodes } from '#~/common/constants/status-codes.js';
+import { deleteGrantPaymentsBySbi } from '#~/common/helpers/delete-grant-payments-by-sbi.js'
+import { serializeError } from '#~/common/helpers/serialize-error.js'
+import { statusCodes } from '#~/common/constants/status-codes.js'
 
 const deleteTestPaymentsBySbiController = {
   options: {
@@ -15,22 +15,22 @@ const deleteTestPaymentsBySbiController = {
   },
   handler: async (req, res) => {
     try {
-      const { sbi, fundCode } = req.params;
-      const { deletedCount } = await deleteGrantPaymentsBySbi(sbi, fundCode);
+      const { sbi, fundCode } = req.params
+      const { deletedCount } = await deleteGrantPaymentsBySbi(sbi, fundCode)
 
       return res
         .response({ sbi, ...(fundCode && { fundCode }), deletedCount })
-        .code(statusCodes.ok);
+        .code(statusCodes.ok)
     } catch (err) {
-      req.log(['error'], err);
+      req.log(['error'], err)
       return res
         .response({
           message: 'Internal Server Error',
           error: serializeError(err)
         })
-        .code(statusCodes.internalServerError);
+        .code(statusCodes.internalServerError)
     }
   }
-};
+}
 
-export { deleteTestPaymentsBySbiController };
+export { deleteTestPaymentsBySbiController }

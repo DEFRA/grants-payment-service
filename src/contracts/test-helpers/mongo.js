@@ -1,13 +1,13 @@
-import crypto from 'node:crypto';
+import crypto from 'node:crypto'
 
-import { config } from '#~/config/index.js';
+import { config } from '#~/config/index.js'
 
-const SUFFIX_SANITISER = /[^a-z0-9]+/gi;
+const SUFFIX_SANITISER = /[^a-z0-9]+/gi
 
 function resolveMongoUri() {
   return (
     globalThis.__MONGO_URI__ ?? process.env.MONGO_URI ?? config.get('mongoUri')
-  );
+  )
 }
 
 /**
@@ -22,17 +22,17 @@ export function buildIsolatedMongoOptions(
   mongoUrl = resolveMongoUri()
 ) {
   if (!suiteName) {
-    throw new Error('suiteName is required to isolate the Mongo database');
+    throw new Error('suiteName is required to isolate the Mongo database')
   }
   if (!mongoUrl) {
-    throw new Error('mongoUrl is required to isolate the Mongo database');
+    throw new Error('mongoUrl is required to isolate the Mongo database')
   }
 
-  const suffix = suiteName.replace(SUFFIX_SANITISER, '-').toLowerCase();
-  const uniqueSegment = crypto.randomUUID().slice(0, 8);
+  const suffix = suiteName.replace(SUFFIX_SANITISER, '-').toLowerCase()
+  const uniqueSegment = crypto.randomUUID().slice(0, 8)
 
   return {
     mongoUrl,
     mongoDatabase: `contracts-${suffix}-${uniqueSegment}`
-  };
+  }
 }

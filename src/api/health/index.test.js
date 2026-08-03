@@ -1,56 +1,56 @@
-import { vi } from 'vitest';
-import { statusCodes } from '#~/common/constants/status-codes.js';
-import { config } from '#~/config/index.js';
+import { vi } from 'vitest'
+import { statusCodes } from '#~/common/constants/status-codes.js'
+import { config } from '#~/config/index.js'
 
-vi.mock('mongoose', async () => await import('./__mocks__/mongoose.js'));
+vi.mock('mongoose', async () => await import('./__mocks__/mongoose.js'))
 
 vi.mock('#~/common/helpers/get-stats.js', () => ({
   getStats: vi.fn()
-}));
+}))
 
 describe('#healthController', () => {
   /** @type {Server} */
-  let server;
-  let mongooseModule;
-  let mockGetStats;
+  let server
+  let mongooseModule
+  let mockGetStats
 
   beforeAll(async () => {
     // import the mocked mongoose (manual mock default export)
-    mongooseModule = await import('mongoose');
+    mongooseModule = await import('mongoose')
 
-    config.set('serviceVersion', 'versionMock');
-    config.set('featureFlags.testEndpoints', true);
-    config.set('featureFlags.isPaymentHubEnabled', false);
-    config.set('featureFlags.enableBackups', false);
-    config.set('featureFlags.requestLoggerDebug', false);
-    config.set('disabledActionCodes', ['PA3']);
+    config.set('serviceVersion', 'versionMock')
+    config.set('featureFlags.testEndpoints', true)
+    config.set('featureFlags.isPaymentHubEnabled', false)
+    config.set('featureFlags.enableBackups', false)
+    config.set('featureFlags.requestLoggerDebug', false)
+    config.set('disabledActionCodes', ['PA3'])
 
     // import createServer after mongoose is mocked so controllers picks up the mock
-    const { createServer } = await import('../../server.js');
+    const { createServer } = await import('../../server.js')
 
     server = await createServer({
       disableSQS: true
-    });
-    await server.initialize();
+    })
+    await server.initialize()
 
-    mockGetStats = (await import('#~/common/helpers/get-stats.js')).getStats;
-  });
+    mockGetStats = (await import('#~/common/helpers/get-stats.js')).getStats
+  })
 
   afterAll(async () => {
     if (server) {
-      await server.stop({ timeout: 0 });
+      await server.stop({ timeout: 0 })
     }
-  });
+  })
 
   describe('MongoDB successfully connected', () => {
     test('Should provide expected response', async () => {
       // ensure ping resolves (success)
-      mongooseModule.__mockPing.mockResolvedValueOnce({ ok: 1 });
+      mongooseModule.__mockPing.mockResolvedValueOnce({ ok: 1 })
 
       const { result, statusCode } = await server.inject({
         method: 'GET',
         url: '/health'
-      });
+      })
 
       expect(result).toEqual({
         message: 'success',
@@ -63,20 +63,20 @@ describe('#healthController', () => {
           requestLoggerDebug: false
         },
         disabledActionCodes: ['PA3']
-      });
-      expect(statusCode).toBe(statusCodes.ok);
-    });
-  });
+      })
+      expect(statusCode).toBe(statusCodes.ok)
+    })
+  })
 
   describe('MongoDB failed to connect', () => {
     test('Should return an error when MongoDB connected but the ping failed', async () => {
       // simulate mongo failure
-      mongooseModule.__mockPing.mockResolvedValueOnce({ ok: 0 });
+      mongooseModule.__mockPing.mockResolvedValueOnce({ ok: 0 })
 
       const { result, statusCode } = await server.inject({
         method: 'GET',
         url: '/health'
-      });
+      })
 
       expect(result).toEqual({
         message: 'Unable to connect to backend MongoDB',
@@ -85,19 +85,19 @@ describe('#healthController', () => {
           name: 'Error'
         }),
         version: 'versionMock'
-      });
-      expect(statusCode).toBe(statusCodes.serviceUnavailable);
-    });
+      })
+      expect(statusCode).toBe(statusCodes.serviceUnavailable)
+    })
 
     test('Should return an error when MongoDB is unavailable', async () => {
       // simulate mongo failure
-      const err = new Error('connection refused');
-      mongooseModule.__mockPing.mockRejectedValueOnce(err);
+      const err = new Error('connection refused')
+      mongooseModule.__mockPing.mockRejectedValueOnce(err)
 
       const { result, statusCode } = await server.inject({
         method: 'GET',
         url: '/health'
-      });
+      })
 
       expect(result).toEqual({
         message: 'Unable to connect to backend MongoDB',
@@ -106,15 +106,15 @@ describe('#healthController', () => {
           name: 'Error'
         }),
         version: 'versionMock'
-      });
-      expect(statusCode).toBe(statusCodes.serviceUnavailable);
-    });
+      })
+      expect(statusCode).toBe(statusCodes.serviceUnavailable)
+    })
 
     test('falls back to dev version when cleared', async () => {
       // clear the setting and make another request to exercise the fallback
-      config.set('serviceVersion', null);
-      mongooseModule.__mockPing.mockResolvedValueOnce({ ok: 1 });
-      const response = await server.inject({ method: 'GET', url: '/health' });
+      config.set('serviceVersion', null)
+      mongooseModule.__mockPing.mockResolvedValueOnce({ ok: 1 })
+      const response = await server.inject({ method: 'GET', url: '/health' })
       expect(response.result).toEqual({
         message: 'success',
         version: 'dev',
@@ -126,23 +126,23 @@ describe('#healthController', () => {
           requestLoggerDebug: false
         },
         disabledActionCodes: ['PA3']
-      });
-      expect(response.statusCode).toBe(statusCodes.ok);
-    });
+      })
+      expect(response.statusCode).toBe(statusCodes.ok)
+    })
 
     test('Should return the updated feature flags', async () => {
-      config.set('featureFlags.isPaymentHubEnabled', true);
+      config.set('featureFlags.isPaymentHubEnabled', true)
 
-      mongooseModule.__mockPing.mockResolvedValueOnce({ ok: 1 });
+      mongooseModule.__mockPing.mockResolvedValueOnce({ ok: 1 })
       const { result, statusCode } = await server.inject({
         method: 'GET',
         url: '/health'
-      });
+      })
 
-      expect(result.featureFlags.isPaymentHubEnabled).toBe(true);
-      expect(statusCode).toBe(statusCodes.ok);
-    });
-  });
+      expect(result.featureFlags.isPaymentHubEnabled).toBe(true)
+      expect(statusCode).toBe(statusCodes.ok)
+    })
+  })
   describe('GET /health/stats', () => {
     test('Should provide expected response', async () => {
       mockGetStats.mockResolvedValue({
@@ -156,12 +156,12 @@ describe('#healthController', () => {
           locked: 0,
           failed: 0
         }
-      });
+      })
 
       const { result, statusCode } = await server.inject({
         method: 'GET',
         url: '/health/stats'
-      });
+      })
 
       expect(result).toEqual({
         stats: {
@@ -176,23 +176,23 @@ describe('#healthController', () => {
             failed: 0
           }
         }
-      });
-      expect(statusCode).toBe(statusCodes.ok);
-    });
+      })
+      expect(statusCode).toBe(statusCodes.ok)
+    })
 
     test('Should handle database error', async () => {
-      mockGetStats.mockRejectedValue(new Error('DB error'));
+      mockGetStats.mockRejectedValue(new Error('DB error'))
 
       const { result, statusCode } = await server.inject({
         method: 'GET',
         url: '/health/stats'
-      });
+      })
 
-      expect(result.message).toBe('Unable to fetch stats');
-      expect(statusCode).toBe(statusCodes.serviceUnavailable);
-    });
-  });
-});
+      expect(result.message).toBe('Unable to fetch stats')
+      expect(statusCode).toBe(statusCodes.serviceUnavailable)
+    })
+  })
+})
 
 /**
  * @import { Server } from '@hapi/hapi'

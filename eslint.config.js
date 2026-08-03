@@ -1,13 +1,13 @@
-import { readFileSync } from 'node:fs';
-import { gitignoreToMinimatch } from '@humanwhocodes/gitignore-to-minimatch';
-import js from '@eslint/js';
-import globals from 'globals';
+import { readFileSync } from 'node:fs'
+import { gitignoreToMinimatch } from '@humanwhocodes/gitignore-to-minimatch'
+import js from '@eslint/js'
+import globals from 'globals'
 
 const ignores = readFileSync(new URL('.gitignore', import.meta.url), 'utf8')
   .split('\n')
   .map((line) => line.trim())
   .filter((line) => line && !line.startsWith('#'))
-  .map(gitignoreToMinimatch);
+  .map(gitignoreToMinimatch)
 
 export default [
   {
@@ -31,4 +31,4 @@ export default [
       globals: globals.vitest
     }
   }
-];
+]

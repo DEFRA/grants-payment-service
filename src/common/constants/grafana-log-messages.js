@@ -15,4 +15,4 @@ export const grafanaLogMessages = Object.freeze({
   warning: {
     noGrantPaymentEntryFound: 'Warning: No grant payment entry found'
   }
-});
+})

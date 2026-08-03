@@ -1,9 +1,9 @@
-import { cancelGrantPayments } from '#~/common/helpers/cancel-grant-payment.js';
-import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js';
+import { cancelGrantPayments } from '#~/common/helpers/cancel-grant-payment.js'
+import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js'
 import {
   auditEvent,
   AuditEvent
-} from '#~/common/helpers/payment-hub/audit-event.js';
+} from '#~/common/helpers/payment-hub/audit-event.js'
 
 /**
  * Builds the auditEvent context for each cancelled payment across all updated documents.
@@ -24,7 +24,7 @@ const buildCancelledPaymentAuditContexts = (updatedPayments) =>
         crn: grantPayment.claimId
       }
     }))
-  );
+  )
 
 /**
  * Inbound cancel_payment event handler
@@ -34,35 +34,35 @@ const buildCancelledPaymentAuditContexts = (updatedPayments) =>
  * @param {import('pino').Logger} logger
  */
 export async function handleCancelPaymentEvent(messageId, payload, logger) {
-  const { sbi, frn } = payload.data;
+  const { sbi, frn } = payload.data
 
   try {
     const { updatedPayments, foundGrantPayments } = await cancelGrantPayments(
       sbi,
       frn
-    );
+    )
 
     if (updatedPayments.length) {
       logger.info(
         { messageId, sbi },
         `Successfully cancelled grant payment entry for message ${messageId}: ${JSON.stringify(updatedPayments)}`
-      );
+      )
 
-      const auditContexts = buildCancelledPaymentAuditContexts(updatedPayments);
+      const auditContexts = buildCancelledPaymentAuditContexts(updatedPayments)
       for (const auditContext of auditContexts) {
-        await auditEvent(AuditEvent.GRANT_PAYMENT_CANCELLED, auditContext);
+        await auditEvent(AuditEvent.GRANT_PAYMENT_CANCELLED, auditContext)
       }
     } else if (foundGrantPayments.length) {
       logger.warn(
         { messageId, sbi },
         `Found grant payment entries for message ${messageId}: sbi ${sbi} and frn ${frn}, but none were in a pending state to be cancelled`
-      );
+      )
     } else {
       logger.warn(
         `${grafanaLogMessages.warning.noGrantPaymentEntryFound} to cancel for message ${messageId}: sbi ${sbi} and frn ${frn}`
-      );
+      )
     }
   } catch (err) {
-    logger.error(err, grafanaLogMessages.error.cancelPayment);
+    logger.error(err, grafanaLogMessages.error.cancelPayment)
   }
 }

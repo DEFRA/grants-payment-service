@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Create a reusable mock function for getTraceId
-const mockGetTraceId = vi.fn();
+const mockGetTraceId = vi.fn()
 
 describe('loggerOptions', () => {
-  let loggerOptions;
+  let loggerOptions
 
   beforeEach(async () => {
-    vi.clearAllMocks();
-    vi.resetModules();
+    vi.clearAllMocks()
+    vi.resetModules()
 
     // Mock config module
     vi.doMock('#~/config/index.js', () => ({
@@ -20,60 +20,60 @@ describe('loggerOptions', () => {
               redact: ['req', 'res'],
               level: 'info',
               format: 'pino-pretty'
-            };
+            }
           } else if (key === 'serviceName') {
-            return 'test-service';
+            return 'test-service'
           } else if (key === 'serviceVersion') {
-            return '1.0.0';
+            return '1.0.0'
           } else if (key === 'featureFlags.requestLoggerDebug') {
-            return false;
+            return false
           } else {
-            return undefined;
+            return undefined
           }
         }),
         set: vi.fn()
       }
-    }));
+    }))
 
     // Mock @defra/hapi-tracing
     vi.doMock('@defra/hapi-tracing', () => ({
       getTraceId: mockGetTraceId
-    }));
+    }))
 
     // Import loggerOptions
-    const module = await import('./logger-options.js');
-    loggerOptions = module.loggerOptions;
-  });
+    const module = await import('./logger-options.js')
+    loggerOptions = module.loggerOptions
+  })
 
   it('has valid basic configuration', () => {
-    expect(loggerOptions).toHaveProperty('enabled');
-    expect(loggerOptions).toHaveProperty('level');
-    expect(loggerOptions).toHaveProperty('redact');
-    expect(loggerOptions.nesting).toBe(true);
-  });
+    expect(loggerOptions).toHaveProperty('enabled')
+    expect(loggerOptions).toHaveProperty('level')
+    expect(loggerOptions).toHaveProperty('redact')
+    expect(loggerOptions.nesting).toBe(true)
+  })
 
   describe('mixin', () => {
     it('returns empty object when no traceId is present', () => {
-      mockGetTraceId.mockReturnValue(null);
-      const result = loggerOptions.mixin();
-      expect(result).toEqual({});
-    });
+      mockGetTraceId.mockReturnValue(null)
+      const result = loggerOptions.mixin()
+      expect(result).toEqual({})
+    })
 
     it('returns trace object when traceId is present', () => {
-      const fakeTraceId = 'test-trace-id';
-      mockGetTraceId.mockReturnValue(fakeTraceId);
-      const result = loggerOptions.mixin();
-      expect(result).toEqual({ trace: { id: fakeTraceId } });
-    });
-  });
-});
+      const fakeTraceId = 'test-trace-id'
+      mockGetTraceId.mockReturnValue(fakeTraceId)
+      const result = loggerOptions.mixin()
+      expect(result).toEqual({ trace: { id: fakeTraceId } })
+    })
+  })
+})
 
 describe('loggerOptions with requestLoggerDebug feature flag', () => {
-  let loggerOptions;
+  let loggerOptions
 
   beforeEach(async () => {
-    vi.clearAllMocks();
-    vi.resetModules();
+    vi.clearAllMocks()
+    vi.resetModules()
 
     // Mock config module with testEndpoints enabled
     vi.doMock('#~/config/index.js', () => ({
@@ -85,34 +85,34 @@ describe('loggerOptions with requestLoggerDebug feature flag', () => {
               redact: ['req', 'res', 'responseTime'],
               level: 'info',
               format: 'pino-pretty'
-            };
+            }
           } else if (key === 'serviceName') {
-            return 'test-service';
+            return 'test-service'
           } else if (key === 'serviceVersion') {
-            return '1.0.0';
+            return '1.0.0'
           } else if (key === 'featureFlags.requestLoggerDebug') {
-            return true;
+            return true
           } else {
-            return undefined;
+            return undefined
           }
         }),
         set: vi.fn()
       }
-    }));
+    }))
 
     // Mock @defra/hapi-tracing
     vi.doMock('@defra/hapi-tracing', () => ({
       getTraceId: mockGetTraceId
-    }));
+    }))
 
     // Import loggerOptions
-    const module = await import('./logger-options.js');
-    loggerOptions = module.loggerOptions;
-  });
+    const module = await import('./logger-options.js')
+    loggerOptions = module.loggerOptions
+  })
 
   it('sets redact to only x-api-key and enables logPayload when requestLoggerDebug is enabled', () => {
-    expect(loggerOptions.redact.paths).toEqual(['req.headers.x-api-key']);
-    expect(loggerOptions.redact.remove).toBe(false);
-    expect(loggerOptions.logPayload).toBe(true);
-  });
-});
+    expect(loggerOptions.redact.paths).toEqual(['req.headers.x-api-key'])
+    expect(loggerOptions.redact.remove).toBe(false)
+    expect(loggerOptions.logPayload).toBe(true)
+  })
+})

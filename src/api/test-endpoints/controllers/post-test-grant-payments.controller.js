@@ -1,6 +1,6 @@
-import { statusCodes } from '#~/common/constants/status-codes.js';
-import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js';
-import { serializeError } from '#~/common/helpers/serialize-error.js';
+import { statusCodes } from '#~/common/constants/status-codes.js'
+import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
+import { serializeError } from '#~/common/helpers/serialize-error.js'
 
 const postTestGrantPaymentController = {
   options: {
@@ -14,29 +14,29 @@ const postTestGrantPaymentController = {
   },
   handler: async (req, res) => {
     try {
-      let created;
+      let created
       if (Array.isArray(req.payload)) {
         created = await Promise.all(
           req.payload.map((payload) => createGrantPayment(payload))
-        );
-        const ids = created.map((c) => c?._id?.toString?.());
+        )
+        const ids = created.map((c) => c?._id?.toString?.())
         return res
           .response({
             ids,
             message: 'Grant payments created'
           })
-          .code(statusCodes.created);
+          .code(statusCodes.created)
       }
 
-      created = await createGrantPayment(req.payload);
-      const id = created?._id?.toString?.();
+      created = await createGrantPayment(req.payload)
+      const id = created?._id?.toString?.()
 
       return res
         .response({
           id,
           message: 'Grant payments created'
         })
-        .code(statusCodes.created);
+        .code(statusCodes.created)
     } catch (err) {
       if (err?.name === 'ValidationError' || err?.name === 'ValidatorError') {
         return res
@@ -44,7 +44,7 @@ const postTestGrantPaymentController = {
             message: 'Validation error',
             error: serializeError(err)
           })
-          .code(statusCodes.badRequest);
+          .code(statusCodes.badRequest)
       }
 
       return res
@@ -52,9 +52,9 @@ const postTestGrantPaymentController = {
           message: 'Internal Server Error',
           error: serializeError(err)
         })
-        .code(statusCodes.internalServerError);
+        .code(statusCodes.internalServerError)
     }
   }
-};
+}
 
-export { postTestGrantPaymentController };
+export { postTestGrantPaymentController }

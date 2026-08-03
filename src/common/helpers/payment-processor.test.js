@@ -1,71 +1,71 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest'
 import {
   processDailyPayments,
   processStaleLockedPayments
-} from './payment-processor.js';
-import { streamGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js';
-import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js';
+} from './payment-processor.js'
+import { streamGrantPaymentsByDate } from '#~/common/helpers/fetch-grants-by-date.js'
+import { sendPaymentHubRequest } from '#~/common/helpers/payment-hub/index.js'
 import {
   updatePaymentStatus,
   markAllStaleLockedPaymentsAsFailed
-} from '#~/common/helpers/update-payment-status.js';
+} from '#~/common/helpers/update-payment-status.js'
 import {
   auditEvent,
   AuditEvent
-} from '#~/common/helpers/payment-hub/audit-event.js';
-import { getTodaysDate, getNextDay } from './date.js';
+} from '#~/common/helpers/payment-hub/audit-event.js'
+import { getTodaysDate, getNextDay } from './date.js'
 
 vi.mock('#~/common/helpers/fetch-grants-by-date.js', () => ({
   fetchGrantPaymentsByDate: vi.fn(),
   streamGrantPaymentsByDate: vi.fn(),
   streamGrantPaymentsByCorrelationIds: vi.fn()
-}));
+}))
 vi.mock('#~/common/helpers/payment-hub/index.js', () => ({
   sendPaymentHubRequest: vi.fn()
-}));
+}))
 vi.mock('#~/common/helpers/update-payment-status.js', () => ({
   updatePaymentStatus: vi.fn(),
   markAllStaleLockedPaymentsAsFailed: vi.fn()
-}));
+}))
 vi.mock('#~/common/helpers/payment-hub/audit-event.js', async () => {
   const actual = await vi.importActual(
     '#~/common/helpers/payment-hub/audit-event.js'
-  );
+  )
   return {
     ...actual,
     auditEvent: vi.fn()
-  };
-});
+  }
+})
 vi.mock('#~/api/common/models/grant_payments.js', () => ({
   default: {
     findOne: vi.fn(),
     updateMany: vi.fn()
   }
-}));
+}))
 
 describe('processDailyPayments', () => {
   const logger = {
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn()
-  };
-  const server = { logger };
+  }
+  const server = { logger }
 
   const mockCursor = (docs) => ({
     eachAsync: vi.fn().mockImplementation(async (callback) => {
       for (const doc of docs) {
-        await callback(doc);
+        await callback(doc)
       }
     })
-  });
+  })
 
   beforeEach(() => {
-    vi.resetAllMocks();
-    markAllStaleLockedPaymentsAsFailed.mockResolvedValue(0);
-  });
+    vi.resetAllMocks()
+    markAllStaleLockedPaymentsAsFailed.mockResolvedValue(0)
+  })
 
   it('uses provided date, locks each payment and proxies to PaymentHub, returning results via stream', async () => {
-    const fakeDate = '2026-02-20';
+    const fakeDate = '2026-02-20'
     const fakeDocs = [
       {
         _id: '1',
@@ -131,30 +131,30 @@ describe('processDailyPayments', () => {
           }
         ]
       }
-    ];
+    ]
 
-    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs));
-    const responses = ['a', 'b'];
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
+    const responses = ['a', 'b']
     sendPaymentHubRequest
       .mockResolvedValueOnce(responses[0])
-      .mockResolvedValueOnce(responses[1]);
+      .mockResolvedValueOnce(responses[1])
 
-    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' });
+    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
 
     const result = await processDailyPayments(server, undefined, {
       date: fakeDate
-    });
+    })
 
     expect(streamGrantPaymentsByDate).toHaveBeenCalledWith(
       fakeDate,
       'pending',
       undefined
-    );
+    )
     expect(logger.info).toHaveBeenCalledWith(
       `Processing payments for dates <= ${getNextDay(fakeDate)}`
-    );
+    )
 
-    expect(sendPaymentHubRequest).toHaveBeenCalledTimes(2);
+    expect(sendPaymentHubRequest).toHaveBeenCalledTimes(2)
     expect(result).toEqual({
       results: [
         { paymentId: 'p1', docId: '1' },
@@ -164,17 +164,17 @@ describe('processDailyPayments', () => {
       fetchDuration: expect.any(String),
       processDuration: expect.any(String),
       sendDuration: expect.any(String)
-    });
+    })
 
     // Wait for background tasks to complete
     await vi.waitFor(() => {
-      expect(updatePaymentStatus).toHaveBeenCalledWith('1', 'p1', 'submitted');
-      expect(updatePaymentStatus).toHaveBeenCalledWith('2', 'p2', 'submitted');
-    });
-  });
+      expect(updatePaymentStatus).toHaveBeenCalledWith('1', 'p1', 'submitted')
+      expect(updatePaymentStatus).toHaveBeenCalledWith('2', 'p2', 'submitted')
+    })
+  })
 
   it('skips payments that cannot be locked by another instance', async () => {
-    const fakeDate = '2026-02-20';
+    const fakeDate = '2026-02-20'
     const fakeDocs = [
       {
         _id: '1',
@@ -230,84 +230,84 @@ describe('processDailyPayments', () => {
           }
         ]
       }
-    ];
-    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs));
+    ]
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
 
     updatePaymentStatus
       .mockResolvedValueOnce({ _id: 'doc1' })
-      .mockResolvedValueOnce(null);
+      .mockResolvedValueOnce(null)
 
-    sendPaymentHubRequest.mockResolvedValue('ok');
+    sendPaymentHubRequest.mockResolvedValue('ok')
 
     const result = await processDailyPayments(server, undefined, {
       date: fakeDate
-    });
+    })
 
-    expect(sendPaymentHubRequest).toHaveBeenCalledTimes(1);
-    expect(result.results).toEqual([{ paymentId: 'x', docId: '1' }, null]);
+    expect(sendPaymentHubRequest).toHaveBeenCalledTimes(1)
+    expect(result.results).toEqual([{ paymentId: 'x', docId: '1' }, null])
     expect(logger.info).toHaveBeenCalledWith(
       `Skipping payment y (already locked or processed)`
-    );
-  });
+    )
+  })
 
   it('defaults to today if no date supplied', async () => {
-    const today = getTodaysDate();
-    streamGrantPaymentsByDate.mockReturnValue(mockCursor([]));
+    const today = getTodaysDate()
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor([]))
 
-    const result = await processDailyPayments(server, undefined, {});
+    const result = await processDailyPayments(server, undefined, {})
 
     expect(streamGrantPaymentsByDate).toHaveBeenCalledWith(
       today,
       'pending',
       undefined
-    );
+    )
     expect(result).toEqual({
       results: [],
       backgroundTasks: [],
       fetchDuration: expect.any(String),
       processDuration: expect.any(String),
       sendDuration: expect.any(String)
-    });
-  });
+    })
+  })
 
   it('handles documents with no grants and grants with no payments gracefully', async () => {
-    const fakeDate = '2026-02-20';
+    const fakeDate = '2026-02-20'
     const fakeDocs = [
       { _id: 'no-grants' },
       {
         _id: 'no-payments',
         grants: [{ invoiceNumber: 'INV1', agreementNumber: 'AGR1' }]
       }
-    ];
-    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs));
+    ]
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
 
     const result = await processDailyPayments(server, undefined, {
       date: fakeDate
-    });
+    })
 
-    expect(sendPaymentHubRequest).not.toHaveBeenCalled();
-    expect(result.results).toEqual([]);
-  });
+    expect(sendPaymentHubRequest).not.toHaveBeenCalled()
+    expect(result.results).toEqual([])
+  })
 
   it('logs and rethrows when the streaming fails', async () => {
-    const fakeDate = '2026-02-20';
-    const error = new Error('streaming failure');
+    const fakeDate = '2026-02-20'
+    const error = new Error('streaming failure')
     streamGrantPaymentsByDate.mockReturnValue({
       eachAsync: vi.fn().mockRejectedValue(error)
-    });
+    })
 
     await expect(
       processDailyPayments(server, undefined, { date: fakeDate })
-    ).rejects.toThrow(error);
+    ).rejects.toThrow(error)
 
     expect(logger.error).toHaveBeenCalledWith(
       error,
       `Failed to process payments while Processing payments for dates <= ${getNextDay(fakeDate)}`
-    );
-  });
+    )
+  })
 
   it('marks payment as failed when transform throws after lock', async () => {
-    const fakeDate = '2026-02-20';
+    const fakeDate = '2026-02-20'
     const fakeDocs = [
       {
         _id: '1',
@@ -339,41 +339,41 @@ describe('processDailyPayments', () => {
           }
         ]
       }
-    ];
-    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs));
-    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' });
+    ]
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
+    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
 
     const result = await processDailyPayments(server, undefined, {
       date: fakeDate
-    });
+    })
 
-    expect(sendPaymentHubRequest).not.toHaveBeenCalled();
-    expect(updatePaymentStatus).toHaveBeenCalledWith('1', 'p-other', 'failed');
+    expect(sendPaymentHubRequest).not.toHaveBeenCalled()
+    expect(updatePaymentStatus).toHaveBeenCalledWith('1', 'p-other', 'failed')
     expect(logger.error).toHaveBeenCalledWith(
       expect.any(Error),
       'Payment Hub data transform failed for payment p-other in record 1'
-    );
+    )
     expect(result.results[0]).toMatchObject({
       message: 'Payment not found in the payments array'
-    });
-  });
+    })
+  })
 
   it('skips and marks as failed payments with an unsupported sourceSystem', async () => {
-    const fakeDate = '2026-02-20';
-    const fakeDocs = [];
-    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs));
-    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' });
+    const fakeDate = '2026-02-20'
+    const fakeDocs = []
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
+    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
 
     await processDailyPayments(server, undefined, {
       date: fakeDate
-    });
+    })
 
-    expect(sendPaymentHubRequest).not.toHaveBeenCalled();
-    expect(updatePaymentStatus).not.toHaveBeenCalled();
-  });
+    expect(sendPaymentHubRequest).not.toHaveBeenCalled()
+    expect(updatePaymentStatus).not.toHaveBeenCalled()
+  })
 
   it('logs individual hub failures and continues, updating status appropriately', async () => {
-    const fakeDate = '2026-02-20';
+    const fakeDate = '2026-02-20'
     const fakeDocs = [
       {
         _id: '1',
@@ -405,32 +405,32 @@ describe('processDailyPayments', () => {
           }
         ]
       }
-    ];
-    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs));
+    ]
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor(fakeDocs))
 
     sendPaymentHubRequest
       .mockResolvedValueOnce('ok1')
-      .mockRejectedValueOnce(new Error('hub down'));
+      .mockRejectedValueOnce(new Error('hub down'))
 
-    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' });
+    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
 
     const result = await processDailyPayments(server, undefined, {
       date: fakeDate
-    });
+    })
 
     expect(result.results).toEqual([
       { paymentId: 'a', docId: '1' },
       { paymentId: 'b', docId: '2' }
-    ]);
+    ])
     await vi.waitFor(() => {
-      expect(updatePaymentStatus).toHaveBeenCalledWith('2', 'b', 'failed');
+      expect(updatePaymentStatus).toHaveBeenCalledWith('2', 'b', 'failed')
       expect(logger.error).toHaveBeenCalledWith(
         expect.any(Error),
         `PaymentHub request failed for record 2`
-      );
-    });
+      )
+    })
 
-    const backgroundTasksResult = await Promise.all(result.backgroundTasks);
+    const backgroundTasksResult = await Promise.all(result.backgroundTasks)
     expect(backgroundTasksResult).toEqual([
       'ok1',
       expect.objectContaining({
@@ -439,29 +439,29 @@ describe('processDailyPayments', () => {
         error: expect.objectContaining({ message: 'hub down' }),
         body: expect.objectContaining({ sourceSystem: 'FPTT' })
       })
-    ]);
-  });
+    ])
+  })
 
   it('passes limit to streamGrantPaymentsByDate and includes it in logs', async () => {
-    const fakeDate = '2026-02-20';
-    const limit = 5;
-    streamGrantPaymentsByDate.mockReturnValue(mockCursor([]));
+    const fakeDate = '2026-02-20'
+    const limit = 5
+    streamGrantPaymentsByDate.mockReturnValue(mockCursor([]))
 
-    await processDailyPayments(server, limit, { date: fakeDate });
+    await processDailyPayments(server, limit, { date: fakeDate })
 
     expect(streamGrantPaymentsByDate).toHaveBeenCalledWith(
       fakeDate,
       'pending',
       limit
-    );
+    )
 
     expect(logger.info).toHaveBeenCalledWith(
       `Processing payments for dates <= ${getNextDay(fakeDate)} (limited to ${limit} payments)`
-    );
-  });
+    )
+  })
 
   it('uses provided correlationIds and processes payments by correlation IDs', async () => {
-    const fakeCorrelationIds = ['corr1', 'corr2', 'corr3'];
+    const fakeCorrelationIds = ['corr1', 'corr2', 'corr3']
     const fakeDocs = [
       {
         _id: '1',
@@ -525,32 +525,32 @@ describe('processDailyPayments', () => {
           }
         ]
       }
-    ];
+    ]
 
     const { streamGrantPaymentsByCorrelationIds } =
-      await import('#~/common/helpers/fetch-grants-by-date.js');
-    streamGrantPaymentsByCorrelationIds.mockReturnValue(mockCursor(fakeDocs));
-    const responses = ['a', 'b'];
+      await import('#~/common/helpers/fetch-grants-by-date.js')
+    streamGrantPaymentsByCorrelationIds.mockReturnValue(mockCursor(fakeDocs))
+    const responses = ['a', 'b']
     sendPaymentHubRequest
       .mockResolvedValueOnce(responses[0])
-      .mockResolvedValueOnce(responses[1]);
+      .mockResolvedValueOnce(responses[1])
 
-    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' });
+    updatePaymentStatus.mockResolvedValue({ _id: 'mock-doc' })
 
     const result = await processDailyPayments(server, undefined, {
       correlationIds: fakeCorrelationIds
-    });
+    })
 
     expect(streamGrantPaymentsByCorrelationIds).toHaveBeenCalledWith(
       fakeCorrelationIds,
       'pending',
       undefined
-    );
+    )
     expect(logger.info).toHaveBeenCalledWith(
       `Processing payments by correlation IDs: ${fakeCorrelationIds.length} grant(s)`
-    );
+    )
 
-    expect(sendPaymentHubRequest).toHaveBeenCalledTimes(2);
+    expect(sendPaymentHubRequest).toHaveBeenCalledTimes(2)
     expect(result).toEqual({
       results: [
         { paymentId: 'payment1', docId: '1' },
@@ -560,7 +560,7 @@ describe('processDailyPayments', () => {
       fetchDuration: expect.any(String),
       processDuration: expect.any(String),
       sendDuration: expect.any(String)
-    });
+    })
 
     // Wait for background tasks to complete
     await vi.waitFor(() => {
@@ -568,18 +568,18 @@ describe('processDailyPayments', () => {
         '1',
         'payment1',
         'submitted'
-      );
+      )
       expect(updatePaymentStatus).toHaveBeenCalledWith(
         '2',
         'payment2',
         'submitted'
-      );
-    });
-  });
+      )
+    })
+  })
 
   it('throws error when both date and correlationIds are provided', async () => {
-    const fakeDate = '2026-02-20';
-    const fakeCorrelationIds = ['corr1', 'corr2'];
+    const fakeDate = '2026-02-20'
+    const fakeCorrelationIds = ['corr1', 'corr2']
 
     await expect(
       processDailyPayments(server, undefined, {
@@ -588,43 +588,43 @@ describe('processDailyPayments', () => {
       })
     ).rejects.toThrow(
       'Cannot provide both date and correlationIds. Provide one or the other.'
-    );
-  });
+    )
+  })
 
   it('passes limit to streamGrantPaymentsByCorrelationIds and includes it in logs', async () => {
-    const fakeCorrelationIds = ['corr1', 'corr2', 'corr3'];
-    const limit = 5;
+    const fakeCorrelationIds = ['corr1', 'corr2', 'corr3']
+    const limit = 5
     const { streamGrantPaymentsByCorrelationIds } =
-      await import('#~/common/helpers/fetch-grants-by-date.js');
-    streamGrantPaymentsByCorrelationIds.mockReturnValue(mockCursor([]));
+      await import('#~/common/helpers/fetch-grants-by-date.js')
+    streamGrantPaymentsByCorrelationIds.mockReturnValue(mockCursor([]))
 
     await processDailyPayments(server, limit, {
       correlationIds: fakeCorrelationIds
-    });
+    })
 
     expect(streamGrantPaymentsByCorrelationIds).toHaveBeenCalledWith(
       fakeCorrelationIds,
       'pending',
       limit
-    );
+    )
 
     expect(logger.info).toHaveBeenCalledWith(
       `Processing payments by correlation IDs: ${fakeCorrelationIds.length} grant(s) (limited to ${limit} grants)`
-    );
-  });
-});
+    )
+  })
+})
 
 describe('processStaleLockedPayments', () => {
   const logger = {
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn()
-  };
-  const server = { logger };
+  }
+  const server = { logger }
 
   beforeEach(() => {
-    vi.resetAllMocks();
-  });
+    vi.resetAllMocks()
+  })
 
   it('calls markAllStaleLockedPaymentsAsFailed, audits, and logs if any were marked', async () => {
     const affectedPayments = [
@@ -638,15 +638,15 @@ describe('processStaleLockedPayments', () => {
         dueDate: '2026-06-05',
         totalAmountPence: '1263'
       }
-    ];
+    ]
     markAllStaleLockedPaymentsAsFailed.mockResolvedValue({
       modifiedCount: 5,
       affectedPayments
-    });
+    })
 
-    const result = await processStaleLockedPayments(server);
+    const result = await processStaleLockedPayments(server)
 
-    expect(markAllStaleLockedPaymentsAsFailed).toHaveBeenCalled();
+    expect(markAllStaleLockedPaymentsAsFailed).toHaveBeenCalled()
     expect(auditEvent).toHaveBeenCalledWith(
       AuditEvent.GRANT_PAYMENT_STALE_LOCK_FAILED,
       {
@@ -661,42 +661,38 @@ describe('processStaleLockedPayments', () => {
           crn: 'R00000004'
         }
       }
-    );
-    expect(logger.info).toHaveBeenCalledWith(
-      'Processing stale locked payments'
-    );
+    )
+    expect(logger.info).toHaveBeenCalledWith('Processing stale locked payments')
     expect(logger.error).toHaveBeenCalledWith(
       'Payment remained locked beyond timeout threshold: marked 5 stale locked payment(s) as failed'
-    );
-    expect(result).toEqual(5);
-  });
+    )
+    expect(result).toEqual(5)
+  })
 
   it('does not log error or audit if no stale payments', async () => {
     markAllStaleLockedPaymentsAsFailed.mockResolvedValue({
       modifiedCount: 0,
       affectedPayments: []
-    });
+    })
 
-    const result = await processStaleLockedPayments(server);
+    const result = await processStaleLockedPayments(server)
 
-    expect(markAllStaleLockedPaymentsAsFailed).toHaveBeenCalled();
-    expect(auditEvent).not.toHaveBeenCalled();
-    expect(logger.info).toHaveBeenCalledWith(
-      'Processing stale locked payments'
-    );
-    expect(logger.info).toHaveBeenCalledWith('No stale locked payments found');
-    expect(logger.error).not.toHaveBeenCalled();
-    expect(result).toEqual(0);
-  });
+    expect(markAllStaleLockedPaymentsAsFailed).toHaveBeenCalled()
+    expect(auditEvent).not.toHaveBeenCalled()
+    expect(logger.info).toHaveBeenCalledWith('Processing stale locked payments')
+    expect(logger.info).toHaveBeenCalledWith('No stale locked payments found')
+    expect(logger.error).not.toHaveBeenCalled()
+    expect(result).toEqual(0)
+  })
 
   it('logs and rethrows errors', async () => {
-    const error = new Error('db error');
-    markAllStaleLockedPaymentsAsFailed.mockRejectedValue(error);
+    const error = new Error('db error')
+    markAllStaleLockedPaymentsAsFailed.mockRejectedValue(error)
 
-    await expect(processStaleLockedPayments(server)).rejects.toThrow(error);
+    await expect(processStaleLockedPayments(server)).rejects.toThrow(error)
     expect(logger.error).toHaveBeenCalledWith(
       error,
       'Failed to process stale locked payments'
-    );
-  });
-});
+    )
+  })
+})
