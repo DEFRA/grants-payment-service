@@ -68,6 +68,8 @@ updates:
           - '@types/*'
 
     ignore:
+      - dependency-name: 'eslint'
+        versions: [">=10"]
       - dependency-name: "@types/node"
         versions: [">=25"] # Use Node LTS
 
@@ -78,9 +80,8 @@ updates:
       time: '10:30'
       timezone: 'Europe/London'
 
-    # Delay a PR for a package update by 5 days
     cooldown:
-      default-days: 5
+      default-days: 7
 
     versioning-strategy: increase
 
@@ -105,9 +106,8 @@ updates:
       time: '10:30'
       timezone: 'Europe/London'
 
-    # Delay a PR for an action update by 5 days
     cooldown:
-      default-days: 5
+      default-days: 7
 
   # Update docker-compose packages
   - package-ecosystem: docker-compose
@@ -126,9 +126,8 @@ updates:
       time: '10:30'
       timezone: 'Europe/London'
 
-    # Delay a PR for an action update by 5 days
     cooldown:
-      default-days: 5
+      default-days: 7
 
   # Update GitHub Actions
   - package-ecosystem: github-actions
@@ -141,6 +140,5 @@ updates:
       time: '10:30'
       timezone: 'Europe/London'
 
-    # Delay a PR for an action update by 5 days
     cooldown:
-      default-days: 5
+      default-days: 7
