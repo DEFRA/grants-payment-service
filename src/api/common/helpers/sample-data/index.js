@@ -1,5 +1,5 @@
-import grants from './grants.js';
+import grants from './grants.js'
 
 export default {
   grants
-};
+}

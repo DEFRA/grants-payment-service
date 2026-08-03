@@ -1,4 +1,4 @@
-import { getActionCodeByName, getPaymentHubConfig } from './index.js';
+import { getActionCodeByName, getPaymentHubConfig } from './index.js'
 
 describe('config-mapper', () => {
   describe('getActionCodeByName', () => {
@@ -10,9 +10,9 @@ describe('config-mapper', () => {
       ['PA3', '51840'],
       ['UNKNOWN', undefined]
     ])('given name %s it returns code %s', (name, expectedCode) => {
-      expect(getActionCodeByName(name)).toBe(expectedCode);
-    });
-  });
+      expect(getActionCodeByName(name)).toBe(expectedCode)
+    })
+  })
 
   describe('getPaymentHubConfig', () => {
     it('returns config for SFI', () => {
@@ -24,8 +24,8 @@ describe('config-mapper', () => {
         ledger: 'AP',
         remittanceDescription: 'Farm Payments Technical Test Payment',
         sourceSystem: 'FPTT'
-      });
-    });
+      })
+    })
 
     it('returns config for WMP', () => {
       expect(getPaymentHubConfig('WMP')).toEqual({
@@ -36,11 +36,11 @@ describe('config-mapper', () => {
         ledger: 'AP',
         remittanceDescription: 'Woodland Management Plan Payment',
         sourceSystem: 'WMP'
-      });
-    });
+      })
+    })
 
     it('returns undefined for unknown scheme', () => {
-      expect(getPaymentHubConfig('UNKNOWN')).toBeUndefined();
-    });
-  });
-});
+      expect(getPaymentHubConfig('UNKNOWN')).toBeUndefined()
+    })
+  })
+})

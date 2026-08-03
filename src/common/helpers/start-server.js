@@ -1,23 +1,23 @@
-import { config } from '#~/config/index.js';
+import { config } from '#~/config/index.js'
 
-import { createServer } from '#~/server.js';
+import { createServer } from '#~/server.js'
 
 async function startServer() {
-  const server = await createServer();
-  await server.start();
+  const server = await createServer()
+  await server.start()
 
   server.logger.info(
     `Feature flags: ${JSON.stringify(config.get('featureFlags'), null, 2)}`
-  );
+  )
   server.logger.info(
     `Disabled scheme action codes: ${JSON.stringify(config.get('disabledActionCodes'), null, 2)}`
-  );
-  server.logger.info('Server started successfully');
+  )
+  server.logger.info('Server started successfully')
   server.logger.info(
     `Access your backend on http://localhost:${config.get('port')}`
-  );
+  )
 
-  return server;
+  return server
 }
 
-export { startServer };
+export { startServer }

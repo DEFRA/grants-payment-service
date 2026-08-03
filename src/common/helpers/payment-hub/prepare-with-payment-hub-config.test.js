@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { prepareWithPaymentHubConfig } from './prepare-with-payment-hub-config.js';
+import { describe, it, expect } from 'vitest'
+import { prepareWithPaymentHubConfig } from './prepare-with-payment-hub-config.js'
 
 describe('prepareWithPaymentHubConfig', () => {
   it('should return grantPayment with schemeConfig merged into each grant', () => {
@@ -38,54 +38,54 @@ describe('prepareWithPaymentHubConfig', () => {
           ]
         }
       ]
-    };
+    }
 
-    const result = prepareWithPaymentHubConfig(grantPayment);
-    const grant = result.grants[0];
+    const result = prepareWithPaymentHubConfig(grantPayment)
+    const grant = result.grants[0]
 
-    expect(result.scheme).toBe('SFI');
-    expect(grant.ledger).toBe('AP'); // from SFI config
-    expect(grant.fesCode).toBe('FALS_FPTT'); // from SFI config
+    expect(result.scheme).toBe('SFI')
+    expect(grant.ledger).toBe('AP') // from SFI config
+    expect(grant.fesCode).toBe('FALS_FPTT') // from SFI config
 
     // Should NOT be at grant level
-    expect(grant.accountCode).not.toBe('AC001');
-    expect(grant.fundCode).not.toBe('FUND10');
-    expect(grant.deliveryBody).toBe('RP00');
+    expect(grant.accountCode).not.toBe('AC001')
+    expect(grant.fundCode).not.toBe('FUND10')
+    expect(grant.deliveryBody).toBe('RP00')
 
     // Should be at invoiceLines level
     grant.payments.forEach((payment) => {
-      expect(payment.status).toBe('pending');
+      expect(payment.status).toBe('pending')
       payment.invoiceLines.forEach((invoiceLine) => {
-        expect(invoiceLine.accountCode).toBe('SOS710');
-        expect(invoiceLine.fundCode).toBe('DRD10');
-        expect(invoiceLine.deliveryBody).toBe('RP00');
-      });
-    });
+        expect(invoiceLine.accountCode).toBe('SOS710')
+        expect(invoiceLine.fundCode).toBe('DRD10')
+        expect(invoiceLine.deliveryBody).toBe('RP00')
+      })
+    })
     // Check original grant properties are preserved
-    expect(grant.sourceSystem).toBe('FPTT');
-    expect(grant.correlationId).toBe('CORR-ID-001');
-  });
+    expect(grant.sourceSystem).toBe('FPTT')
+    expect(grant.correlationId).toBe('CORR-ID-001')
+  })
 
   it('should return original grantPayment if scheme config is not found', () => {
     const grantPayment = {
       scheme: 'NON_EXISTENT',
       grants: [{ original: 'prop' }]
-    };
+    }
 
-    const result = prepareWithPaymentHubConfig(grantPayment);
+    const result = prepareWithPaymentHubConfig(grantPayment)
 
-    expect(result).toEqual(grantPayment);
-  });
+    expect(result).toEqual(grantPayment)
+  })
 
   it('should handle missing grants array', () => {
     const grantPayment = {
       scheme: 'SFI'
-    };
+    }
 
-    const result = prepareWithPaymentHubConfig(grantPayment);
+    const result = prepareWithPaymentHubConfig(grantPayment)
 
-    expect(result.grants).toEqual([]);
-  });
+    expect(result.grants).toEqual([])
+  })
 
   it('should handle missing payments and invoiceLines in grants', () => {
     const grantPayment = {
@@ -96,11 +96,11 @@ describe('prepareWithPaymentHubConfig', () => {
           // no payments
         }
       ]
-    };
+    }
 
-    const result = prepareWithPaymentHubConfig(grantPayment);
-    expect(result.grants[0].payments).toEqual([]);
-  });
+    const result = prepareWithPaymentHubConfig(grantPayment)
+    expect(result.grants[0].payments).toEqual([])
+  })
 
   it('should handle missing invoiceLines in payments', () => {
     const grantPayment = {
@@ -116,11 +116,11 @@ describe('prepareWithPaymentHubConfig', () => {
           ]
         }
       ]
-    };
+    }
 
-    const result = prepareWithPaymentHubConfig(grantPayment);
-    expect(result.grants[0].payments[0].invoiceLines).toEqual([]);
-  });
+    const result = prepareWithPaymentHubConfig(grantPayment)
+    expect(result.grants[0].payments[0].invoiceLines).toEqual([])
+  })
 
   it('should return grantPayment with WMP schemeConfig merged into each grant', () => {
     const grantPayment = {
@@ -152,33 +152,31 @@ describe('prepareWithPaymentHubConfig', () => {
           ]
         }
       ]
-    };
+    }
 
-    const result = prepareWithPaymentHubConfig(grantPayment);
-    const grant = result.grants[0];
+    const result = prepareWithPaymentHubConfig(grantPayment)
+    const grant = result.grants[0]
 
     // From WMP config
-    expect(grant.sourceSystem).toBe('WMP');
-    expect(grant.ledger).toBe('AP');
-    expect(grant.fesCode).toBe('FALS_WMP');
-    expect(grant.deliveryBody).toBe('RP10');
-    expect(grant.remittanceDescription).toBe(
-      'Woodland Management Plan Payment'
-    );
+    expect(grant.sourceSystem).toBe('WMP')
+    expect(grant.ledger).toBe('AP')
+    expect(grant.fesCode).toBe('FALS_WMP')
+    expect(grant.deliveryBody).toBe('RP10')
+    expect(grant.remittanceDescription).toBe('Woodland Management Plan Payment')
 
     // Should be at invoiceLines level
     grant.payments.forEach((payment) => {
-      expect(payment.status).toBe('pending');
+      expect(payment.status).toBe('pending')
       payment.invoiceLines.forEach((invoiceLine) => {
-        expect(invoiceLine.accountCode).toBe('SOS710');
-        expect(invoiceLine.fundCode).toBe('DRD10');
-        expect(invoiceLine.deliveryBody).toBe('RP10');
-      });
-    });
+        expect(invoiceLine.accountCode).toBe('SOS710')
+        expect(invoiceLine.fundCode).toBe('DRD10')
+        expect(invoiceLine.deliveryBody).toBe('RP10')
+      })
+    })
     // Check original grant properties are preserved
-    expect(grant.sourceSystem).toBe('WMP');
-    expect(grant.correlationId).toBe('CORR-ID-001');
-  });
+    expect(grant.sourceSystem).toBe('WMP')
+    expect(grant.correlationId).toBe('CORR-ID-001')
+  })
 
   it('should allow incoming grantPayment to overwrite schemeConfig values', () => {
     const grantPayment = {
@@ -209,26 +207,26 @@ describe('prepareWithPaymentHubConfig', () => {
           ]
         }
       ]
-    };
+    }
 
-    const result = prepareWithPaymentHubConfig(grantPayment);
-    const grant = result.grants[0];
+    const result = prepareWithPaymentHubConfig(grantPayment)
+    const grant = result.grants[0]
 
     // Grant level - incoming values should override schemeConfig
-    expect(grant.sourceSystem).toBe('CUSTOM_SOURCE_SYSTEM');
-    expect(grant.ledger).toBe('CUSTOM_LEDGER');
-    expect(grant.fesCode).toBe('CUSTOM_FES');
-    expect(grant.deliveryBody).toBe('CUSTOM_BODY');
-    expect(grant.remittanceDescription).toBe('CUSTOM_REMITTANCE');
+    expect(grant.sourceSystem).toBe('CUSTOM_SOURCE_SYSTEM')
+    expect(grant.ledger).toBe('CUSTOM_LEDGER')
+    expect(grant.fesCode).toBe('CUSTOM_FES')
+    expect(grant.deliveryBody).toBe('CUSTOM_BODY')
+    expect(grant.remittanceDescription).toBe('CUSTOM_REMITTANCE')
 
     // InvoiceLine level - incoming values should override schemeConfig
     grant.payments.forEach((payment) => {
       payment.invoiceLines.forEach((invoiceLine) => {
-        expect(invoiceLine.schemeCode).toBe('CUSTOM_SCHEME');
-        expect(invoiceLine.accountCode).toBe('CUSTOM_ACCOUNT');
-        expect(invoiceLine.fundCode).toBe('CUSTOM_FUND');
-        expect(invoiceLine.deliveryBody).toBe('CUSTOM_LINE_BODY');
-      });
-    });
-  });
-});
+        expect(invoiceLine.schemeCode).toBe('CUSTOM_SCHEME')
+        expect(invoiceLine.accountCode).toBe('CUSTOM_ACCOUNT')
+        expect(invoiceLine.fundCode).toBe('CUSTOM_FUND')
+        expect(invoiceLine.deliveryBody).toBe('CUSTOM_LINE_BODY')
+      })
+    })
+  })
+})

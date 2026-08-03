@@ -5,20 +5,20 @@
  */
 function formatPaymentDate(paymentDate) {
   if (paymentDate === undefined) {
-    return '';
+    return ''
   }
 
   if (typeof paymentDate !== 'string') {
-    throw new TypeError('Payment date must be a string');
+    throw new TypeError('Payment date must be a string')
   }
 
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(paymentDate);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(paymentDate)
   if (!match) {
-    throw new Error('Payment date must be in YYYY-MM-DD format');
+    throw new Error('Payment date must be in YYYY-MM-DD format')
   }
 
-  const [, year, month, day] = match;
-  return `${day}/${month}/${year}`;
+  const [, year, month, day] = match
+  return `${day}/${month}/${year}`
 }
 
-export { formatPaymentDate };
+export { formatPaymentDate }

@@ -1,34 +1,34 @@
-import { vi } from 'vitest';
-import { getStats } from '#~/common/helpers/get-stats.js';
+import { vi } from 'vitest'
+import { getStats } from '#~/common/helpers/get-stats.js'
 
-const MOCK_ACCOUNT_COUNT = 10;
-const MOCK_GRANT_COUNT = 15;
-const MOCK_PENDING_COUNT = 5;
-const MOCK_SUBMITTED_COUNT = 3;
-const MOCK_CANCELLED_COUNT = 2;
-const MOCK_EMPTY_ACCOUNT_COUNT = 5;
-const MOCK_EMPTY_GRANT_COUNT = 3;
-const MOCK_SINGLE_PAYMENT_COUNT = 2;
-const MOCK_EMPTY_GRANT_STATS_COUNT = 7;
+const MOCK_ACCOUNT_COUNT = 10
+const MOCK_GRANT_COUNT = 15
+const MOCK_PENDING_COUNT = 5
+const MOCK_SUBMITTED_COUNT = 3
+const MOCK_CANCELLED_COUNT = 2
+const MOCK_EMPTY_ACCOUNT_COUNT = 5
+const MOCK_EMPTY_GRANT_COUNT = 3
+const MOCK_SINGLE_PAYMENT_COUNT = 2
+const MOCK_EMPTY_GRANT_STATS_COUNT = 7
 
 vi.mock('#~/api/common/models/grant_payments.js', () => ({
   default: {
     countDocuments: vi.fn(),
     aggregate: vi.fn()
   }
-}));
+}))
 
 describe('getStats', () => {
-  let mockGrantPayments;
+  let mockGrantPayments
 
   beforeAll(async () => {
     mockGrantPayments = (await import('#~/api/common/models/grant_payments.js'))
-      .default;
-  });
+      .default
+  })
 
   afterEach(() => {
-    vi.clearAllMocks();
-  });
+    vi.clearAllMocks()
+  })
 
   const setupMocks = (
     accounts,
@@ -37,13 +37,13 @@ describe('getStats', () => {
     pendingOverdue = [{ count: 0 }],
     pendingByDueDate = []
   ) => {
-    mockGrantPayments.countDocuments.mockResolvedValue(accounts);
+    mockGrantPayments.countDocuments.mockResolvedValue(accounts)
     mockGrantPayments.aggregate
       .mockResolvedValueOnce(grantStats)
       .mockResolvedValueOnce(paymentStats)
       .mockResolvedValueOnce(pendingOverdue)
-      .mockResolvedValueOnce(pendingByDueDate);
-  };
+      .mockResolvedValueOnce(pendingByDueDate)
+  }
 
   test('Should provide expected stats', async () => {
     setupMocks(
@@ -65,9 +65,9 @@ describe('getStats', () => {
           count: 3
         }
       ]
-    );
+    )
 
-    const result = await getStats();
+    const result = await getStats()
 
     expect(result).toEqual({
       accounts: MOCK_ACCOUNT_COUNT,
@@ -87,8 +87,8 @@ describe('getStats', () => {
         locked: 0,
         failed: 0
       }
-    });
-  });
+    })
+  })
 
   test('Should handle empty grant stats', async () => {
     setupMocks(
@@ -97,9 +97,9 @@ describe('getStats', () => {
       [{ _id: 'pending', count: MOCK_SINGLE_PAYMENT_COUNT }],
       [{ count: 0 }],
       []
-    );
+    )
 
-    const result = await getStats();
+    const result = await getStats()
 
     expect(result).toEqual({
       accounts: MOCK_EMPTY_ACCOUNT_COUNT,
@@ -116,8 +116,8 @@ describe('getStats', () => {
         locked: 0,
         failed: 0
       }
-    });
-  });
+    })
+  })
 
   test('Should handle empty payment stats', async () => {
     setupMocks(
@@ -126,9 +126,9 @@ describe('getStats', () => {
       [],
       [{ count: 0 }],
       []
-    );
+    )
 
-    const result = await getStats();
+    const result = await getStats()
 
     expect(result).toEqual({
       accounts: 3,
@@ -141,8 +141,8 @@ describe('getStats', () => {
         locked: 0,
         failed: 0
       }
-    });
-  });
+    })
+  })
 
   test('Should include locked and failed payment counts and overdue pending totals', async () => {
     setupMocks(
@@ -170,9 +170,9 @@ describe('getStats', () => {
           count: 1
         }
       ]
-    );
+    )
 
-    const result = await getStats();
+    const result = await getStats()
 
     expect(result).toEqual({
       accounts: MOCK_ACCOUNT_COUNT,
@@ -197,12 +197,12 @@ describe('getStats', () => {
         locked: 1,
         failed: 2
       }
-    });
-  });
+    })
+  })
 
   test('Should handle database error', async () => {
-    mockGrantPayments.countDocuments.mockRejectedValue(new Error('DB error'));
+    mockGrantPayments.countDocuments.mockRejectedValue(new Error('DB error'))
 
-    await expect(getStats()).rejects.toThrow('DB error');
-  });
-});
+    await expect(getStats()).rejects.toThrow('DB error')
+  })
+})

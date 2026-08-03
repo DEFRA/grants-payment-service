@@ -1,25 +1,25 @@
-import Hapi from '@hapi/hapi';
-import CatboxMemory from '@hapi/catbox-memory';
+import Hapi from '@hapi/hapi'
+import CatboxMemory from '@hapi/catbox-memory'
 
-import { secureContext } from '@defra/hapi-secure-context';
+import { secureContext } from '@defra/hapi-secure-context'
 
-import { config } from '#~/config/index.js';
-import { router } from '#~/plugins/router.js';
-import { cron } from '#~/plugins/cron.js';
-import { requestLogger } from '#~/common/helpers/logging/request-logger.js';
-import { mongooseDb } from '#~/common/helpers/mongoose.js';
-import { failAction } from '#~/common/helpers/fail-action.js';
-import { pulse } from '#~/common/helpers/pulse.js';
-import { requestTracing } from '#~/common/helpers/request-tracing.js';
-import { metrics } from '@defra/cdp-metrics';
-import { createSqsConsumerPlugin } from '#~/common/helpers/sqs/sqs-consumer-plugin.js';
-import { handleCreatePaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-create-payment.js';
-import { handleCancelPaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-cancel-payment.js';
-import { mongodbBackup } from '#~/plugins/mongodb-backup.js';
-import { resendFailedPayments } from '#~/plugins/resend-failed-payments.js';
+import { config } from '#~/config/index.js'
+import { router } from '#~/plugins/router.js'
+import { cron } from '#~/plugins/cron.js'
+import { requestLogger } from '#~/common/helpers/logging/request-logger.js'
+import { mongooseDb } from '#~/common/helpers/mongoose.js'
+import { failAction } from '#~/common/helpers/fail-action.js'
+import { pulse } from '#~/common/helpers/pulse.js'
+import { requestTracing } from '#~/common/helpers/request-tracing.js'
+import { metrics } from '@defra/cdp-metrics'
+import { createSqsConsumerPlugin } from '#~/common/helpers/sqs/sqs-consumer-plugin.js'
+import { handleCreatePaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-create-payment.js'
+import { handleCancelPaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-cancel-payment.js'
+import { mongodbBackup } from '#~/plugins/mongodb-backup.js'
+import { resendFailedPayments } from '#~/plugins/resend-failed-payments.js'
 
 async function createServer(serverOptions = {}) {
-  const { mongoUrl, mongoDatabase, disableSQS = false } = serverOptions;
+  const { mongoUrl, mongoDatabase, disableSQS = false } = serverOptions
 
   const server = Hapi.server({
     host: config.get('host'),
@@ -53,7 +53,7 @@ async function createServer(serverOptions = {}) {
         }
       }
     ]
-  });
+  })
 
   // Hapi Plugins:
   // requestLogger  - automatically logs incoming requests
@@ -93,9 +93,9 @@ async function createServer(serverOptions = {}) {
           })
         ]),
     router
-  ]);
+  ])
 
-  return server;
+  return server
 }
 
-export { createServer };
+export { createServer }

@@ -1,28 +1,28 @@
-import crypto from 'node:crypto';
-import { fetchWithRetry } from '#~/common/helpers/fetch.js';
-import { config } from '#~/config/index.js';
-import { initCache } from '#~/common/helpers/cache.js';
+import crypto from 'node:crypto'
+import { fetchWithRetry } from '#~/common/helpers/fetch.js'
+import { config } from '#~/config/index.js'
+import { initCache } from '#~/common/helpers/cache.js'
 import {
   auditEvent,
   AuditEvent
-} from '#~/common/helpers/payment-hub/audit-event.js';
+} from '#~/common/helpers/payment-hub/audit-event.js'
 
-let cache = null;
+let cache = null
 
 /**
  * Generate a payment hub token
  * @returns {string} The generated token
  */
 const getPaymentHubToken = () => {
-  const encoded = encodeURIComponent(config.get('paymentHub.uri'));
-  const ttl = Math.round(Date.now() / 1000) + config.get('paymentHub.ttl');
-  const signature = `${encoded}\n${ttl}`;
+  const encoded = encodeURIComponent(config.get('paymentHub.uri'))
+  const ttl = Math.round(Date.now() / 1000) + config.get('paymentHub.ttl')
+  const signature = `${encoded}\n${ttl}`
   const hash = crypto
     .createHmac('sha256', config.get('paymentHub.key'))
     .update(signature)
-    .digest('base64');
-  return `SharedAccessSignature sr=${encoded}&sig=${encodeURIComponent(hash)}&se=${ttl}&skn=${config.get('paymentHub.keyName')}`;
-};
+    .digest('base64')
+  return `SharedAccessSignature sr=${encoded}&sig=${encodeURIComponent(hash)}&se=${ttl}&skn=${config.get('paymentHub.keyName')}`
+}
 
 /**
  * Payment Hub token cache
@@ -33,10 +33,10 @@ const getCachedToken = (server) => {
   if (!cache) {
     cache = initCache(server, 'paymentHubToken', getPaymentHubToken, {
       expiresIn: config.get('paymentHub.ttl')
-    });
+    })
   }
-  return cache;
-};
+  return cache
+}
 
 /**
  * Send a request to the payment hub
@@ -45,11 +45,11 @@ const getCachedToken = (server) => {
  * @returns {Promise<object>} The response from the payment hub
  */
 export const sendPaymentHubRequest = async (server, body) => {
-  const { logger } = server;
+  const { logger } = server
   if (!config.get('featureFlags.isPaymentHubEnabled')) {
     logger.warn(
       `The PaymentHub feature flag is disabled. The request has not been sent to payment hub: ${JSON.stringify(body, null, 2)}`
-    );
+    )
 
     return {
       status: 'warning',
@@ -57,19 +57,19 @@ export const sendPaymentHubRequest = async (server, body) => {
         'Payment Hub feature flag is disabled. Payload that would have been sent',
       body,
       response: null
-    };
+    }
   }
 
   if (!config.get('paymentHub.keyName') || !config.get('paymentHub.key')) {
-    throw new Error('Payment Hub keyname or key is not set');
+    throw new Error('Payment Hub keyname or key is not set')
   }
 
-  const accessToken = await getCachedToken(server).get('token');
+  const accessToken = await getCachedToken(server).get('token')
 
-  const url = new URL(`${config.get('paymentHub.uri')}/messages`);
+  const url = new URL(`${config.get('paymentHub.uri')}/messages`)
   logger.info(
     `Attempting to submit a message to payment hub: ${JSON.stringify(body, null, 2)}`
-  );
+  )
   const response = await fetchWithRetry(
     url,
     {
@@ -81,35 +81,35 @@ export const sendPaymentHubRequest = async (server, body) => {
       body: JSON.stringify(body)
     },
     logger
-  );
+  )
 
   if (!response.ok) {
-    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, body, 'failure');
+    await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, body, 'failure')
 
-    let responseBody = '';
+    let responseBody = ''
     try {
-      responseBody = await response.text();
+      responseBody = await response.text()
     } catch (err) {
-      logger.error(err, 'Failed to read the response body from payment hub');
+      logger.error(err, 'Failed to read the response body from payment hub')
     }
 
-    const details = responseBody ? ` - ${responseBody}` : '';
+    const details = responseBody ? ` - ${responseBody}` : ''
     throw new Error(
       `Payment hub request failed: ${response.status} ${response.statusText}${details}`
-    );
+    )
   }
 
   logger.info(
     `Request successfully sent to Payment Hub for SBI: ${body.sbi} FRN: ${body.frn} (correlation ID: ${body.correlationId})`
-  );
-  await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, body);
+  )
+  await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, body)
 
   return {
     status: 'success',
     message: 'Payload sent to payment hub successfully',
     body,
     response
-  };
-};
+  }
+}
 
 /** @import { PaymentHubPayload } from '#~/common/types/payment-hub.d.js' */

@@ -1,251 +1,251 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
-import { setImmediate } from 'node:timers/promises';
-import { statusCodes } from '#~/common/constants/status-codes.js';
-import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js';
-import GrantPaymentsModel from '#~/api/common/models/grant_payments.js';
-import { postTestPopulateGrantPaymentController } from './post-test-populate-grant-payments.controller.js';
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
+import { setImmediate } from 'node:timers/promises'
+import { statusCodes } from '#~/common/constants/status-codes.js'
+import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
+import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
+import { postTestPopulateGrantPaymentController } from './post-test-populate-grant-payments.controller.js'
 
 vi.mock('#~/common/helpers/create-grant-payment.js', () => ({
   createGrantPayment: vi.fn()
-}));
+}))
 
 vi.mock('#~/api/common/models/grant_payments.js', () => ({
   default: {
     countDocuments: vi.fn()
   }
-}));
+}))
 
 vi.mock('#~/config/index.js', () => ({
   config: {
     get: vi.fn((key) => {
       if (key === 'paymentProcessor') {
-        return { minBatchSize: 10, maxBatchSize: 100 };
+        return { minBatchSize: 10, maxBatchSize: 100 }
       }
-      return {};
+      return {}
     })
   }
-}));
+}))
 
 const makeH = () => {
-  const res = { statusCode: 200, source: undefined };
+  const res = { statusCode: 200, source: undefined }
   const h = {
     response: (payload) => {
-      res.source = payload;
+      res.source = payload
       return {
         code: (status) => {
-          res.statusCode = status;
-          return res;
+          res.statusCode = status
+          return res
         }
-      };
+      }
     }
-  };
-  return { h, res };
-};
+  }
+  return { h, res }
+}
 
 describe('postTestPopulateGrantPaymentController', () => {
   const mockLogger = {
     info: vi.fn(),
     error: vi.fn()
-  };
+  }
 
   beforeEach(() => {
-    vi.clearAllMocks();
-  });
+    vi.clearAllMocks()
+  })
 
   afterEach(() => {
-    vi.restoreAllMocks();
-  });
+    vi.restoreAllMocks()
+  })
 
   test('should successfully populate grant payments with default values', async () => {
-    createGrantPayment.mockResolvedValue({ _id: 'mock-id' });
+    createGrantPayment.mockResolvedValue({ _id: 'mock-id' })
     GrantPaymentsModel.countDocuments
       .mockResolvedValueOnce(100) // Initial count
-      .mockResolvedValueOnce(200); // Final count
+      .mockResolvedValueOnce(200) // Final count
 
-    const { h } = makeH();
+    const { h } = makeH()
     const req = {
       payload: { targetCount: 100, dueDate: '2026-04-08' }, // Simulated Hapi validated payload
       logger: mockLogger
-    };
+    }
 
-    const result = await postTestPopulateGrantPaymentController.handler(req, h);
+    const result = await postTestPopulateGrantPaymentController.handler(req, h)
 
-    expect(result.statusCode).toBe(statusCodes.accepted);
-    expect(result.source.message).toBe('Grant payment population started');
-    expect(result.source.targetCount).toBe(100);
-    expect(result.source.batchSize).toBe(10); // 100/10
+    expect(result.statusCode).toBe(statusCodes.accepted)
+    expect(result.source.message).toBe('Grant payment population started')
+    expect(result.source.targetCount).toBe(100)
+    expect(result.source.batchSize).toBe(10) // 100/10
 
     // Wait for setImmediate to complete
-    await setImmediate();
+    await setImmediate()
 
-    expect(createGrantPayment).toHaveBeenCalledTimes(100);
+    expect(createGrantPayment).toHaveBeenCalledTimes(100)
     expect(mockLogger.info).toHaveBeenCalledWith(
       expect.stringContaining('Starting test database population')
-    );
+    )
     expect(mockLogger.info).toHaveBeenCalledWith(
       'Existing grant payments in database before creation: 100'
-    );
+    )
     expect(mockLogger.info).toHaveBeenCalledWith(
       expect.stringContaining('Processing batch')
-    );
+    )
     expect(mockLogger.info).toHaveBeenCalledWith(
       expect.stringContaining('Population complete')
-    );
+    )
     expect(mockLogger.info).toHaveBeenCalledWith(
       'Total grant payments in database after creation: 200'
-    );
-  });
+    )
+  })
 
   test('should successfully populate with custom targetCount and dueDate', async () => {
-    createGrantPayment.mockResolvedValue({ _id: 'mock-id' });
-    GrantPaymentsModel.countDocuments.mockResolvedValue(0);
+    createGrantPayment.mockResolvedValue({ _id: 'mock-id' })
+    GrantPaymentsModel.countDocuments.mockResolvedValue(0)
 
-    const { h } = makeH();
+    const { h } = makeH()
     const req = {
       payload: { targetCount: 15, dueDate: '2025-12-25' },
       logger: mockLogger
-    };
+    }
 
-    const result = await postTestPopulateGrantPaymentController.handler(req, h);
+    const result = await postTestPopulateGrantPaymentController.handler(req, h)
 
-    expect(result.statusCode).toBe(statusCodes.accepted);
-    expect(result.source.dueDate).toBe('2025-12-25');
+    expect(result.statusCode).toBe(statusCodes.accepted)
+    expect(result.source.dueDate).toBe('2025-12-25')
 
     // Wait for setImmediate to complete
-    await setImmediate();
+    await setImmediate()
 
-    expect(createGrantPayment).toHaveBeenCalledTimes(15);
+    expect(createGrantPayment).toHaveBeenCalledTimes(15)
     expect(
       createGrantPayment.mock.calls[0][0].grants[0].payments[0].dueDate
-    ).toBe('2025-12-25');
-  });
+    ).toBe('2025-12-25')
+  })
 
   test('should handle partial failures during population', async () => {
     // Fail some calls
     createGrantPayment.mockImplementation((payload) => {
       // In new format, claimId is R00000002, R00000005 etc
       if (payload.claimId.endsWith('02') || payload.claimId.endsWith('05')) {
-        return Promise.reject(new Error('Mock creation error'));
+        return Promise.reject(new Error('Mock creation error'))
       }
-      return Promise.resolve({ _id: 'mock-id' });
-    });
-    GrantPaymentsModel.countDocuments.mockResolvedValue(0);
+      return Promise.resolve({ _id: 'mock-id' })
+    })
+    GrantPaymentsModel.countDocuments.mockResolvedValue(0)
 
-    const { h } = makeH();
+    const { h } = makeH()
     const req = {
       payload: { targetCount: 10, batchSize: 5, dueDate: '2026-04-08' },
       logger: mockLogger
-    };
+    }
 
-    const result = await postTestPopulateGrantPaymentController.handler(req, h);
+    const result = await postTestPopulateGrantPaymentController.handler(req, h)
 
-    expect(result.statusCode).toBe(statusCodes.accepted);
+    expect(result.statusCode).toBe(statusCodes.accepted)
 
     // Wait for setImmediate to complete
-    await setImmediate();
+    await setImmediate()
 
-    expect(mockLogger.error).toHaveBeenCalled();
-  });
+    expect(mockLogger.error).toHaveBeenCalled()
+  })
 
   test('should limit the number of errors in response to 100', async () => {
-    createGrantPayment.mockRejectedValue(new Error('Persistent error'));
-    GrantPaymentsModel.countDocuments.mockResolvedValue(0);
+    createGrantPayment.mockRejectedValue(new Error('Persistent error'))
+    GrantPaymentsModel.countDocuments.mockResolvedValue(0)
 
-    const { h } = makeH();
+    const { h } = makeH()
     const req = {
       payload: { targetCount: 150, batchSize: 50, dueDate: '2026-04-08' },
       logger: mockLogger
-    };
+    }
 
-    const result = await postTestPopulateGrantPaymentController.handler(req, h);
+    const result = await postTestPopulateGrantPaymentController.handler(req, h)
 
-    expect(result.statusCode).toBe(statusCodes.accepted);
+    expect(result.statusCode).toBe(statusCodes.accepted)
 
     // Wait for setImmediate to complete
-    await setImmediate();
+    await setImmediate()
 
-    expect(createGrantPayment).toHaveBeenCalledTimes(150);
-  });
+    expect(createGrantPayment).toHaveBeenCalledTimes(150)
+  })
 
   test('should log error if background population fails', async () => {
-    GrantPaymentsModel.countDocuments.mockResolvedValue(0);
+    GrantPaymentsModel.countDocuments.mockResolvedValue(0)
 
     const faultyReq = {
       payload: { targetCount: 10, dueDate: '2026-04-08' },
       logger: {
         info: vi.fn(() => {
-          throw new Error('Logger failed');
+          throw new Error('Logger failed')
         }),
         error: vi.fn()
       }
-    };
-    const { h } = makeH();
+    }
+    const { h } = makeH()
 
     const result = await postTestPopulateGrantPaymentController.handler(
       faultyReq,
       h
-    );
+    )
 
-    expect(result.statusCode).toBe(statusCodes.accepted);
+    expect(result.statusCode).toBe(statusCodes.accepted)
 
     // Wait for setImmediate to complete
-    await setImmediate();
+    await setImmediate()
 
     expect(faultyReq.logger.error).toHaveBeenCalledWith(
       expect.any(Error),
       'Error during test population'
-    );
-  });
+    )
+  })
 
   test('should use provided dueDate for all records and format it as YYYY-MM-DD', async () => {
-    createGrantPayment.mockResolvedValue({ _id: 'mock-id' });
-    GrantPaymentsModel.countDocuments.mockResolvedValue(0);
+    createGrantPayment.mockResolvedValue({ _id: 'mock-id' })
+    GrantPaymentsModel.countDocuments.mockResolvedValue(0)
 
-    const { h } = makeH();
-    const customDate = '2024-05-01';
+    const { h } = makeH()
+    const customDate = '2024-05-01'
     const req = {
       payload: { targetCount: 4, dueDate: customDate + 'T00:00:00.000Z' }, // Simulate Joi conversion
       logger: mockLogger
-    };
+    }
 
-    await postTestPopulateGrantPaymentController.handler(req, h);
+    await postTestPopulateGrantPaymentController.handler(req, h)
 
     // Wait for setImmediate to complete
-    await setImmediate();
+    await setImmediate()
 
-    expect(createGrantPayment).toHaveBeenCalledTimes(4);
+    expect(createGrantPayment).toHaveBeenCalledTimes(4)
 
     // All records should have the same dueDate, formatted as YYYY-MM-DD
     createGrantPayment.mock.calls.forEach((call) => {
-      const payload = call[0];
-      expect(payload.grants[0].payments[0].dueDate).toBe(customDate);
-      expect(payload.grants[0].sourceSystem).toBe('FPTT');
-      expect(payload.grants[0].marketingYear).toBe('2026');
-      expect(payload.grants[0].ledger).toBe('AP');
-      expect(payload.grants[0].fesCode).toBe('FALS_FPTT');
-      expect(typeof payload.grants[0].totalAmountPence).toBe('string');
+      const payload = call[0]
+      expect(payload.grants[0].payments[0].dueDate).toBe(customDate)
+      expect(payload.grants[0].sourceSystem).toBe('FPTT')
+      expect(payload.grants[0].marketingYear).toBe('2026')
+      expect(payload.grants[0].ledger).toBe('AP')
+      expect(payload.grants[0].fesCode).toBe('FALS_FPTT')
+      expect(typeof payload.grants[0].totalAmountPence).toBe('string')
       expect(typeof payload.grants[0].payments[0].totalAmountPence).toBe(
         'string'
-      );
+      )
       expect(payload.grants[0].payments[0].invoiceLines[0].schemeCode).toBe(
         'CMOR1'
-      );
+      )
       expect(
         typeof payload.grants[0].payments[0].invoiceLines[0].amountPence
-      ).toBe('string');
+      ).toBe('string')
       expect(payload.grants[0].payments[0].invoiceLines[0].accountCode).toBe(
         'SOS710'
-      );
+      )
       expect(payload.grants[0].payments[0].invoiceLines[0].fundCode).toBe(
         'DRD10'
-      );
-    });
-  });
+      )
+    })
+  })
 
   test('Joi schema defaults dueDate', () => {
     const schema =
-      postTestPopulateGrantPaymentController.options.validate.payload;
-    const { value } = schema.validate({ targetCount: 1 });
-    expect(value.dueDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-  });
-});
+      postTestPopulateGrantPaymentController.options.validate.payload
+    const { value } = schema.validate({ targetCount: 1 })
+    expect(value.dueDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+})

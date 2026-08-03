@@ -1,4 +1,4 @@
-import { networkInterfaces } from 'node:os';
+import { networkInterfaces } from 'node:os'
 
 /**
  * Finds the first non-internal IPv4 address across all network interfaces.
@@ -8,7 +8,7 @@ import { networkInterfaces } from 'node:os';
 const findNonInternalIPv4 = (interfaces) =>
   Object.values(interfaces)
     .flat()
-    .find((addr) => addr?.family === 'IPv4' && !addr?.internal);
+    .find((addr) => addr?.family === 'IPv4' && !addr?.internal)
 
 /**
  * Resolves the IP to record on the audit event.
@@ -22,9 +22,9 @@ const findNonInternalIPv4 = (interfaces) =>
  * @returns {string}
  */
 export const getLocalIp = (request) => {
-  const hapiHost = request?.server?.info?.host;
+  const hapiHost = request?.server?.info?.host
   if (hapiHost && hapiHost !== '0.0.0.0') {
-    return hapiHost;
+    return hapiHost
   }
-  return findNonInternalIPv4(networkInterfaces())?.address ?? '';
-};
+  return findNonInternalIPv4(networkInterfaces())?.address ?? ''
+}

@@ -1,6 +1,6 @@
-import { MatchersV2 } from '@pact-foundation/pact';
+import { MatchersV2 } from '@pact-foundation/pact'
 
-const { like, eachLike } = MatchersV2;
+const { like, eachLike } = MatchersV2
 
 /**
  * Recursively converts an object or array into a Pact MatcherV2 structure.
@@ -13,18 +13,18 @@ const { like, eachLike } = MatchersV2;
 export const toLessRestrictive = (data) => {
   if (Array.isArray(data)) {
     if (data.length === 0) {
-      return eachLike({});
+      return eachLike({})
     }
-    return eachLike(toLessRestrictive(data[0]));
+    return eachLike(toLessRestrictive(data[0]))
   }
 
   if (data !== null && typeof data === 'object') {
-    const result = {};
+    const result = {}
     for (const key of Object.keys(data)) {
-      result[key] = toLessRestrictive(data[key]);
+      result[key] = toLessRestrictive(data[key])
     }
-    return like(result);
+    return like(result)
   }
 
-  return like(data);
-};
+  return like(data)
+}
