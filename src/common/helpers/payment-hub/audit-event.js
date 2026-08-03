@@ -1,7 +1,7 @@
-import { PublishCommand, SNSClient } from '@aws-sdk/client-sns';
-import { config } from '#~/config/index.js';
-import { getLogger } from '#~/common/helpers/logging/logger.js';
-import { getLocalIp } from '#~/common/helpers/request-ip.js';
+import { PublishCommand, SNSClient } from '@aws-sdk/client-sns'
+import { config } from '#~/config/index.js'
+import { getLogger } from '#~/common/helpers/logging/logger.js'
+import { getLocalIp } from '#~/common/helpers/request-ip.js'
 
 /**
  * Audit event types.
@@ -13,7 +13,7 @@ export const AuditEvent = Object.freeze({
   GRANT_PAYMENT_CANCELLED: 'GRANT_PAYMENT_CANCELLED',
   GRANT_PAYMENT_STALE_LOCK_FAILED: 'GRANT_PAYMENT_STALE_LOCK_FAILED',
   GRANT_PAYMENTS_RESET_TO_PENDING: 'GRANT_PAYMENTS_RESET_TO_PENDING'
-});
+})
 
 // Human-readable description for each audit event, used in security.details.message
 const eventMessages = {
@@ -24,7 +24,7 @@ const eventMessages = {
     'Grant payment failed due to stale lock timeout',
   [AuditEvent.GRANT_PAYMENTS_RESET_TO_PENDING]:
     'Failed grant payment reset to pending'
-};
+}
 
 // Transaction code for each audit event, used in security.details.transactioncode
 const eventTransactionCodes = {
@@ -33,7 +33,7 @@ const eventTransactionCodes = {
   [AuditEvent.GRANT_PAYMENT_CANCELLED]: '2315',
   [AuditEvent.GRANT_PAYMENT_STALE_LOCK_FAILED]: '2316',
   [AuditEvent.GRANT_PAYMENTS_RESET_TO_PENDING]: '2315'
-};
+}
 
 // PMC code for each audit event, used in security.pmccode
 const eventPmcCodes = {
@@ -42,7 +42,7 @@ const eventPmcCodes = {
   [AuditEvent.GRANT_PAYMENT_CANCELLED]: '0706',
   [AuditEvent.GRANT_PAYMENT_STALE_LOCK_FAILED]: '0706',
   [AuditEvent.GRANT_PAYMENTS_RESET_TO_PENDING]: '0706'
-};
+}
 
 // Audit event type for each audit event, used in audit.eventtype
 const eventTypes = {
@@ -51,7 +51,7 @@ const eventTypes = {
   [AuditEvent.GRANT_PAYMENT_CANCELLED]: 'GrantsPaymentCancelled',
   [AuditEvent.GRANT_PAYMENT_STALE_LOCK_FAILED]: 'GrantsPaymentStaleLockFailed',
   [AuditEvent.GRANT_PAYMENTS_RESET_TO_PENDING]: 'GrantsPaymentsResetToPending'
-};
+}
 
 // Entities for each audit event, used in audit.entities
 // action must be one of: created, read, updated, deleted, submitted, accepted, rejected, withdrawn, cancelled
@@ -71,7 +71,7 @@ const eventEntities = {
   [AuditEvent.GRANT_PAYMENTS_RESET_TO_PENDING]: (context) => [
     { entity: 'payment', action: 'updated', entityId: context.correlationId }
   ]
-};
+}
 
 /**
  * Builds the full audit payload for a payment hub request.
@@ -115,20 +115,20 @@ const buildAuditPayload = (
       crn: context.identifiers?.crn
     }
   }
-});
+})
 
 /** @type {import('@aws-sdk/client-sns').SNSClient|null} */
-let snsClient = null;
+let snsClient = null
 
 const getSnsClient = () => {
   if (!snsClient) {
     snsClient = new SNSClient({
       region: config.get('aws.region'),
       endpoint: config.get('sns.endpoint')
-    });
+    })
   }
-  return snsClient;
-};
+  return snsClient
+}
 
 /**
  * Records a payment hub request audit event.
@@ -143,7 +143,7 @@ export const auditEvent = async (
   status = 'success',
   request = null
 ) => {
-  const logger = getLogger();
+  const logger = getLogger()
   try {
     await getSnsClient().send(
       new PublishCommand({
@@ -152,14 +152,14 @@ export const auditEvent = async (
           buildAuditPayload(event, context, status, request)
         )
       })
-    );
+    )
     logger.info(
       `Audit event successfully published: ${event}, context: ${JSON.stringify(context)}`
-    );
+    )
   } catch (error) {
     logger.warn(
       error,
       `Failed to publish audit event: ${event}, context: ${JSON.stringify(context)}`
-    );
+    )
   }
-};
+}

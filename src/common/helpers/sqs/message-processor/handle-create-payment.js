@@ -1,10 +1,10 @@
-import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js';
-import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js';
-import { transformDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/transformers/index.js';
+import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
+import { grafanaLogMessages } from '#~/common/constants/grafana-log-messages.js'
+import { transformDataToPaymentHubFormat } from '#~/common/helpers/payment-hub/transformers/index.js'
 import {
   auditEvent,
   AuditEvent
-} from '#~/common/helpers/payment-hub/audit-event.js';
+} from '#~/common/helpers/payment-hub/audit-event.js'
 
 /**
  * Inbound create_payment event handler
@@ -15,17 +15,17 @@ import {
  */
 export async function handleCreatePaymentEvent(messageId, payload, logger) {
   try {
-    const grantPayment = await createGrantPayment(payload.data);
+    const grantPayment = await createGrantPayment(payload.data)
 
     logger.info(
       `Successfully created grant payment entry for message ${messageId}: ${JSON.stringify(grantPayment)}`
-    );
+    )
 
     const identifiers = {
       sbi: grantPayment.sbi,
       frn: grantPayment.frn,
       claimId: grantPayment.claimId
-    };
+    }
 
     for (const grant of grantPayment.grants || []) {
       for (const payment of grant.payments || []) {
@@ -33,10 +33,10 @@ export async function handleCreatePaymentEvent(messageId, payload, logger) {
           identifiers,
           grant,
           payment
-        );
+        )
         logger.info(
           `Dry run: Payment ${payment._id} due date ${payment.dueDate} Payment Hub data: ${JSON.stringify(paymentHubData, null, 2)}`
-        );
+        )
 
         await auditEvent(AuditEvent.GRANT_PAYMENT_CREATED, {
           correlationId: payment.correlationId,
@@ -50,14 +50,14 @@ export async function handleCreatePaymentEvent(messageId, payload, logger) {
             frn: grantPayment.frn,
             crn: grantPayment.claimId
           }
-        });
+        })
       }
     }
   } catch (err) {
-    const mongoDuplicateKeyErrorCode = 11000;
+    const mongoDuplicateKeyErrorCode = 11000
     const isDuplicateKeyError =
       err?.name === 'MongoServerError' &&
-      err?.code === mongoDuplicateKeyErrorCode;
+      err?.code === mongoDuplicateKeyErrorCode
 
     if (isDuplicateKeyError) {
       logger.warn(
@@ -69,9 +69,9 @@ export async function handleCreatePaymentEvent(messageId, payload, logger) {
           ])
           .flat()
           .join(', ')}`
-      );
+      )
     } else {
-      logger.error(err, grafanaLogMessages.error.createPayment);
+      logger.error(err, grafanaLogMessages.error.createPayment)
     }
   }
 }

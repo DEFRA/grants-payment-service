@@ -9,7 +9,7 @@ import {
   postTestPopulateGrantPaymentController,
   deleteTestPaymentsBySbiController,
   postSyncDbIndexesController
-} from './controllers/index.js';
+} from './controllers/index.js'
 
 /**
  * @satisfies {ServerRegisterPluginObject<void>}
@@ -69,13 +69,13 @@ const testEndpoints = {
           path: '/sync-db-indexes',
           ...postSyncDbIndexesController
         }
-      ]);
+      ])
     }
   },
   routes: { prefix: '/api/test' }
-};
+}
 
-export { testEndpoints };
+export { testEndpoints }
 
 /**
  * @import { ServerRegisterPluginObject } from '@hapi/hapi'

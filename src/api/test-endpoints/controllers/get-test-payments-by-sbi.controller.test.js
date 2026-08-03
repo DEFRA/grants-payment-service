@@ -1,124 +1,124 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fetchGrantPaymentsBySbi } from '#~/common/helpers/fetch-grant-payments-by-sbi.js';
-import { statusCodes } from '#~/common/constants/status-codes.js';
-import { getTestPaymentsBySbiController } from './get-test-payments-by-sbi.controller.js';
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
+import { fetchGrantPaymentsBySbi } from '#~/common/helpers/fetch-grant-payments-by-sbi.js'
+import { statusCodes } from '#~/common/constants/status-codes.js'
+import { getTestPaymentsBySbiController } from './get-test-payments-by-sbi.controller.js'
 
 vi.mock('#~/common/helpers/fetch-grant-payments-by-sbi.js', () => ({
   fetchGrantPaymentsBySbi: vi.fn()
-}));
+}))
 
 const makeH = () => {
-  const res = { statusCode: 200, source: undefined };
+  const res = { statusCode: 200, source: undefined }
   return {
     response: (payload) => ({
       code: (status) => {
-        res.statusCode = status;
-        res.source = payload;
-        return res;
+        res.statusCode = status
+        res.source = payload
+        return res
       }
     })
-  };
-};
+  }
+}
 
 describe('getTestPaymentsBySbiController', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-  });
+    vi.clearAllMocks()
+  })
 
   afterEach(() => {
-    vi.restoreAllMocks();
-  });
+    vi.restoreAllMocks()
+  })
 
   test('returns 200 and payments for a given sbi when no fundCode is provided', async () => {
-    const sbi = '123456789';
+    const sbi = '123456789'
     const mockPayments = [
       { id: '1', sbi },
       { id: '2', sbi }
-    ];
-    const pagination = { page: 1, total: 1 };
+    ]
+    const pagination = { page: 1, total: 1 }
     fetchGrantPaymentsBySbi.mockResolvedValue({
       docs: mockPayments,
       pagination
-    });
+    })
 
-    const req = { params: { sbi } };
-    const h = makeH();
-    const result = await getTestPaymentsBySbiController.handler(req, h);
+    const req = { params: { sbi } }
+    const h = makeH()
+    const result = await getTestPaymentsBySbiController.handler(req, h)
 
-    expect(fetchGrantPaymentsBySbi).toHaveBeenCalledWith(sbi, undefined, 1);
-    expect(result.statusCode).toBe(statusCodes.ok);
-    expect(result.source).toEqual({ sbi, docs: mockPayments, pagination });
-  });
+    expect(fetchGrantPaymentsBySbi).toHaveBeenCalledWith(sbi, undefined, 1)
+    expect(result.statusCode).toBe(statusCodes.ok)
+    expect(result.source).toEqual({ sbi, docs: mockPayments, pagination })
+  })
 
   test('returns 200 and payments for a given sbi and fundCode when fundCode is provided', async () => {
-    const sbi = '123456789';
-    const fundCode = 'DRD10';
+    const sbi = '123456789'
+    const fundCode = 'DRD10'
     const mockPayments = [
       { id: '1', sbi },
       { id: '2', sbi }
-    ];
-    const pagination = { page: 1, total: 1 };
+    ]
+    const pagination = { page: 1, total: 1 }
     fetchGrantPaymentsBySbi.mockResolvedValue({
       docs: mockPayments,
       pagination
-    });
+    })
 
-    const req = { params: { sbi, fundCode } };
-    const h = makeH();
-    const result = await getTestPaymentsBySbiController.handler(req, h);
+    const req = { params: { sbi, fundCode } }
+    const h = makeH()
+    const result = await getTestPaymentsBySbiController.handler(req, h)
 
-    expect(fetchGrantPaymentsBySbi).toHaveBeenCalledWith(sbi, fundCode, 1);
-    expect(result.statusCode).toBe(statusCodes.ok);
+    expect(fetchGrantPaymentsBySbi).toHaveBeenCalledWith(sbi, fundCode, 1)
+    expect(result.statusCode).toBe(statusCodes.ok)
     expect(result.source).toEqual({
       sbi,
       fundCode,
       docs: mockPayments,
       pagination
-    });
-  });
+    })
+  })
 
   test('returns 200 and empty array when no payments found for sbi', async () => {
-    const pagination = { page: 1, total: 0 };
-    fetchGrantPaymentsBySbi.mockResolvedValue({ docs: [], pagination });
+    const pagination = { page: 1, total: 0 }
+    fetchGrantPaymentsBySbi.mockResolvedValue({ docs: [], pagination })
 
-    const req = { params: { sbi: '999999999' } };
-    const h = makeH();
-    const result = await getTestPaymentsBySbiController.handler(req, h);
+    const req = { params: { sbi: '999999999' } }
+    const h = makeH()
+    const result = await getTestPaymentsBySbiController.handler(req, h)
 
-    expect(result.statusCode).toBe(statusCodes.ok);
-    expect(result.source).toEqual({ sbi: '999999999', docs: [], pagination });
-  });
+    expect(result.statusCode).toBe(statusCodes.ok)
+    expect(result.source).toEqual({ sbi: '999999999', docs: [], pagination })
+  })
 
   test('returns 200 and empty array when no payments found for sbi and fundCode', async () => {
-    const pagination = { page: 1, total: 0 };
-    fetchGrantPaymentsBySbi.mockResolvedValue({ docs: [], pagination });
+    const pagination = { page: 1, total: 0 }
+    fetchGrantPaymentsBySbi.mockResolvedValue({ docs: [], pagination })
 
-    const req = { params: { sbi: '999999999', fundCode: 'UNKNOWN' } };
-    const h = makeH();
-    const result = await getTestPaymentsBySbiController.handler(req, h);
+    const req = { params: { sbi: '999999999', fundCode: 'UNKNOWN' } }
+    const h = makeH()
+    const result = await getTestPaymentsBySbiController.handler(req, h)
 
-    expect(result.statusCode).toBe(statusCodes.ok);
+    expect(result.statusCode).toBe(statusCodes.ok)
     expect(result.source).toEqual({
       sbi: '999999999',
       fundCode: 'UNKNOWN',
       docs: [],
       pagination
-    });
-  });
+    })
+  })
 
   test('returns 500 for unexpected error', async () => {
-    const mockError = new Error('db down');
-    fetchGrantPaymentsBySbi.mockRejectedValue(mockError);
+    const mockError = new Error('db down')
+    fetchGrantPaymentsBySbi.mockRejectedValue(mockError)
 
-    const req = { params: { sbi: '123456789' }, log: vi.fn() };
-    const h = makeH();
-    const result = await getTestPaymentsBySbiController.handler(req, h);
+    const req = { params: { sbi: '123456789' }, log: vi.fn() }
+    const h = makeH()
+    const result = await getTestPaymentsBySbiController.handler(req, h)
 
-    expect(req.log).toHaveBeenCalledWith(['error'], mockError);
-    expect(result.statusCode).toBe(statusCodes.internalServerError);
+    expect(req.log).toHaveBeenCalledWith(['error'], mockError)
+    expect(result.statusCode).toBe(statusCodes.internalServerError)
     expect(result.source).toEqual({
       message: 'Internal Server Error',
       error: expect.objectContaining({ message: 'db down' })
-    });
-  });
-});
+    })
+  })
+})

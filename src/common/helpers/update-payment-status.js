@@ -1,6 +1,6 @@
-import GrantPaymentsModel from '#~/api/common/models/grant_payments.js';
-import { getLogger } from '#~/common/helpers/logging/logger.js';
-import { config } from '#~/config/index.js';
+import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
+import { getLogger } from '#~/common/helpers/logging/logger.js'
+import { config } from '#~/config/index.js'
 
 /**
  * Change the status of a single payment subdocument.
@@ -17,36 +17,36 @@ export const updatePaymentStatus = async (
   status,
   currentStatus
 ) => {
-  const logger = getLogger();
+  const logger = getLogger()
 
   try {
     // build the array filter; always match by _id and optionally current status
-    const arrayFilter = { 'p._id': paymentId };
+    const arrayFilter = { 'p._id': paymentId }
     if (currentStatus !== undefined) {
-      arrayFilter['p.status'] = currentStatus;
+      arrayFilter['p.status'] = currentStatus
     }
 
     const result = await GrantPaymentsModel.findOneAndUpdate(
       { _id: documentId },
       { $set: { 'grants.$[].payments.$[p].status': status } },
       { arrayFilters: [arrayFilter], returnDocument: 'after' }
-    );
+    )
 
     logger.info(
       `Updated payment ${paymentId} (doc ${documentId}) status to ${status}`
-    );
-    return result;
+    )
+    return result
   } catch (err) {
     logger.error(
       err,
       `Failed to update status to ${status} for payment ${paymentId} in ${documentId}`
-    );
-    throw err;
+    )
+    throw err
   }
-};
+}
 
 const isStaleLocked = (payment, staleBefore) =>
-  payment.status === 'locked' && payment.updatedAt < staleBefore;
+  payment.status === 'locked' && payment.updatedAt < staleBefore
 
 const toAffectedPayment = (doc, grant, payment) => ({
   sbi: doc.sbi,
@@ -57,17 +57,17 @@ const toAffectedPayment = (doc, grant, payment) => ({
   agreementNumber: grant.agreementNumber,
   dueDate: payment.dueDate,
   totalAmountPence: payment.totalAmountPence
-});
+})
 
 const extractStalePaymentsFromGrant = (doc, grant, staleBefore) =>
   (grant.payments || [])
     .filter((payment) => isStaleLocked(payment, staleBefore))
-    .map((payment) => toAffectedPayment(doc, grant, payment));
+    .map((payment) => toAffectedPayment(doc, grant, payment))
 
 const extractStalePaymentsFromDocument = (doc, staleBefore) =>
   (doc.grants || []).flatMap((grant) =>
     extractStalePaymentsFromGrant(doc, grant, staleBefore)
-  );
+  )
 
 /**
  * Atomically find and mark ALL stale locked payments as failed using a transaction.
@@ -75,18 +75,18 @@ const extractStalePaymentsFromDocument = (doc, staleBefore) =>
  * @returns {Promise<{ modifiedCount: number, affectedPayments: object[] }>} number of payments marked as failed, and the affected payments' identifiers (for audit purposes)
  */
 export const markAllStaleLockedPaymentsAsFailed = async () => {
-  const logger = getLogger();
-  const session = await GrantPaymentsModel.startSession();
+  const logger = getLogger()
+  const session = await GrantPaymentsModel.startSession()
 
   try {
-    let modifiedCount = 0;
-    let affectedPayments = [];
+    let modifiedCount = 0
+    let affectedPayments = []
 
     await session.withTransaction(
       async () => {
         const staleBefore = new Date(
           Date.now() - config.get('lockedPaymentTtl')
-        );
+        )
 
         const staleFilter = {
           grants: {
@@ -99,7 +99,7 @@ export const markAllStaleLockedPaymentsAsFailed = async () => {
               }
             }
           }
-        };
+        }
 
         // Capture identifiers of the payments about to be marked failed, for audit purposes
         const staleDocuments = await GrantPaymentsModel.find(
@@ -108,10 +108,10 @@ export const markAllStaleLockedPaymentsAsFailed = async () => {
           {
             session
           }
-        );
+        )
         affectedPayments = staleDocuments.flatMap((doc) =>
           extractStalePaymentsFromDocument(doc, staleBefore)
-        );
+        )
 
         // Atomically update all documents with stale locked payments
         const result = await GrantPaymentsModel.updateMany(
@@ -131,18 +131,18 @@ export const markAllStaleLockedPaymentsAsFailed = async () => {
               }
             ]
           }
-        );
+        )
 
-        modifiedCount = result.modifiedCount;
+        modifiedCount = result.modifiedCount
       },
       { readPreference: 'primary' }
-    );
+    )
 
-    return { modifiedCount, affectedPayments };
+    return { modifiedCount, affectedPayments }
   } catch (err) {
-    logger.error(err, `Error in stale locked payment cleanup: ${err.message}`);
-    throw err;
+    logger.error(err, `Error in stale locked payment cleanup: ${err.message}`)
+    throw err
   } finally {
-    await session.endSession();
+    await session.endSession()
   }
-};
+}

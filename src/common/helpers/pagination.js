@@ -1,4 +1,4 @@
-import { config } from '#~/config/index.js';
+import { config } from '#~/config/index.js'
 
 /**
  * Wraps results with pagination metadata.
@@ -21,5 +21,5 @@ export const wrapWithPagination = (
       page: page || 1,
       total: Math.ceil(totalDocs / limit) || 1
     }
-  };
-};
+  }
+}

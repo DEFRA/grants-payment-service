@@ -1,9 +1,9 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
-import { config } from '#~/config/index.js';
-import { statusCodes } from '#~/common/constants/status-codes.js';
-import { serializeError } from '#~/common/helpers/serialize-error.js';
-import { getStats } from '#~/common/helpers/get-stats.js';
+import { config } from '#~/config/index.js'
+import { statusCodes } from '#~/common/constants/status-codes.js'
+import { serializeError } from '#~/common/helpers/serialize-error.js'
+import { getStats } from '#~/common/helpers/get-stats.js'
 
 const health = {
   method: 'GET',
@@ -11,7 +11,7 @@ const health = {
   handler: async (_request, h) => {
     try {
       if (!(await mongoose.connection.db.admin().ping()).ok) {
-        throw new Error('MongoDB ping failed');
+        throw new Error('MongoDB ping failed')
       }
     } catch (e) {
       return h
@@ -20,7 +20,7 @@ const health = {
           error: serializeError(e),
           version: config.get('serviceVersion')
         })
-        .code(statusCodes.serviceUnavailable);
+        .code(statusCodes.serviceUnavailable)
     }
 
     return h.response({
@@ -28,20 +28,20 @@ const health = {
       version: config.get('serviceVersion') ?? 'dev',
       featureFlags: config.get('featureFlags'),
       disabledActionCodes: config.get('disabledActionCodes')
-    });
+    })
   }
-};
+}
 
 const stats = {
   method: 'GET',
   path: '/health/stats',
   handler: async (_request, h) => {
     try {
-      const statsData = await getStats();
+      const statsData = await getStats()
 
       return h.response({
         stats: statsData
-      });
+      })
     } catch (e) {
       return h
         .response({
@@ -49,9 +49,9 @@ const stats = {
           error: serializeError(e),
           version: config.get('serviceVersion')
         })
-        .code(statusCodes.serviceUnavailable);
+        .code(statusCodes.serviceUnavailable)
     }
   }
-};
+}
 
-export { health, stats };
+export { health, stats }

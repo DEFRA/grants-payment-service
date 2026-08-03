@@ -1,8 +1,8 @@
-import Boom from '@hapi/boom';
-import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
-import { statusCodes } from '#~/common/constants/status-codes.js';
-import { config } from '#~/config/index.js';
-import { serializeError } from '#~/common/helpers/serialize-error.js';
+import Boom from '@hapi/boom'
+import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs'
+import { statusCodes } from '#~/common/constants/status-codes.js'
+import { config } from '#~/config/index.js'
+import { serializeError } from '#~/common/helpers/serialize-error.js'
 
 /**
  * Controller to post a test queue message
@@ -10,54 +10,54 @@ import { serializeError } from '#~/common/helpers/serialize-error.js';
  */
 const postTestQueueMessageController = {
   handler: async (request, h) => {
-    const requestId = crypto.randomUUID();
+    const requestId = crypto.randomUUID()
     try {
-      const queueMessage = request.payload;
+      const queueMessage = request.payload
 
       if (!queueMessage) {
-        throw Boom.internal('Queue message data is required');
+        throw Boom.internal('Queue message data is required')
       }
 
-      const baseQueueUrl = config.get('sqs.queueUrl').split('/');
+      const baseQueueUrl = config.get('sqs.queueUrl').split('/')
 
-      const defaultQueueName = baseQueueUrl.pop();
-      const { queueName = defaultQueueName } = request.params || {};
-      const queueUrl = `${baseQueueUrl.join('/')}/${queueName}`;
+      const defaultQueueName = baseQueueUrl.pop()
+      const { queueName = defaultQueueName } = request.params || {}
+      const queueUrl = `${baseQueueUrl.join('/')}/${queueName}`
 
       request.logger.info(
         `[RequestID: ${requestId}] Posting test queue message in: "${queueUrl}" with data: ${JSON.stringify(queueMessage)}`
-      );
+      )
 
       const sqsClient = new SQSClient({
         region: config.get('aws.region'),
         endpoint: config.get('sqs.endpoint')
-      });
+      })
 
       const command = new SendMessageCommand({
         QueueUrl: queueUrl,
         MessageBody: JSON.stringify(queueMessage),
         MessageGroupId: config.get('serviceName'),
         MessageDeduplicationId: crypto.randomUUID()
-      });
+      })
 
-      const result = await sqsClient.send(command);
+      const result = await sqsClient.send(command)
       request.logger.info(
         `[RequestID: ${requestId}] Successfully posted test queue message to: "${queueUrl}" with MessageId: ${result.MessageId}`
-      );
+      )
 
       return h
         .response({
           message: 'Test queue message posted'
         })
-        .code(statusCodes.ok);
+        .code(statusCodes.ok)
     } catch (error) {
       request.logger.error(
         error,
         `[RequestID: ${requestId}] Error posting test queue message`
-      );
+      )
 
       if (error.isBoom) {
-        return error;
+        return error
       }
 
       return h
@@ -65,12 +65,12 @@ const postTestQueueMessageController = {
           message: 'Failed to post test queue message',
           error: serializeError(error)
         })
-        .code(statusCodes.internalServerError);
+        .code(statusCodes.internalServerError)
     }
   }
-};
+}
 
-export { postTestQueueMessageController };
+export { postTestQueueMessageController }
 
 /**
  * @import { ServerRoute } from '@hapi/hapi'
