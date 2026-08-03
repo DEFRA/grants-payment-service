@@ -29,7 +29,7 @@
     "setup:husky": "node -e \"try { (await import('husky')).default() } catch (e) { if (e.code !== 'ERR_MODULE_NOT_FOUND') throw e }\" --input-type module",
     "start": "NODE_ENV=production node --use-strict .",
     "test": "npm run test:defaults -- run --coverage --exclude '**/contracts/**'",
-    "test:defaults": "TZ=UTC HTTP_PROXY=http://localhost:8080 NODE_USE_ENV_PROXY=1 vitest",
+    "test:defaults": "node node_modules/mongodb-memory-server/postinstall.js && TZ=UTC HTTP_PROXY=http://localhost:8080 NODE_USE_ENV_PROXY=1 vitest",
     "test:watch": "npm run test:defaults -- --exclude '**/contracts/**'",
     "test:contracts": "npm run test:defaults -- run src/contracts",
     "test:contracts:consumer": "npm run test:defaults -- run src/contracts/consumer",
