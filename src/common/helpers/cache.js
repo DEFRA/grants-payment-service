@@ -4,9 +4,9 @@ import { config } from '#~/config/index.js'
  *
  * @param { import('@hapi/hapi').Server } server
  * @param { string } segment
- * @param { Function } generateFunc
- * @param { any } [options]
- * @returns { import('@hapi/catbox').Policy<any, any> }
+ * @param {(id: string) => string | Promise<string>} generateFunc
+ * @param {object} [options]
+ * @returns { import('@hapi/catbox').Policy<string, string> }
  */
 export function initCache(server, segment, generateFunc, options = {}) {
   return server.cache({

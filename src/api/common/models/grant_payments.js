@@ -3,6 +3,53 @@ const collection = 'grant_payments'
 
 const { Decimal128 } = mongoose.Types
 
+/**
+ * @typedef {object} InvoiceLine
+ * @property {import('mongoose').Types.ObjectId} _id - The invoice line id
+ * @property {string} schemeCode - The scheme code
+ * @property {string} description - The line description
+ * @property {unknown} amountPence - The amount in pence
+ * @property {string} accountCode - The account code
+ * @property {string} fundCode - The fund code
+ * @property {string} deliveryBody - The delivery body
+ */
+
+/**
+ * @typedef {object} Payment
+ * @property {import('mongoose').Types.ObjectId} _id - The payment id
+ * @property {string} dueDate - The payment due date
+ * @property {unknown} totalAmountPence - The total amount in pence
+ * @property {string} correlationId - The payment correlation id
+ * @property {Array<InvoiceLine>} invoiceLines - The invoice lines
+ * @property {string} status - The payment status
+ * @property {string | null} [currency] - The payment currency
+ * @property {string | null} [recoveryDate] - The recovery date
+ * @property {string | null} [originalSettlementDate] - The original settlement date
+ */
+
+/**
+ * @typedef {object} Grant
+ * @property {import('mongoose').Types.ObjectId} _id - The grant id
+ * @property {string} sourceSystem - The source system
+ * @property {number} paymentRequestNumber - The payment request number
+ * @property {string} correlationId - The grant correlation id
+ * @property {string} invoiceNumber - The invoice number
+ * @property {string | null} [originalInvoiceNumber] - The original invoice number
+ * @property {string} agreementNumber - The agreement number
+ * @property {string | null} [recoveryDate] - The recovery date
+ * @property {string | null} [originalSettlementDate] - The original settlement date
+ * @property {string | null} [remittanceDescription] - The remittance description
+ * @property {unknown} totalAmountPence - The total amount in pence
+ * @property {string} currency - The currency
+ * @property {string | null} [marketingYear] - The marketing year
+ * @property {string} ledger - The ledger
+ * @property {string} fesCode - The FES code
+ * @property {string} deliveryBody - The delivery body
+ * @property {Array<Payment>} payments - The payments
+ * @property {Array<Payment>} [matchedPayments] - The matched payments
+ * @property {string} [debtType] - The debt type
+ */
+
 const InvoiceLine = new mongoose.Schema({
   schemeCode: { type: String, required: true },
   description: { type: String, required: true },

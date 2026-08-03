@@ -4,8 +4,8 @@ import { getLogger } from '#~/common/helpers/logging/logger.js'
 /**
  * Syncs indexes for all Mongoose models with their schema definitions.
  * This ensures indexes defined in schemas are created in the database.
- *
- * @param {string} [logPrefix='sync-model-indexes'] - Optional prefix for log messages
+ * @param {string} [logPrefix] - Optional prefix for log messages
+ * @returns {Promise<boolean | unknown>} True on success, otherwise the sync error
  */
 export const syncModelIndexes = async (logPrefix = 'sync-model-indexes') => {
   const logger = getLogger()

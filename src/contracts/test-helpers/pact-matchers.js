@@ -6,9 +6,8 @@ const { like, eachLike } = MatchersV2
  * Recursively converts an object or array into a Pact MatcherV2 structure.
  * Objects are wrapped in `like()`.
  * Arrays are wrapped in `eachLike()` using the first element as the template.
- *
- * @param {any} data - The data to convert.
- * @returns {any} The Pact matcher structure.
+ * @param {unknown} data - The data to convert.
+ * @returns {unknown} The Pact matcher structure.
  */
 export const toLessRestrictive = (data) => {
   if (Array.isArray(data)) {

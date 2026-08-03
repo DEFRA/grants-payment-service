@@ -4,7 +4,7 @@ import { config } from '#~/config/index.js'
 import { syncModelIndexes } from '#~/common/helpers/sync-model-indexes.js'
 
 /**
- * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<*> }
+ * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<{ mongoUrl?: string, databaseName?: string }> }
  */
 export const mongooseDb = {
   plugin: {
@@ -14,7 +14,7 @@ export const mongooseDb = {
      *
      * @param { import('@hapi/hapi').Server } server
      * @param {{mongoUrl?: string, databaseName?: string}} [options]
-     * @returns {void}
+     * @returns {Promise<void>}
      */
     register: async function (server, options = {}) {
       server.logger.info('Setting up Mongoose')
@@ -32,9 +32,9 @@ export const mongooseDb = {
 
       await syncModelIndexes('mongoose')
 
-      server.events.on('stop', async () => {
+      server.events.on('stop', () => {
         server.logger.info('Closing Mongoose client')
-        await mongoose.disconnect()
+        void mongoose.disconnect()
       })
     }
   }

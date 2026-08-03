@@ -9,6 +9,11 @@ import { serializeError } from '#~/common/helpers/serialize-error.js'
  * @satisfies {Partial<ServerRoute>}
  */
 const postTestQueueMessageController = {
+  /**
+   * @param {import('@hapi/hapi').Request & { params: { queueName?: string }, logger: import('pino').Logger }} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   * @returns {Promise<import('@hapi/hapi').ResponseObject>}
+   */
   handler: async (request, h) => {
     const requestId = crypto.randomUUID()
     try {

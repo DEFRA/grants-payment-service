@@ -18,7 +18,7 @@ const findNonInternalIPv4 = (interfaces) =>
  *    (e.g. for scheduled tasks / SQS message processors where there is no
  *    inbound HTTP request to attribute).
  *  - Returns `''` if neither yields a usable address.
- * @param {import('@hapi/hapi').Request} [request]
+ * @param {import('@hapi/hapi').Request | null} [request]
  * @returns {string}
  */
 export const getLocalIp = (request) => {

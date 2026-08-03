@@ -6,6 +6,11 @@ import { syncModelIndexes } from '#~/common/helpers/sync-model-indexes.js'
  * @satisfies {Partial<ServerRoute>}
  */
 const postSyncDbIndexesController = {
+  /**
+   * @param {import('@hapi/hapi').Request & { logger: import('pino').Logger }} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   * @returns {Promise<import('@hapi/hapi').ResponseObject>}
+   */
   handler: async (request, h) => {
     try {
       const result = await syncModelIndexes('test-endpoint')
