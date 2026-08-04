@@ -13,18 +13,25 @@ import { pulse } from '#~/common/helpers/pulse.js'
 import { requestTracing } from '#~/common/helpers/request-tracing.js'
 import { metrics } from '@defra/cdp-metrics'
 import { createSqsConsumerPlugin } from '#~/common/helpers/sqs/sqs-consumer-plugin.js'
+import { createServiceBusSubscriptionPlugin } from '#~/common/helpers/service-bus/service-bus-subscription-plugin.js'
 import { handleCreatePaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-create-payment.js'
 import { handleCancelPaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-cancel-payment.js'
+import { handleBatchRejectedEvent } from '#~/common/helpers/service-bus/message-processor/handle-batch-rejected.js'
 import { mongodbBackup } from '#~/plugins/mongodb-backup.js'
 import { resendFailedPayments } from '#~/plugins/resend-failed-payments.js'
 
 /**
  * Creates the Hapi server
- * @param {{ mongoUrl?: string, mongoDatabase?: string, disableSQS?: boolean }} [serverOptions] - Optional server configuration
+ * @param {{ mongoUrl?: string, mongoDatabase?: string, disableSQS?: boolean, disableServiceBus?: boolean }} [serverOptions] - Optional server configuration
  * @returns {Promise<import('@hapi/hapi').Server>} The configured Hapi server
  */
 async function createServer(serverOptions = {}) {
-  const { mongoUrl, mongoDatabase, disableSQS = false } = serverOptions
+  const {
+    mongoUrl,
+    mongoDatabase,
+    disableSQS = false,
+    disableServiceBus = false
+  } = serverOptions
 
   const server = Hapi.server({
     host: config.get('host'),
@@ -95,6 +102,15 @@ async function createServer(serverOptions = {}) {
             tag: 'cancel-payment',
             queueUrl: config.get('sqs.cancelPaymentQueueUrl'),
             handler: handleCancelPaymentEvent
+          })
+        ]),
+    ...(disableServiceBus ||
+    !config.get('featureFlags.isBatchRejectedSubscriptionEnabled')
+      ? []
+      : [
+          createServiceBusSubscriptionPlugin({
+            tag: 'batch-rejected',
+            handler: handleBatchRejectedEvent
           })
         ]),
     router

@@ -59,6 +59,7 @@ describe('#healthController', () => {
           testEndpoints: true,
           isPaymentHubEnabled: false,
           enableBackups: false,
+          isBatchRejectedSubscriptionEnabled: true,
           resendFailedPaymentsEnabled: false,
           requestLoggerDebug: false
         },
@@ -122,6 +123,7 @@ describe('#healthController', () => {
           testEndpoints: true,
           isPaymentHubEnabled: false,
           enableBackups: false,
+          isBatchRejectedSubscriptionEnabled: true,
           resendFailedPaymentsEnabled: false,
           requestLoggerDebug: false
         },
