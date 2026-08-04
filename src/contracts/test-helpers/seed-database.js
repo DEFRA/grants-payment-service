@@ -3,6 +3,11 @@ import models from '#~/api/common/models/index.js'
 import sampleData from '#~/api/common/helpers/sample-data/index.js'
 import { handleCreatePaymentEvent } from '#~/common/helpers/sqs/message-processor/handle-create-payment.js'
 
+/**
+ * Publishes sample grant payment events
+ * @param {object[]} tableData - The table data rows to publish
+ * @param {object} logger - The logger
+ */
 async function publishSampleGrantEvents(tableData, logger) {
   for (const row of tableData) {
     const event = {
@@ -21,6 +26,12 @@ async function publishSampleGrantEvents(tableData, logger) {
   logger.info(`Successfully published ${tableData.length} 'grants' documents`)
 }
 
+/**
+ * Seeds the database with sample data
+ * @param {object} logger - The logger
+ * @param {object[]} tableData - The data to seed
+ * @returns {Promise<void>}
+ */
 export async function seedDatabase(
   logger = console,
   tableData = sampleData.grants

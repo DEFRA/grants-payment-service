@@ -5,8 +5,8 @@ import { config } from '#~/config/index.js'
 vi.mock('#~/config/index.js')
 // stub the imported routes so we can inspect them
 vi.mock('#~/api/health/index.js', () => ({
-  health: { method: 'GET', path: '/health', handler: () => {} },
-  stats: { method: 'GET', path: '/health/stats', handler: () => {} }
+  health: { method: 'GET', path: '/health', handler: () => undefined },
+  stats: { method: 'GET', path: '/health/stats', handler: () => undefined }
 }))
 vi.mock('#~/api/test-endpoints/index.js', () => ({
   testEndpoints: { plugin: { name: 'testEndpoints' } }

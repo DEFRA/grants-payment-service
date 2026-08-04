@@ -104,8 +104,8 @@ const processAccountPayments = async (server, account, backgroundTasks) => {
   const identifiers = { sbi, frn, claimId }
 
   const results = await Promise.all(
-    (grants || []).flatMap((grant) =>
-      (grant.matchedPayments || []).map((payment) =>
+    (grants ?? []).flatMap((grant) =>
+      (grant.matchedPayments ?? []).map((payment) =>
         processSinglePayment(
           server,
           docId,
@@ -122,6 +122,13 @@ const processAccountPayments = async (server, account, backgroundTasks) => {
   return results.flatMap((r) => r.result)
 }
 
+/**
+ * Process daily payments, optionally filtered by due date or correlation IDs.
+ * @param {import('@hapi/hapi').Server} server
+ * @param {number} [limit] - Max number of payments/grants to process
+ * @param {{ date?: string, correlationIds?: string[] }} [options] - Either a due date or correlation IDs to filter by
+ * @returns {Promise<object>} Results, background tasks and duration metrics
+ */
 export const processDailyPayments = async (
   server,
   limit,
@@ -135,8 +142,8 @@ export const processDailyPayments = async (
     )
   }
 
-  const useDate = date || (!correlationIds && getTodaysDate())
-  const useCorrelationIds = correlationIds || null
+  const useDate = date ?? (!correlationIds ? getTodaysDate() : undefined)
+  const useCorrelationIds = correlationIds ?? null
 
   let logMessage
 
@@ -161,7 +168,11 @@ export const processDailyPayments = async (
         limit
       )
     } else {
-      cursor = streamGrantPaymentsByDate(useDate, 'pending', limit)
+      cursor = streamGrantPaymentsByDate(
+        /** @type {string} */ (useDate),
+        'pending',
+        limit
+      )
     }
     const fetchDuration = (performance.now() - fetchStart).toFixed(2)
 

@@ -10,3 +10,4 @@ coverage
 .eslintcache
 .env
 src/contracts/consumer/pacts
+*.tsbuildinfo

@@ -18,6 +18,11 @@ import { handleCancelPaymentEvent } from '#~/common/helpers/sqs/message-processo
 import { mongodbBackup } from '#~/plugins/mongodb-backup.js'
 import { resendFailedPayments } from '#~/plugins/resend-failed-payments.js'
 
+/**
+ * Creates the Hapi server
+ * @param {{ mongoUrl?: string, mongoDatabase?: string, disableSQS?: boolean }} [serverOptions] - Optional server configuration
+ * @returns {Promise<import('@hapi/hapi').Server>} The configured Hapi server
+ */
 async function createServer(serverOptions = {}) {
   const { mongoUrl, mongoDatabase, disableSQS = false } = serverOptions
 

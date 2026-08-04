@@ -53,7 +53,7 @@ const processPayments = async (request, processorOptions) => {
 
   // Await background tasks to get full payment hub responses for firstXPayments
   const firstXPaymentResponses = await Promise.all(
-    (firstXBackgroundTasks || []).filter(Boolean)
+    (firstXBackgroundTasks ?? []).filter(Boolean)
   )
 
   // Combine each payment with its corresponding response
@@ -63,7 +63,7 @@ const processPayments = async (request, processorOptions) => {
   }))
 
   // Process remaining payments in background
-  processDailyPayments(request.server, undefined, processorOptions).then(
+  void processDailyPayments(request.server, undefined, processorOptions).then(
     ({ results, fetchDuration, processDuration, sendDuration }) => {
       const totalFetch = (
         Number.parseFloat(fetchDur) + Number.parseFloat(fetchDuration)
@@ -89,6 +89,10 @@ const processPayments = async (request, processorOptions) => {
  * @satisfies {Partial<ServerRoute>}
  */
 const postTestProcessPaymentsController = {
+  /**
+   * @param {import('@hapi/hapi').Request & { params: { date?: string }, logger: import('pino').Logger }} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+    @returns {Promise<import('@hapi/hapi').ResponseObject>}*/
   handler: async (request, h) => {
     try {
       const { date } = request.params
@@ -126,9 +130,13 @@ const postTestProcessPaymentsController = {
  * @satisfies {Partial<ServerRoute>}
  */
 const postTestProcessPaymentsBySbiController = {
+  /**
+   * @param {import('@hapi/hapi').Request & { params: { sbi: string }, logger: import('pino').Logger }} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   * @returns {Promise<import('@hapi/hapi').ResponseObject>}
+   */
   handler: async (request, h) => {
     try {
-      /** @type {string} */
       const { sbi } = request.params
 
       const correlationIds = await fetchCorrelationIdsBySbi(sbi, request.logger)

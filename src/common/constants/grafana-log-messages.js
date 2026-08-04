@@ -1,8 +1,8 @@
 /**
  * WARNING: These log messages are monitored by Grafana
  * When changing, please update the Grafana alert rules
- * @type {Object}
- * @property {Object} error - Error log messages
+ * @type {object}
+ * @property {object} error - Error log messages
  */
 export const grafanaLogMessages = Object.freeze({
   error: {

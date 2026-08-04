@@ -10,7 +10,8 @@ const health = {
   path: '/health',
   handler: async (_request, h) => {
     try {
-      if (!(await mongoose.connection.db.admin().ping()).ok) {
+      const ping = await mongoose.connection.db?.admin().ping()
+      if (!ping?.ok) {
         throw new Error('MongoDB ping failed')
       }
     } catch (e) {

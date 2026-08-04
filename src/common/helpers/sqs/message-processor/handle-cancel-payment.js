@@ -28,9 +28,8 @@ const buildCancelledPaymentAuditContexts = (updatedPayments) =>
 
 /**
  * Inbound cancel_payment event handler
- *
  * @param {string} messageId
- * @param {any} payload
+ * @param {{ data: { sbi: string, frn: string } }} payload
  * @param {import('pino').Logger} logger
  */
 export async function handleCancelPaymentEvent(messageId, payload, logger) {

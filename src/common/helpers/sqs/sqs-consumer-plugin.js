@@ -6,8 +6,7 @@ import { config } from '#~/config/index.js'
 
 /**
  * Parse and process a single SQS message.
- *
- * @param {(messageId: string, payload: any, logger: import('pino').Logger) => Promise<void>} handler
+ * @param {(messageId: string, payload: object, logger: import('pino').Logger) => Promise<void>} handler
  * @param {import('@aws-sdk/client-sqs').Message} message
  * @param {import('pino').Logger} logger
  */
@@ -56,14 +55,14 @@ const processMessage = async (handler, message, logger) => {
  * - delete messages on successful handler completion (handled by `sqs-consumer`)
  * - log errors
  * - stop the consumer and destroy the SQS client on server shutdown
- *
- * @type {import('@hapi/hapi').Plugin<{ tag: string, queueUrl: string, handler: Function }>}
+ * @param {{ tag: string, queueUrl: string, handler: (messageId: string, payload: object, logger: import('pino').Logger) => Promise<void> }} options
+ * @returns {import('@hapi/hapi').ServerRegisterPluginObject<void>}
  */
 export const createSqsConsumerPlugin = ({ tag, queueUrl, handler }) => ({
   plugin: {
     name: `sqs-consumer-${tag}`,
     version: '1.0.0',
-    register: async (server) => {
+    register: (server) => {
       server.logger.info(
         `Setting up SQS consumer (${tag}) for queueUrl: ${queueUrl}`
       )
@@ -114,7 +113,7 @@ export const createSqsConsumerPlugin = ({ tag, queueUrl, handler }) => ({
 
       consumer.start()
 
-      server.events.on('stop', async () => {
+      server.events.on('stop', () => {
         server.logger.info(`Stopping SQS consumer (${tag})`)
         consumer.stop()
         server.logger.info(`Closing SQS client (${tag})`)

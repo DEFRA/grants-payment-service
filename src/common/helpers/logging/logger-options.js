@@ -2,9 +2,9 @@ import { ecsFormat } from '@elastic/ecs-pino-format'
 import { config } from '#~/config/index.js'
 import { getTraceId } from '@defra/hapi-tracing'
 
-const logConfig = config.get('log') || {}
-const serviceName = config.get('serviceName') || ''
-const serviceVersion = config.get('serviceVersion') || ''
+const logConfig = config.get('log') ?? {}
+const serviceName = config.get('serviceName') ?? ''
+const serviceVersion = config.get('serviceVersion') ?? ''
 const requestLoggerDebugEnabled =
   config.get('featureFlags.requestLoggerDebug') === true
 
@@ -24,10 +24,10 @@ export const loggerOptions = {
   redact: {
     paths: requestLoggerDebugEnabled
       ? ['req.headers.x-api-key']
-      : logConfig.redact || [],
+      : (logConfig.redact ?? []),
     remove: !requestLoggerDebugEnabled
   },
-  level: logConfig.level || 'info',
+  level: logConfig.level ?? 'info',
   ...formatters[logConfig.format],
   nesting: true,
   logPayload: requestLoggerDebugEnabled,

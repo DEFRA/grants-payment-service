@@ -8,9 +8,8 @@ import {
 
 /**
  * Inbound create_payment event handler
- *
  * @param {string} messageId
- * @param {any} payload
+ * @param {{ data: { sbi?: string, frn?: string, grants?: Array<{ correlationId?: string, payments?: Array<{ correlationId?: string }> }> } }} payload
  * @param {import('pino').Logger} logger
  */
 export async function handleCreatePaymentEvent(messageId, payload, logger) {
@@ -35,7 +34,7 @@ export async function handleCreatePaymentEvent(messageId, payload, logger) {
           payment
         )
         logger.info(
-          `Dry run: Payment ${payment._id} due date ${payment.dueDate} Payment Hub data: ${JSON.stringify(paymentHubData, null, 2)}`
+          `Dry run: Payment ${String(payment._id)} due date ${payment.dueDate} Payment Hub data: ${JSON.stringify(paymentHubData, null, 2)}`
         )
 
         await auditEvent(AuditEvent.GRANT_PAYMENT_CREATED, {
@@ -65,7 +64,7 @@ export async function handleCreatePaymentEvent(messageId, payload, logger) {
         `Duplicate grant payment entry received for message ${messageId}: SBI: ${payload?.data?.sbi} FRN: ${payload?.data?.frn} correlation IDs: ${payload?.data?.grants
           ?.map?.((g) => [
             g.correlationId,
-            ...(g.payments?.map?.((p) => p.correlationId) || [])
+            ...(g.payments?.map?.((p) => p.correlationId) ?? [])
           ])
           .flat()
           .join(', ')}`

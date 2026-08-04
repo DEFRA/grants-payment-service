@@ -9,10 +9,15 @@ import { config } from '#~/config/index.js'
  * @satisfies {Partial<ServerRoute>}
  */
 const getTestDailyPaymentsController = {
+  /**
+   * @param {import('@hapi/hapi').Request & { params: { date?: string }, logger: import('pino').Logger }} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+    @returns {Promise<import('@hapi/hapi').ResponseObject>}
+   */
   handler: async (request, h) => {
     try {
       const { date = getTomorrowsDate() } = request.params
-      const page = Number.parseInt(request.query?.page) || 1
+      const page = Number.parseInt(String(request.query?.page)) || 1
       const { docs, pagination } = await fetchGrantPaymentsByDate(
         date,
         null,

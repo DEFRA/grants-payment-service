@@ -39,8 +39,8 @@ const paymentId = (id) => id?.toString?.() ?? ''
  * Calculates the quarter suffix for an invoice number based on the payment index
  * @param {string} invoiceNumber
  * @param {Array} payments - Array of all payments for the grant
- * @param {Object} currentPayment - The current payment object with _id (from MongoDB)
- * @returns string
+ * @param {object} currentPayment - The current payment object with _id (from MongoDB)
+ * @returns {string}
  */
 const updateQuarter = (invoiceNumber, payments, currentPayment) => {
   const invoiceWithoutQuarter = invoiceNumber.replace(/Q[1-4X]$/i, '')
@@ -63,7 +63,7 @@ const updateQuarter = (invoiceNumber, payments, currentPayment) => {
 
 /**
  * Transforms data into the format required by Payment Hub
- * @param {schema} identifiers
+ * @param {{ sbi: string, frn: string, claimId: string }} identifiers
  * @param {Grant} grant
  * @param {Payment} payment
  * @returns {PaymentHubRequest}
@@ -80,11 +80,11 @@ export const transformDataToPaymentHubFormat = (
   frn: identifiers.frn,
   sbi: identifiers.sbi,
   fesCode: grant.fesCode,
-  marketingYear: grant.marketingYear || new Date().getFullYear(),
+  marketingYear: grant.marketingYear ?? new Date().getFullYear(),
   paymentRequestNumber: grant.paymentRequestNumber,
   agreementNumber: asNumbersOnly(grant.agreementNumber),
   contractNumber: identifiers.claimId,
-  currency: payment.currency || 'GBP',
+  currency: payment.currency ?? 'GBP',
   dueDate: formatPaymentDate(payment.dueDate),
   remittanceDescription: grant.remittanceDescription,
   invoiceLines: buildInvoiceLines(grant, payment),
@@ -119,5 +119,5 @@ export const transformDataToPaymentHubFormat = (
     : {})
 })
 
-/** @import { schema, Grant, Payment } from '#~/api/common/models/grant_payments.js' */
+/** @import { Grant, Payment } from '#~/api/common/models/grant_payments.js' */
 /** @import { PaymentHubRequest } from '#~/common/types/payment-hub.d.js' */

@@ -4,6 +4,10 @@ import { config } from '#~/config/index.js'
 
 const SUFFIX_SANITISER = /[^a-z0-9]+/gi
 
+/**
+ * Resolves the Mongo URI from the test environment or config
+ * @returns {string} The Mongo URI
+ */
 function resolveMongoUri() {
   return (
     globalThis.__MONGO_URI__ ?? process.env.MONGO_URI ?? config.get('mongoUri')

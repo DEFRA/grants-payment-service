@@ -74,11 +74,25 @@ const eventEntities = {
 }
 
 /**
+ * Context for an audit event.
+ * @typedef {object} AuditEventContext
+ * @property {string} [correlationId] - The correlation id
+ * @property {string} [contractNumber] - The contract number
+ * @property {string} [invoiceNumber] - The invoice number
+ * @property {string} [sbi] - The SBI
+ * @property {string} [frn] - The FRN
+ * @property {string} [crn] - The CRN
+ * @property {string} [agreementNumber] - The agreement number
+ * @property {{ sbi?: string, frn?: string, crn?: string }} [identifiers] - The identifiers
+ */
+
+/**
  * Builds the full audit payload for a payment hub request.
  * @param {AuditEvent} event
- * @param {{ correlationId?: string, contractNumber?: string, invoiceNumber?: string, sbi?: number, frn?: number, crn?: string, agreementNumber?: string }} context
+ * @param {AuditEventContext} context
  * @param {'success'|'failure'} status
- * @param {import('@hapi/hapi').Request|null} request
+ * @param {import('@hapi/hapi').Request | null} request
+ * @returns {object} The full audit payload
  */
 const buildAuditPayload = (
   event,
@@ -121,21 +135,19 @@ const buildAuditPayload = (
 let snsClient = null
 
 const getSnsClient = () => {
-  if (!snsClient) {
-    snsClient = new SNSClient({
-      region: config.get('aws.region'),
-      endpoint: config.get('sns.endpoint')
-    })
-  }
+  snsClient ??= new SNSClient({
+    region: config.get('aws.region'),
+    endpoint: config.get('sns.endpoint')
+  })
   return snsClient
 }
 
 /**
  * Records a payment hub request audit event.
  * @param {AuditEvent} event
- * @param {{ correlationId?: string, contractNumber?: string, invoiceNumber?: string, sbi?: number, frn?: number, crn?: string, agreementNumber?: string }} context
+ * @param {AuditEventContext} context
  * @param {'success'|'failure'} [status]
- * @param {import('@hapi/hapi').Request|null} [request]
+ * @param {import('@hapi/hapi').Request | null} [request]
  */
 export const auditEvent = async (
   event,

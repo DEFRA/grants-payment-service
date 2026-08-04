@@ -98,8 +98,8 @@ describe('mongooseDb', () => {
       )
     })
 
-    test('should fall back to index when options are not provided', () => {
-      mongooseDb.plugin.register(mockServer)
+    test('should fall back to index when options are not provided', async () => {
+      await mongooseDb.plugin.register(mockServer)
 
       expect(mockMongoose.connect).toHaveBeenCalledWith(
         configValues.mongo.uri,

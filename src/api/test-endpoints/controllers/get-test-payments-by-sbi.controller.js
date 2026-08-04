@@ -2,6 +2,10 @@ import { fetchGrantPaymentsBySbi } from '#~/common/helpers/fetch-grant-payments-
 import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 
+/**
+ * Controller to get all grant payments for a given SBI
+ * @satisfies {Partial<ServerRoute>}
+ */
 const getTestPaymentsBySbiController = {
   options: {
     description:
@@ -13,10 +17,15 @@ const getTestPaymentsBySbiController = {
       socket: false
     }
   },
+  /**
+   * @param {import('@hapi/hapi').Request & { params: { sbi: string, fundCode?: string } }} req
+   * @param {import('@hapi/hapi').ResponseToolkit} res
+   * @returns {Promise<import('@hapi/hapi').ResponseObject>}
+   */
   handler: async (req, res) => {
     try {
       const { sbi, fundCode } = req.params
-      const page = Number.parseInt(req.query?.page) || 1
+      const page = Number.parseInt(String(req.query?.page)) || 1
       const { docs, pagination } = await fetchGrantPaymentsBySbi(
         sbi,
         fundCode,
@@ -39,3 +48,7 @@ const getTestPaymentsBySbiController = {
 }
 
 export { getTestPaymentsBySbiController }
+
+/**
+ * @import { ServerRoute } from '@hapi/hapi'
+ */

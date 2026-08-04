@@ -4,11 +4,10 @@ import { config } from '#~/config/index.js'
 
 /**
  * Change the status of a single payment subdocument.
- *
  * @param {string} documentId - _id of the grant payments document
  * @param {string} paymentId - _id of the specific payment subdocument
  * @param {string} status - new status value (locked, submitted, failed, etc.)
- * @param {string} currentStatus - Optional previous status to assert when performing the update. If provided, the update will only succeed when the existing payment status equals this value. This is useful for acquiring a lock (e.g. pending -> locked) in a concurrent environment.
+ * @param {string} [currentStatus] - Optional previous status to assert when performing the update. If provided, the update will only succeed when the existing payment status equals this value. This is useful for acquiring a lock (e.g. pending -> locked) in a concurrent environment.
  * @returns {Promise<object>} result of the update operation
  */
 export const updatePaymentStatus = async (
@@ -60,12 +59,12 @@ const toAffectedPayment = (doc, grant, payment) => ({
 })
 
 const extractStalePaymentsFromGrant = (doc, grant, staleBefore) =>
-  (grant.payments || [])
+  (grant.payments ?? [])
     .filter((payment) => isStaleLocked(payment, staleBefore))
     .map((payment) => toAffectedPayment(doc, grant, payment))
 
 const extractStalePaymentsFromDocument = (doc, staleBefore) =>
-  (doc.grants || []).flatMap((grant) =>
+  (doc.grants ?? []).flatMap((grant) =>
     extractStalePaymentsFromGrant(doc, grant, staleBefore)
   )
 
