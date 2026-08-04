@@ -87,6 +87,9 @@ services:
       NODE_ENV: development
       FLOCI_ENDPOINT: http://grants-payment-floci:4566
       MONGO_URI: mongodb://mongodb:27017/
+      ENABLE_BATCH_REJECTED_SUBSCRIPTION: 'true'
+      # Points at the in-process Service Bus (AMQP) broker in the azure-service-bus-stub app container (cdp-tenant network)
+      SERVICE_BUS_CONNECTION_STRING: ${SERVICE_BUS_CONNECTION_STRING:-Endpoint=sb://azure-service-bus-stub;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true}
     networks:
       - cdp-tenant
     volumes:

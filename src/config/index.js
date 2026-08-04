@@ -206,6 +206,30 @@ const config = convict({
       env: 'PAYMENT_HUB_SA_KEY'
     }
   },
+  serviceBus: {
+    connectionString: {
+      doc: 'Azure Service Bus connection string used to subscribe to payment hub response topics',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'SERVICE_BUS_CONNECTION_STRING',
+      sensitive: true
+    },
+    batchRejected: {
+      topic: {
+        doc: 'Azure Service Bus topic for batch rejected responses',
+        format: String,
+        default: 'ffc-pay-request-response-dev',
+        env: 'BATCH_REJECTED_TOPIC_ADDRESS'
+      },
+      subscription: {
+        doc: 'Azure Service Bus subscription for batch rejected responses',
+        format: String,
+        default: 'grants-payment-service',
+        env: 'BATCH_REJECTED_SUBSCRIPTION_ADDRESS'
+      }
+    }
+  },
   featureFlags: {
     testEndpoints: {
       doc: 'Enable test endpoints',
@@ -218,6 +242,12 @@ const config = convict({
       format: 'Boolean',
       default: false,
       env: 'ENABLE_PAYMENT_HUB'
+    },
+    isBatchRejectedSubscriptionEnabled: {
+      doc: 'Enable the subscription to the payment hub BATCH_REJECTED events',
+      format: 'Boolean',
+      default: false,
+      env: 'ENABLE_BATCH_REJECTED_SUBSCRIPTION'
     },
     enableBackups: {
       doc: 'Enable MongoDB backups',
