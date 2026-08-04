@@ -23,6 +23,7 @@ describe('#healthController', () => {
     config.set('featureFlags.isPaymentHubEnabled', false)
     config.set('featureFlags.enableBackups', false)
     config.set('featureFlags.requestLoggerDebug', false)
+    config.set('featureFlags.isBatchRejectedSubscriptionEnabled', false)
     config.set('disabledActionCodes', ['PA3'])
 
     // import createServer after mongoose is mocked so controllers picks up the mock
@@ -59,7 +60,7 @@ describe('#healthController', () => {
           testEndpoints: true,
           isPaymentHubEnabled: false,
           enableBackups: false,
-          isBatchRejectedSubscriptionEnabled: true,
+          isBatchRejectedSubscriptionEnabled: false,
           resendFailedPaymentsEnabled: false,
           requestLoggerDebug: false
         },
@@ -123,7 +124,7 @@ describe('#healthController', () => {
           testEndpoints: true,
           isPaymentHubEnabled: false,
           enableBackups: false,
-          isBatchRejectedSubscriptionEnabled: true,
+          isBatchRejectedSubscriptionEnabled: false,
           resendFailedPaymentsEnabled: false,
           requestLoggerDebug: false
         },
