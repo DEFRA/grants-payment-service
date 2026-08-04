@@ -37,7 +37,7 @@ const cron = {
       const staleLockedPaymentCleanupSchedule = new Cron(
         staleLockedPaymentCleanupScheduleCron,
         options,
-        () => processStaleLockedPayments(server)
+        () => void processStaleLockedPayments(server)
       )
 
       const statsScheduleCron = config.get('cron.statsSchedule')

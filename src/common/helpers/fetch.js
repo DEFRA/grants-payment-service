@@ -2,7 +2,7 @@ import { config } from '#~/config/index.js'
 
 /**
  * Make fetch requests with exponential back-off and timeout support
- * @param {string} url - The URL to fetch
+ * @param {string|URL} url - The URL to fetch
  * @param {object} options - The fetch options
  * @param {string} options.method - The HTTP method (GET, POST, etc.)
  * @param {object} options.headers - The request headers
@@ -34,6 +34,7 @@ export const fetchWithRetry = async (url, options, logger) => {
     } catch (err) {
       clearTimeout(timeoutId)
       lastError = err
+      const message = err?.message
       const isRetryable =
         [
           'TimeoutError',
@@ -43,8 +44,8 @@ export const fetchWithRetry = async (url, options, logger) => {
           'ENOTFOUND'
         ].includes(err?.name) ||
         ['ECONNRESET', 'ECONNREFUSED', 'ENOTFOUND'].includes(err?.code) ||
-        err?.message?.includes('network') ||
-        err?.message?.includes('timeout')
+        Boolean(message?.includes('network')) ||
+        Boolean(message?.includes('timeout'))
 
       logger.error(
         {

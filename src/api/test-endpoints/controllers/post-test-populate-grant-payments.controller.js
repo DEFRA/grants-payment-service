@@ -18,6 +18,9 @@ const INVOICE_NUMBER_PADDING = 3
 
 /**
  * Generate a random amount in pence
+ * @param {number} min - The minimum amount in pence
+ * @param {number} max - The maximum amount in pence
+ * @returns {number} A random amount in pence
  */
 const getRandomAmount = (min, max) => {
   return crypto.randomInt(min, max + 1)
@@ -39,6 +42,9 @@ const calculatePaymentDueDates = (startDate, count = 4, intervalMonths = 3) =>
 
 /**
  * Create a random grant payment payload
+ * @param {number} index - The index of the payment to generate
+ * @param {string} dueDate - The due date in ISO format (YYYY-MM-DD)
+ * @returns {object} A random grant payment payload
  */
 const createGrantPaymentPayload = (index, dueDate) => {
   const timestamp = Date.now()
@@ -94,6 +100,11 @@ const createGrantPaymentPayload = (index, dueDate) => {
 
 /**
  * Process a batch of grant payments
+ * @param {number} startIndex - The starting index for the batch
+ * @param {number} batchSize - The number of payments in the batch
+ * @param {string} dueDate - The due date in ISO format (YYYY-MM-DD)
+ * @param {import('pino').Logger} logger - The logger
+ * @returns {Promise<{ successCount: number, errorCount: number, errors: object[] }>} Batch processing results
  */
 const processBatch = async (startIndex, batchSize, dueDate, logger) => {
   const promises = []
@@ -124,6 +135,14 @@ const processBatch = async (startIndex, batchSize, dueDate, logger) => {
   return { successCount, errorCount: errors.length, errors }
 }
 
+/**
+ * Populates the database with grant payments in batches
+ * @param {number} targetCount - The total number of payments to create
+ * @param {number} calculatedBatchSize - The size of each batch
+ * @param {import('pino').Logger} logger - The logger
+ * @param {string} dueDate - The due date in ISO format (YYYY-MM-DD)
+ * @returns {Promise<{ totalCreated: number, totalErrors: number, allErrors: object[] }>} Population results
+ */
 async function populateDataInBatches(
   targetCount,
   calculatedBatchSize,
@@ -167,6 +186,49 @@ async function populateDataInBatches(
 }
 
 /**
+ * Populates the database with grant payments in the background
+ * @param {import('pino').Logger} logger - The logger
+ * @param {number} targetCount - The total number of payments to create
+ * @param {number} batchSize - The size of each batch
+ * @param {string} dueDate - The due date in ISO format (YYYY-MM-DD)
+ * @returns {Promise<void>}
+ */
+const populateDatabaseInBackground = async (
+  logger,
+  targetCount,
+  batchSize,
+  dueDate
+) => {
+  try {
+    logger.info(
+      `Starting test database population: targetCount=${targetCount}, batchSize=${batchSize}, dueDate=${dueDate}`
+    )
+
+    const existingCount = await GrantPaymentsModel.countDocuments()
+    logger.info(
+      `Existing grant payments in database before creation: ${existingCount}`
+    )
+
+    const { totalCreated, totalErrors, allErrors } =
+      await populateDataInBatches(targetCount, batchSize, logger, dueDate)
+
+    const finalCount = await GrantPaymentsModel.countDocuments()
+    logger.info(
+      `Total grant payments in database after creation: ${finalCount}`
+    )
+
+    logger.info({
+      message: 'Population complete',
+      totalCreated,
+      totalErrors,
+      errors: allErrors.slice(0, MAX_ERRORS_IN_RESPONSE) // Limit errors returned in response
+    })
+  } catch (error) {
+    logger.error(error, `Error during test population`)
+  }
+}
+
+/**
  * Controller to populate the database with grant payments for performance testing
  * @satisfies {Partial<ServerRoute>}
  */
@@ -185,7 +247,12 @@ const postTestPopulateGrantPaymentController = {
       }).default()
     }
   },
-  handler: async (req, res) => {
+  /**
+   * @param {import('@hapi/hapi').Request & { payload: { targetCount: number, dueDate: string }, logger: import('pino').Logger }} req
+   * @param {import('@hapi/hapi').ResponseToolkit} res
+    @returns {import('@hapi/hapi').ResponseObject}
+   */
+  handler: (req, res) => {
     let { targetCount, dueDate } = req.payload
 
     // Ensure dueDate is only the date part YYYY-MM-DD
@@ -202,41 +269,13 @@ const postTestPopulateGrantPaymentController = {
       Math.min(maxBatchSize, Math.ceil(targetCount / 10))
     )
 
-    setImmediate(async () => {
-      try {
-        const logger = req.logger
-
-        logger.info(
-          `Starting test database population: targetCount=${targetCount}, batchSize=${calculatedBatchSize}, dueDate=${dueDate}`
-        )
-
-        const existingCount = await GrantPaymentsModel.countDocuments()
-        logger.info(
-          `Existing grant payments in database before creation: ${existingCount}`
-        )
-
-        const { totalCreated, totalErrors, allErrors } =
-          await populateDataInBatches(
-            targetCount,
-            calculatedBatchSize,
-            logger,
-            dueDate
-          )
-
-        const finalCount = await GrantPaymentsModel.countDocuments()
-        logger.info(
-          `Total grant payments in database after creation: ${finalCount}`
-        )
-
-        logger.info({
-          message: 'Population complete',
-          totalCreated,
-          totalErrors,
-          errors: allErrors.slice(0, MAX_ERRORS_IN_RESPONSE) // Limit errors returned in response
-        })
-      } catch (error) {
-        req.logger.error(error, `Error during test population`)
-      }
+    setImmediate(() => {
+      void populateDatabaseInBackground(
+        req.logger,
+        targetCount,
+        calculatedBatchSize,
+        dueDate
+      )
     })
 
     return res

@@ -2,6 +2,10 @@ import { statusCodes } from '#~/common/constants/status-codes.js'
 import { createGrantPayment } from '#~/common/helpers/create-grant-payment.js'
 import { serializeError } from '#~/common/helpers/serialize-error.js'
 
+/**
+ * Controller to populate grant payment with sample data for testing
+ * @satisfies {Partial<ServerRoute>}
+ */
 const postTestGrantPaymentController = {
   options: {
     description: 'Populate grant payment with sample data for testing',
@@ -58,3 +62,7 @@ const postTestGrantPaymentController = {
 }
 
 export { postTestGrantPaymentController }
+
+/**
+ * @import { ServerRoute } from '@hapi/hapi'
+ */

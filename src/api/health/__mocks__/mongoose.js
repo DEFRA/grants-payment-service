@@ -31,7 +31,7 @@ const mockModel = vi.fn().mockImplementation((_collection, schema) => {
 class MockSchema {
   constructor(definition, options) {
     this.definition = definition
-    this.options = options || {}
+    this.options = options ?? {}
     this._indexes = []
     this._plugins = []
 

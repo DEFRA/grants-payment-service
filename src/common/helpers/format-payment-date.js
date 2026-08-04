@@ -1,6 +1,6 @@
 /**
  * Formats a YYYY-MM-DD date string into DD/MM/YYYY.
- * @param {string} paymentDate
+ * @param {string | undefined} paymentDate
  * @returns {string}
  */
 function formatPaymentDate(paymentDate) {

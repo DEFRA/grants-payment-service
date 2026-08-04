@@ -25,7 +25,15 @@ vi.mock('#~/common/helpers/payment-hub/audit-event.js', () => ({
 }))
 
 const mongooseMock = {
-  default: { connection: { readyState: 1, once: onceMock } }
+  default: {
+    ConnectionStates: {
+      disconnected: 0,
+      connected: 1,
+      connecting: 2,
+      disconnecting: 3
+    },
+    connection: { readyState: 1, once: onceMock }
+  }
 }
 vi.mock('mongoose', () => mongooseMock)
 

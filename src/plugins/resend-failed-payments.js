@@ -22,12 +22,12 @@ const toAffectedPayment = (doc, grant, payment) => ({
 })
 
 const extractFailedPaymentsFromGrant = (doc, grant) =>
-  (grant.payments || [])
+  (grant.payments ?? [])
     .filter((payment) => payment.status === 'failed')
     .map((payment) => toAffectedPayment(doc, grant, payment))
 
 const extractFailedPaymentsFromDocument = (doc) =>
-  (doc.grants || []).flatMap((grant) =>
+  (doc.grants ?? []).flatMap((grant) =>
     extractFailedPaymentsFromGrant(doc, grant)
   )
 
@@ -129,11 +129,13 @@ const resendFailedPayments = {
         }
       }
 
-      if (mongoose.connection?.readyState === 1) {
+      if (
+        mongoose.connection?.readyState === mongoose.ConnectionStates.connected
+      ) {
         await execute()
       } else {
-        mongoose.connection.once('connected', async () => {
-          await execute()
+        mongoose.connection.once('connected', () => {
+          void execute()
         })
       }
     }

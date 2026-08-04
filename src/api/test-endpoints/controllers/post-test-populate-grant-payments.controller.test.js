@@ -68,7 +68,7 @@ describe('postTestPopulateGrantPaymentController', () => {
       logger: mockLogger
     }
 
-    const result = await postTestPopulateGrantPaymentController.handler(req, h)
+    const result = postTestPopulateGrantPaymentController.handler(req, h)
 
     expect(result.statusCode).toBe(statusCodes.accepted)
     expect(result.source.message).toBe('Grant payment population started')
@@ -106,7 +106,7 @@ describe('postTestPopulateGrantPaymentController', () => {
       logger: mockLogger
     }
 
-    const result = await postTestPopulateGrantPaymentController.handler(req, h)
+    const result = postTestPopulateGrantPaymentController.handler(req, h)
 
     expect(result.statusCode).toBe(statusCodes.accepted)
     expect(result.source.dueDate).toBe('2025-12-25')
@@ -137,7 +137,7 @@ describe('postTestPopulateGrantPaymentController', () => {
       logger: mockLogger
     }
 
-    const result = await postTestPopulateGrantPaymentController.handler(req, h)
+    const result = postTestPopulateGrantPaymentController.handler(req, h)
 
     expect(result.statusCode).toBe(statusCodes.accepted)
 
@@ -157,7 +157,7 @@ describe('postTestPopulateGrantPaymentController', () => {
       logger: mockLogger
     }
 
-    const result = await postTestPopulateGrantPaymentController.handler(req, h)
+    const result = postTestPopulateGrantPaymentController.handler(req, h)
 
     expect(result.statusCode).toBe(statusCodes.accepted)
 
@@ -181,10 +181,7 @@ describe('postTestPopulateGrantPaymentController', () => {
     }
     const { h } = makeH()
 
-    const result = await postTestPopulateGrantPaymentController.handler(
-      faultyReq,
-      h
-    )
+    const result = postTestPopulateGrantPaymentController.handler(faultyReq, h)
 
     expect(result.statusCode).toBe(statusCodes.accepted)
 
@@ -208,7 +205,7 @@ describe('postTestPopulateGrantPaymentController', () => {
       logger: mockLogger
     }
 
-    await postTestPopulateGrantPaymentController.handler(req, h)
+    postTestPopulateGrantPaymentController.handler(req, h)
 
     // Wait for setImmediate to complete
     await setImmediate()

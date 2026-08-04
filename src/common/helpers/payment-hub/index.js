@@ -27,21 +27,19 @@ const getPaymentHubToken = () => {
 /**
  * Payment Hub token cache
  * @param { import('@hapi/hapi').Server } server
- * @returns { import('@hapi/catbox').Policy<any, any> }
+ * @returns { import('@hapi/catbox').Policy<string, string> }
  */
 const getCachedToken = (server) => {
-  if (!cache) {
-    cache = initCache(server, 'paymentHubToken', getPaymentHubToken, {
-      expiresIn: config.get('paymentHub.ttl')
-    })
-  }
+  cache ??= initCache(server, 'paymentHubToken', getPaymentHubToken, {
+    expiresIn: config.get('paymentHub.ttl')
+  })
   return cache
 }
 
 /**
  * Send a request to the payment hub
  * @param { import('@hapi/hapi').Server } server
- * @param { PaymentHubPayload } body
+ * @param { PaymentHubRequest } body
  * @returns {Promise<object>} The response from the payment hub
  */
 export const sendPaymentHubRequest = async (server, body) => {
@@ -112,4 +110,4 @@ export const sendPaymentHubRequest = async (server, body) => {
   }
 }
 
-/** @import { PaymentHubPayload } from '#~/common/types/payment-hub.d.js' */
+/** @import { PaymentHubRequest } from '#~/common/types/payment-hub.d.js' */

@@ -176,11 +176,15 @@ const mongodbBackup = {
         }
       }
 
-      if (mongoose.connection?.readyState === 1 && mongoose.connection?.db) {
+      if (
+        mongoose.connection?.readyState ===
+          mongoose.ConnectionStates.connected &&
+        mongoose.connection?.db
+      ) {
         await execute()
       } else {
-        mongoose.connection.once('connected', async () => {
-          await execute()
+        mongoose.connection.once('connected', () => {
+          void execute()
         })
       }
     }

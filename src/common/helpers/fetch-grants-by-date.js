@@ -120,7 +120,7 @@ const buildFinalMatchStage = () => ({
 /**
  * Builds a MongoDB aggregation pipeline for fetching grant payments by date.
  * @param {string} date - The date to filter payments by (dueDate <= date + 1 day)
- * @param {string} [status] - Optional payment status to filter by
+ * @param {string | null} [status] - Optional payment status to filter by
  * @param {number} [limit] - Optional limit for number of results
  * @param {number} [page] - Optional page number for pagination
  * @returns {object} Object containing the pipeline array and match criteria for counting
@@ -132,6 +132,7 @@ const buildGrantPaymentsAggregationPipeline = (date, status, limit, page) => {
     ...buildInvoiceLinesMatchFilter()
   }
 
+  /** @type {object[]} */
   const filters = [{ $lte: ['$$p.dueDate', nextDay] }]
 
   if (status) {
@@ -169,7 +170,7 @@ const buildGrantPaymentsAggregationPipeline = (date, status, limit, page) => {
 /**
  * Fetches grant payments by date with optional status filter and pagination.
  * @param {string} date - The date to filter payments by (dueDate <= date + 1 day)
- * @param {string} [status] - Optional payment status to filter by
+ * @param {string | null} [status] - Optional payment status to filter by
  * @param {number} [limit] - Optional limit for number of results
  * @param {number} [page] - Optional page number for pagination
  * @returns {Promise<object>} Paginated result with docs, totalDocs, and pagination metadata
@@ -194,7 +195,7 @@ export const fetchGrantPaymentsByDate = async (date, status, limit, page) => {
  * Creates a cursor stream for fetching grant payments by date.
  * Useful for processing large result sets without loading all data into memory.
  * @param {string} date - The date to filter payments by (dueDate <= date + 1 day)
- * @param {string} [status] - Optional payment status to filter by
+ * @param {string | null} [status] - Optional payment status to filter by
  * @param {number} [limit] - Optional limit for number of results
  * @param {number} [page] - Optional page number for pagination
  * @returns {object} MongoDB aggregation cursor

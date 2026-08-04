@@ -14,6 +14,12 @@ const onceMock = vi.fn()
 
 const mongooseMock = {
   default: {
+    ConnectionStates: {
+      disconnected: 0,
+      connected: 1,
+      connecting: 2,
+      disconnecting: 3
+    },
     connection: {
       readyState: 1,
       get db() {
@@ -48,7 +54,7 @@ vi.mock('mongoose', () => mongooseMock)
 const createCollectionStub = (name) => ({
   collectionName: name,
   find: () => ({
-    toArray: async () => {
+    toArray: () => {
       return collectionsMap.get(name)?.docs ?? []
     }
   }),
@@ -57,7 +63,7 @@ const createCollectionStub = (name) => ({
     const targetName = outStage?.$out
 
     return {
-      toArray: async () => {
+      toArray: () => {
         if (typeof targetName === 'string') {
           const docs = collectionsMap.get(name)?.docs ?? []
           collectionsMap.set(targetName, { docs: [...docs] })
@@ -66,22 +72,22 @@ const createCollectionStub = (name) => ({
       }
     }
   },
-  insertMany: async (docs) => {
+  insertMany: (docs) => {
     collectionsMap.set(name, { docs: [...docs] })
   },
-  deleteMany: async () => {
+  deleteMany: () => {
     collectionsMap.set(name, { docs: [] })
     return { deletedCount: 0 }
   }
 })
 
 const buildDb = () => ({
-  collections: async () =>
+  collections: () =>
     Array.from(collectionsMap.keys()).map((collectionName) => ({
       collectionName
     })),
   collection: (collectionName) => createCollectionStub(collectionName),
-  dropCollection: vi.fn(async (collectionName) => {
+  dropCollection: vi.fn((collectionName) => {
     collectionsMap.delete(collectionName)
   })
 })

@@ -2,6 +2,10 @@ import { deleteGrantPaymentsBySbi } from '#~/common/helpers/delete-grant-payment
 import { serializeError } from '#~/common/helpers/serialize-error.js'
 import { statusCodes } from '#~/common/constants/status-codes.js'
 
+/**
+ * Controller to delete all grant payments for a given SBI
+ * @satisfies {Partial<ServerRoute>}
+ */
 const deleteTestPaymentsBySbiController = {
   options: {
     description:
@@ -13,6 +17,11 @@ const deleteTestPaymentsBySbiController = {
       socket: false
     }
   },
+  /**
+   * @param {import('@hapi/hapi').Request & { params: { sbi: string, fundCode?: string } }} req
+   * @param {import('@hapi/hapi').ResponseToolkit} res
+   * @returns {Promise<import('@hapi/hapi').ResponseObject>}
+   */
   handler: async (req, res) => {
     try {
       const { sbi, fundCode } = req.params
@@ -34,3 +43,7 @@ const deleteTestPaymentsBySbiController = {
 }
 
 export { deleteTestPaymentsBySbiController }
+
+/**
+ * @import { ServerRoute } from '@hapi/hapi'
+ */
