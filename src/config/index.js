@@ -207,13 +207,24 @@ const config = convict({
     }
   },
   serviceBus: {
-    connectionString: {
-      doc: 'Azure Service Bus connection string used to subscribe to payment hub response topics',
+    baseUrl: {
+      doc: 'Base URL of the in-process Service Bus HTTP stub',
       format: String,
       nullable: true,
       default: null,
-      env: 'SERVICE_BUS_CONNECTION_STRING',
-      sensitive: true
+      env: 'SERVICE_BUS_BASE_URL'
+    },
+    pollIntervalMs: {
+      doc: 'Poll interval for the Service Bus subscription in milliseconds',
+      format: 'nat',
+      default: 5000,
+      env: 'SERVICE_BUS_POLL_INTERVAL_MS'
+    },
+    errorBackoffMs: {
+      doc: 'Backoff delay after a Service Bus polling error in milliseconds',
+      format: 'nat',
+      default: 10000,
+      env: 'SERVICE_BUS_ERROR_BACKOFF_MS'
     },
     batchRejected: {
       topic: {

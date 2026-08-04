@@ -1,39 +1,6 @@
-import {
-  ServiceBusClient,
-  __mockClient,
-  __mockReceiver,
-  __mockSubscriptionInstance,
-  __mockHandlers
-} from '@azure/service-bus'
-
 import { config } from '#~/config/index.js'
 
 import { createServiceBusSubscriptionPlugin } from './service-bus-subscription-plugin.js'
-
-vi.mock('@azure/service-bus', () => {
-  const mockSubscriptionInstance = { close: vi.fn() }
-  const mockHandlers = {}
-  const mockReceiver = {
-    subscribe: vi.fn((handlers) => {
-      Object.assign(mockHandlers, handlers)
-      return mockSubscriptionInstance
-    }),
-    close: vi.fn()
-  }
-  const mockClient = {
-    createReceiver: vi.fn(() => mockReceiver),
-    close: vi.fn()
-  }
-  return {
-    ServiceBusClient: vi.fn(function () {
-      return mockClient
-    }),
-    __mockClient: mockClient,
-    __mockReceiver: mockReceiver,
-    __mockSubscriptionInstance: mockSubscriptionInstance,
-    __mockHandlers: mockHandlers
-  }
-})
 
 vi.mock('#~/config/index.js', () => ({
   config: {
@@ -43,22 +10,42 @@ vi.mock('#~/config/index.js', () => ({
 
 const mockConfigGet = (key) => {
   switch (key) {
-    case 'serviceBus.connectionString':
-      return 'Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true'
-    case 'serviceBus.batchRejected.topic':
-      return 'ffc-pay-request-response-dev'
+    case 'serviceBus.baseUrl':
+      return 'http://localhost:3001'
     case 'serviceBus.batchRejected.subscription':
       return 'grants-payment-service'
+    case 'serviceBus.pollIntervalMs':
+      return 5000
+    case 'serviceBus.errorBackoffMs':
+      return 10000
     default:
       return undefined
   }
 }
 
+const ok = (body, extra = {}) => ({
+  ok: true,
+  status: 200,
+  headers: { get: () => null },
+  json: () => Promise.resolve(body),
+  ...extra
+})
+
+const noContent = () => ({
+  ok: true,
+  status: 204,
+  headers: { get: () => null },
+  json: () => Promise.resolve(null)
+})
+
 describe('createServiceBusSubscriptionPlugin', () => {
   let server
+  let originalFetch
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.useFakeTimers()
+    originalFetch = globalThis.fetch
     config.get.mockImplementation(mockConfigGet)
 
     server = {
@@ -73,59 +60,35 @@ describe('createServiceBusSubscriptionPlugin', () => {
     }
   })
 
-  it('creates a receiver for the configured topic and subscription', async () => {
-    const handler = vi.fn()
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+    vi.useRealTimers()
+  })
 
+  const getStopHandler = () =>
+    server.events.on.mock.calls.find((call) => call[0] === 'stop')?.[1]
+
+  it('registers a poller for the configured subscription', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(noContent())
+
+    const handler = vi.fn()
     const { plugin } = createServiceBusSubscriptionPlugin({
       tag: 'batch-rejected',
       handler
     })
 
     await plugin.register(server)
+    getStopHandler()?.()
 
-    expect(ServiceBusClient).toHaveBeenCalledWith(
-      'Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true'
-    )
-    expect(__mockClient.createReceiver).toHaveBeenCalledWith(
-      'ffc-pay-request-response-dev',
-      'grants-payment-service',
-      { receiveMode: 'peekLock' }
-    )
-    expect(__mockReceiver.subscribe).toHaveBeenCalledWith(
-      expect.objectContaining({
-        processMessage: expect.any(Function),
-        processError: expect.any(Function)
-      })
+    expect(server.logger.info).toHaveBeenCalledWith(
+      'Setting up Service Bus HTTP poller (batch-rejected) for subscription: grants-payment-service'
     )
     expect(server.events.on).toHaveBeenCalledWith('stop', expect.any(Function))
   })
 
-  it('closes the subscription, receiver and client on server stop', async () => {
-    const handler = vi.fn()
-
-    const { plugin } = createServiceBusSubscriptionPlugin({
-      tag: 'batch-rejected',
-      handler
-    })
-
-    await plugin.register(server)
-
-    const stopHandler = server.events.on.mock.calls.find(
-      (call) => call[0] === 'stop'
-    )[1]
-
-    stopHandler()
-
-    await vi.waitFor(() => {
-      expect(__mockSubscriptionInstance.close).toHaveBeenCalled()
-      expect(__mockReceiver.close).toHaveBeenCalled()
-      expect(__mockClient.close).toHaveBeenCalled()
-    })
-  })
-
-  it('throws when the connection string is not set', () => {
+  it('throws when the base URL is not set', () => {
     config.get.mockImplementation((key) =>
-      key === 'serviceBus.connectionString' ? null : undefined
+      key === 'serviceBus.baseUrl' ? null : undefined
     )
 
     const { plugin } = createServiceBusSubscriptionPlugin({
@@ -134,119 +97,243 @@ describe('createServiceBusSubscriptionPlugin', () => {
     })
 
     expect(() => plugin.register(server)).toThrow(
-      'serviceBus.connectionString is not set'
+      'serviceBus.baseUrl is not set'
     )
   })
 
-  it('parses and processes a JSON string message body', async () => {
+  it('polls for messages, processes them, and completes via DELETE', async () => {
     const handler = vi.fn()
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        ok(
+          {
+            messageId: 'msg-123',
+            body: { type: 'BATCH_REJECTED', data: { batchId: 'b1' } },
+            subject: 'BATCH_REJECTED'
+          },
+          {
+            headers: { get: (h) => (h === 'x-lock-token' ? 'lock-abc' : null) }
+          }
+        )
+      )
+      .mockResolvedValueOnce(ok({ message: 'Message completed' }))
+      .mockResolvedValue(noContent())
+
+    globalThis.fetch = fetchMock
+
     const { plugin } = createServiceBusSubscriptionPlugin({
       tag: 'batch-rejected',
       handler
     })
     await plugin.register(server)
 
-    const payload = { type: 'BATCH_REJECTED', data: { batchId: 'batch-1' } }
-    const message = {
-      messageId: 'msg-123',
-      body: JSON.stringify(payload)
-    }
+    await vi.advanceTimersByTimeAsync(0)
 
-    await __mockHandlers.processMessage(message)
+    expect(handler).toHaveBeenCalledWith(
+      'msg-123',
+      { type: 'BATCH_REJECTED', data: { batchId: 'b1' } },
+      server.logger
+    )
 
-    expect(handler).toHaveBeenCalledWith('msg-123', payload, server.logger)
-    expect(server.logger.info).toHaveBeenCalledWith(
-      'Service Bus subscription (batch-rejected) handling message (MessageId: msg-123)'
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      'http://localhost:3001/servicebus/subscriptions/grants-payment-service/messages/head'
     )
-    expect(server.logger.info).toHaveBeenCalledWith(
-      'Service Bus subscription (batch-rejected) message processed successfully (MessageId: msg-123)'
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      'http://localhost:3001/servicebus/subscriptions/grants-payment-service/messages/lock-abc',
+      { method: 'DELETE' }
     )
+
+    getStopHandler()?.()
+    await vi.advanceTimersByTimeAsync(5000)
   })
 
-  it('processes an object message body directly', async () => {
-    const handler = vi.fn()
+  it('abandons the message when the handler throws', async () => {
+    const handler = vi.fn().mockRejectedValue(new Error('handler failed'))
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        ok(
+          { messageId: 'msg-456', body: { type: 'BATCH_REJECTED' } },
+          {
+            headers: { get: (h) => (h === 'x-lock-token' ? 'lock-xyz' : null) }
+          }
+        )
+      )
+      .mockResolvedValue(ok({ message: 'Message abandoned' }))
+      .mockResolvedValue(noContent())
+
+    globalThis.fetch = fetchMock
+
     const { plugin } = createServiceBusSubscriptionPlugin({
       tag: 'batch-rejected',
       handler
     })
     await plugin.register(server)
 
-    const payload = { type: 'BATCH_REJECTED' }
-    await __mockHandlers.processMessage({
-      messageId: 'msg-456',
-      body: payload
-    })
+    await vi.advanceTimersByTimeAsync(0)
 
-    expect(handler).toHaveBeenCalledWith('msg-456', payload, server.logger)
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      'http://localhost:3001/servicebus/subscriptions/grants-payment-service/messages/lock-xyz/abandon',
+      { method: 'POST' }
+    )
+    expect(server.logger.error).toHaveBeenCalledWith(
+      expect.any(Error),
+      'Service Bus subscription (batch-rejected) error: handler failed'
+    )
+
+    getStopHandler()?.()
+    await vi.advanceTimersByTimeAsync(5000)
   })
 
   it('uses a fallback message id when messageId is missing', async () => {
     const handler = vi.fn()
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        ok(
+          { body: { type: 'BATCH_REJECTED' } },
+          {
+            headers: { get: (h) => (h === 'x-lock-token' ? 'lock-1' : null) }
+          }
+        )
+      )
+      .mockResolvedValueOnce(ok({}))
+      .mockResolvedValue(noContent())
+
+    globalThis.fetch = fetchMock
+
     const { plugin } = createServiceBusSubscriptionPlugin({
       tag: 'batch-rejected',
       handler
     })
     await plugin.register(server)
 
-    await __mockHandlers.processMessage({
-      body: JSON.stringify({ type: 'BATCH_REJECTED' })
-    })
+    await vi.advanceTimersByTimeAsync(0)
 
     expect(handler).toHaveBeenCalledWith(
       'unknown-message-id',
-      expect.any(Object),
+      { type: 'BATCH_REJECTED' },
       server.logger
     )
+
+    getStopHandler()?.()
+    await vi.advanceTimersByTimeAsync(5000)
   })
 
-  it('throws badData when message body is missing', async () => {
-    const handler = vi.fn()
-    const { plugin } = createServiceBusSubscriptionPlugin({
-      tag: 'batch-rejected',
-      handler
-    })
-    await plugin.register(server)
+  it('logs an error when message body is missing', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        ok(
+          { messageId: 'msg-1', body: undefined },
+          {
+            headers: { get: (h) => (h === 'x-lock-token' ? 'lock-2' : null) }
+          }
+        )
+      )
+      .mockResolvedValue(ok({}))
 
-    await expect(
-      __mockHandlers.processMessage({ messageId: 'msg-1', body: undefined })
-    ).rejects.toMatchObject({
-      isBoom: true,
-      message: 'Service Bus message missing body for message msg-1'
-    })
-  })
+    globalThis.fetch = fetchMock
 
-  it('throws badData when message body is invalid JSON', async () => {
-    const handler = vi.fn()
-    const { plugin } = createServiceBusSubscriptionPlugin({
-      tag: 'batch-rejected',
-      handler
-    })
-    await plugin.register(server)
-
-    await expect(
-      __mockHandlers.processMessage({
-        messageId: 'msg-2',
-        body: '{ not: "json"'
-      })
-    ).rejects.toMatchObject({
-      isBoom: true,
-      message: 'Invalid message format for message msg-2'
-    })
-  })
-
-  it('logs errors from the subscription', async () => {
     const { plugin } = createServiceBusSubscriptionPlugin({
       tag: 'batch-rejected',
       handler: vi.fn()
     })
     await plugin.register(server)
 
-    const error = new Error('connection failed')
-    await __mockHandlers.processError({ error })
+    await vi.advanceTimersByTimeAsync(0)
 
     expect(server.logger.error).toHaveBeenCalledWith(
-      error,
-      'Service Bus subscription (batch-rejected) error: connection failed'
+      expect.objectContaining({
+        message: 'Service Bus message missing body for message msg-1'
+      }),
+      expect.stringContaining('Service Bus subscription (batch-rejected) error')
     )
+
+    getStopHandler()?.()
+    await vi.advanceTimersByTimeAsync(5000)
+  })
+
+  it('logs an error when message body is invalid JSON', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        ok(
+          { messageId: 'msg-2', body: '{ not: "json"' },
+          {
+            headers: { get: (h) => (h === 'x-lock-token' ? 'lock-3' : null) }
+          }
+        )
+      )
+      .mockResolvedValue(ok({}))
+
+    globalThis.fetch = fetchMock
+
+    const { plugin } = createServiceBusSubscriptionPlugin({
+      tag: 'batch-rejected',
+      handler: vi.fn()
+    })
+    await plugin.register(server)
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(server.logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Invalid message format for message msg-2'
+      }),
+      expect.stringContaining('Service Bus subscription (batch-rejected) error')
+    )
+
+    getStopHandler()?.()
+    await vi.advanceTimersByTimeAsync(5000)
+  })
+
+  it('logs an error when the poll endpoint returns an unexpected status', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      headers: { get: () => null },
+      json: () => Promise.resolve({})
+    })
+
+    globalThis.fetch = fetchMock
+
+    const { plugin } = createServiceBusSubscriptionPlugin({
+      tag: 'batch-rejected',
+      handler: vi.fn()
+    })
+    await plugin.register(server)
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(server.logger.error).toHaveBeenCalledWith(
+      'Service Bus HTTP poller (batch-rejected) unexpected status: 500'
+    )
+
+    getStopHandler()?.()
+    await vi.advanceTimersByTimeAsync(5000)
+  })
+
+  it('stops polling on server stop', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(noContent())
+    globalThis.fetch = fetchMock
+
+    const { plugin } = createServiceBusSubscriptionPlugin({
+      tag: 'batch-rejected',
+      handler: vi.fn()
+    })
+    await plugin.register(server)
+
+    await vi.advanceTimersByTimeAsync(0)
+    const callsAfterFirstPoll = fetchMock.mock.calls.length
+
+    getStopHandler()?.()
+    await vi.advanceTimersByTimeAsync(10_000)
+
+    expect(fetchMock.mock.calls.length).toBe(callsAfterFirstPoll)
   })
 })
