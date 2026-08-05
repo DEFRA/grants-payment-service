@@ -60,7 +60,7 @@ describe('updatePaymentStatus', () => {
         returnDocument: 'after'
       }
     )
-    expect(result).toEqual(null)
+    expect(result).toBeNull()
   })
 
   it('logs and rethrows if the update fails', async () => {
