@@ -20,40 +20,19 @@ describe('date helpers', () => {
   })
 
   describe('getTomorrowsDate', () => {
-    it('returns the date portion of tomorrow in YYYY-MM-DD format', () => {
-      const fakeNow = new Date('2025-12-31T23:59:59.999Z')
-      vi.setSystemTime(fakeNow)
+    it.each([
+      ['2024-02-28T12:00:00.000Z', '2024-02-29'],
+      ['2025-01-31T12:00:00.000Z', '2025-02-01'],
+      ['2025-02-28T12:00:00.000Z', '2025-03-01'],
+      ['2025-12-31T23:59:59.999Z', '2026-01-01']
+    ])(
+      'returns the date portion of tomorrow for %s',
+      (fakeNow, expectedDate) => {
+        vi.setSystemTime(new Date(fakeNow))
 
-      expect(getTomorrowsDate()).toBe('2026-01-01')
-    })
-
-    it('handles month transitions correctly', () => {
-      const fakeNow = new Date('2025-01-31T12:00:00.000Z')
-      vi.setSystemTime(fakeNow)
-
-      expect(getTomorrowsDate()).toBe('2025-02-01')
-    })
-
-    it('handles leap year correctly', () => {
-      const fakeNow = new Date('2024-02-28T12:00:00.000Z')
-      vi.setSystemTime(fakeNow)
-
-      expect(getTomorrowsDate()).toBe('2024-02-29')
-    })
-
-    it('handles non-leap year correctly', () => {
-      const fakeNow = new Date('2025-02-28T12:00:00.000Z')
-      vi.setSystemTime(fakeNow)
-
-      expect(getTomorrowsDate()).toBe('2025-03-01')
-    })
-
-    it('handles year transition correctly', () => {
-      const fakeNow = new Date('2025-12-31T23:59:59.999Z')
-      vi.setSystemTime(fakeNow)
-
-      expect(getTomorrowsDate()).toBe('2026-01-01')
-    })
+        expect(getTomorrowsDate()).toBe(expectedDate)
+      }
+    )
   })
 
   describe('getNextDay', () => {

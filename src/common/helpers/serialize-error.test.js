@@ -32,8 +32,11 @@ describe('serializeError', () => {
     expect(serializeError(notAnError)).toBe(notAnError)
   })
 
-  it('handles null and undefined', () => {
-    expect(serializeError(null)).toBe(null)
-    expect(serializeError(undefined)).toBe(undefined)
+  it('returns null when given null', () => {
+    expect(serializeError(null)).toBeNull()
+  })
+
+  it('returns undefined when given undefined', () => {
+    expect(serializeError(undefined)).toBeUndefined()
   })
 })
