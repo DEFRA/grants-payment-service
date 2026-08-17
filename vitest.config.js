@@ -1,9 +1,16 @@
 import { defineConfig, configDefaults } from 'vitest/config'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   resolve: {
     // Mirror Node ESM: import file extensions must be fully specified (e.g. "x.js")
-    extensions: []
+    extensions: [],
+    alias: {
+      '~': __dirname
+    }
   },
   test: {
     globals: true,
