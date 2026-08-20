@@ -69,7 +69,7 @@
     "eslint": "9.39.5",
     "eslint-plugin-jsdoc": "64.1.0",
     "husky": "9.1.7",
-    "knip": "6.32.1",
+    "knip": "6.32.2",
     "neostandard": "0.13.0",
     "nodemon": "3.1.14",
     "prettier": "3.9.6",
