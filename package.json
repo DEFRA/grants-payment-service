@@ -75,7 +75,7 @@
     "prettier": "3.9.6",
     "proxy-chain": "3.0.0",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.67.0",
+    "typescript-eslint": "8.68.0",
     "vitest": "4.1.11",
     "vitest-fetch-mock": "0.4.5",
     "vitest-mongodb": "1.0.3"
