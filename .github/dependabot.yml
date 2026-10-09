@@ -72,6 +72,8 @@ updates:
         versions: [">=10"]
       - dependency-name: "@types/node"
         versions: [">=25"] # Use Node LTS
+      - dependency-name: "typescript"
+        versions: [">=7"] # typescript-eslint peer-depends on typescript <6.1
 
     # Schedule run every Monday, local time
     schedule:
