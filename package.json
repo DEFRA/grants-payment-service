@@ -65,7 +65,7 @@
     "@hapi/catbox": "12.1.1",
     "@pact-foundation/pact": "17.1.4",
     "@types/node": "24.19.2",
-    "@vitest/coverage-v8": "5.0.3",
+    "@vitest/coverage-v8": "5.0.5",
     "eslint": "9.39.5",
     "eslint-plugin-jsdoc": "65.3.12",
     "husky": "9.1.7",
@@ -76,7 +76,7 @@
     "proxy-chain": "3.0.1",
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.2",
-    "vitest": "5.0.3",
+    "vitest": "5.0.5",
     "vitest-fetch-mock": "0.4.5",
     "vitest-mongodb": "1.0.3"
   }
