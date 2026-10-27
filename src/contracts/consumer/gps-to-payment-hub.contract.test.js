@@ -33,6 +33,9 @@ vi.mock('#~/common/helpers/payment-hub/audit-event.js', async () => {
 let server
 let httpProxyServer
 
+const sbi = '123456789'
+const frn = '1234567890'
+
 describe('cron job schedule sending a POST request to payment hub', () => {
   const provider = new Pact({
     consumer: 'grants-payment-service',
@@ -45,8 +48,8 @@ describe('cron job schedule sending a POST request to payment hub', () => {
     ledger: 'AP',
     deliveryBody: 'RP10',
     invoiceNumber: 'R00000001-V001',
-    frn: '9876543210',
-    sbi: '123456789',
+    frn,
+    sbi,
     fesCode: 'FALS_WMP',
     marketingYear: '2026',
     paymentRequestNumber: 1,
@@ -75,8 +78,8 @@ describe('cron job schedule sending a POST request to payment hub', () => {
     ledger: 'AP',
     deliveryBody: 'RP00',
     invoiceNumber: 'R00000004-V001Q1',
-    frn: '1234567890',
-    sbi: '106284736',
+    frn,
+    sbi,
     fesCode: 'FALS_FPTT',
     marketingYear: '2026',
     paymentRequestNumber: 1,

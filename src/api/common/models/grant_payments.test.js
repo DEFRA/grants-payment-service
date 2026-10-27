@@ -2,6 +2,9 @@ import { afterAll } from 'vitest'
 import mongoose from 'mongoose'
 import GrantPaymentsModel from './grant_payments.js'
 
+const sbi = '123456789'
+const frn = '1234567890'
+
 describe('grant_payments schema', () => {
   afterAll(() => {
     delete mongoose.connection.models.grant_payments
@@ -20,8 +23,8 @@ describe('grant_payments schema', () => {
 
   test('should pass validation with required fields present', () => {
     const valid = {
-      sbi: '106284736',
-      frn: '1234567890',
+      sbi,
+      frn,
       claimId: 'R00000004',
       grants: [
         {
@@ -65,8 +68,8 @@ describe('grant_payments schema', () => {
 
   test('should pass validation with failed status', () => {
     const valid = {
-      sbi: '106284736',
-      frn: '1234567890',
+      sbi,
+      frn,
       claimId: 'R00000004',
       grants: [
         {
@@ -111,8 +114,8 @@ describe('grant_payments schema', () => {
 
 test('should fail validation when grant or payment correlationId is missing or empty', () => {
   const base = {
-    sbi: '106284736',
-    frn: '1234567890',
+    sbi,
+    frn,
     claimId: 'R00000004',
     grants: [
       {

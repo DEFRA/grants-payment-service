@@ -128,7 +128,7 @@ describe('receive a SFI grant payment event', () => {
           expect(mockLogger.info.mock.calls[0][0]).toEqual({
             messageId,
             eventType,
-            sbi: '106284736'
+            sbi: '123456789'
           })
           expect(mockLogger.info.mock.calls[0][1]).toBe(
             `Received cancel_payment event with payload ${JSON.stringify(payload, null, 2)}`

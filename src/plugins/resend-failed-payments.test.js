@@ -10,6 +10,10 @@ const processDailyPaymentsMock = vi.fn()
 const getStatsMock = vi.fn()
 const auditEventMock = vi.hoisted(() => vi.fn())
 
+const sbi = '123456789'
+const frn = '1234567890'
+const crn = 'R00000004'
+
 vi.mock('#~/api/common/models/grant_payments.js', () => ({
   default: {
     updateMany: updateManyMock,
@@ -80,8 +84,8 @@ describe('resend-failed-payments plugin', () => {
     updateManyMock.mockResolvedValue({ modifiedCount: 5 })
     leanMock.mockResolvedValue([
       {
-        sbi: '106284736',
-        frn: '1234567890',
+        sbi,
+        frn,
         claimId: 'R00000004',
         grants: [
           {
@@ -154,13 +158,9 @@ describe('resend-failed-payments plugin', () => {
         correlationId: 'corr-1',
         invoiceNumber: 'INV-001',
         agreementNumber: 'AGR-001',
-        sbi: '106284736',
-        frn: '1234567890',
-        identifiers: {
-          sbi: '106284736',
-          frn: '1234567890',
-          crn: 'R00000004'
-        }
+        sbi,
+        frn,
+        identifiers: { sbi, frn, crn }
       }
     )
     expect(processDailyPaymentsMock).toHaveBeenCalledWith(fakeServer)

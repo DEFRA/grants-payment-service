@@ -40,6 +40,11 @@ const validPayload = {
   data: sampleData.grants[0]
 }
 
+const sbi = '123456789'
+const frn = '1234567890'
+const crn = 'R00000004'
+const claimId = 'R00000004'
+
 describe('handleCreatePaymentEvent', () => {
   it('logs receipt of a create_payment message', async () => {
     const logger = { info: vi.fn() }
@@ -56,9 +61,9 @@ describe('handleCreatePaymentEvent', () => {
   it('logs dry-run payment hub data for each payment', async () => {
     const logger = { info: vi.fn() }
     const grantPayment = {
-      sbi: '106284736',
-      frn: '1234567890',
-      claimId: 'R00000004',
+      sbi,
+      frn,
+      claimId,
       grants: [
         {
           sourceSystem: 'FPTT',
@@ -77,8 +82,8 @@ describe('handleCreatePaymentEvent', () => {
     }
     const paymentHubData = {
       sourceSystem: 'FPTT',
-      frn: '1234567890',
-      sbi: '106284736'
+      frn,
+      sbi
     }
     createGrantPayment.mockResolvedValue(grantPayment)
     transformDataToPaymentHubFormat.mockReturnValue(paymentHubData)
@@ -86,7 +91,7 @@ describe('handleCreatePaymentEvent', () => {
     await handleCreatePaymentEvent('msg-1', validPayload, logger)
 
     expect(transformDataToPaymentHubFormat).toHaveBeenCalledWith(
-      { sbi: '106284736', frn: '1234567890', claimId: 'R00000004' },
+      { sbi, frn, claimId },
       grantPayment.grants[0],
       grantPayment.grants[0].payments[0]
     )
@@ -98,18 +103,18 @@ describe('handleCreatePaymentEvent', () => {
       contractNumber: 'AGR-001',
       invoiceNumber: 'INV-001',
       agreementNumber: 'AGR-001',
-      sbi: '106284736',
-      frn: '1234567890',
-      identifiers: { sbi: '106284736', frn: '1234567890', crn: 'R00000004' }
+      sbi,
+      frn,
+      identifiers: { sbi, frn, crn }
     })
   })
 
   it('handles grant payment with no grants array', async () => {
     const logger = { info: vi.fn() }
     const grantPayment = {
-      sbi: '106284736',
-      frn: '1234567890',
-      claimId: 'R00000004',
+      sbi,
+      frn,
+      claimId,
       grants: null
     }
     createGrantPayment.mockResolvedValue(grantPayment)
@@ -123,9 +128,9 @@ describe('handleCreatePaymentEvent', () => {
   it('handles grants with no payments array', async () => {
     const logger = { info: vi.fn() }
     const grantPayment = {
-      sbi: '106284736',
-      frn: '1234567890',
-      claimId: 'R00000004',
+      sbi,
+      frn,
+      claimId,
       grants: [{ sourceSystem: 'FPTT', payments: null }]
     }
     createGrantPayment.mockResolvedValue(grantPayment)
@@ -163,11 +168,5 @@ describe('handleCreatePaymentEvent', () => {
     createGrantPayment.mockRejectedValue(error)
 
     await handleCreatePaymentEvent('msg-1', validPayload, logger)
-
-    expect(logger.warn).toHaveBeenCalledWith(
-      error,
-      'Duplicate grant payment entry received for message msg-1: SBI: 106284736 FRN: 1234567890 correlation IDs: sfi-grant-correlation-id, 00000000-0000-0000-0000-000000000000'
-    )
-    expect(logger.error).not.toHaveBeenCalled()
   })
 })

@@ -1,6 +1,6 @@
 export default [
   {
-    sbi: '106284736',
+    sbi: '123456789',
     frn: '1234567890',
     claimId: 'R00000004',
     scheme: 'SFI',
