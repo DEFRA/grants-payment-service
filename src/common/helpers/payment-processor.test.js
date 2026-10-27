@@ -43,6 +43,10 @@ vi.mock('#~/api/common/models/grant_payments.js', () => ({
   }
 }))
 
+const sbi = '123456789'
+const frn = '1234567890'
+const crn = 'R00000004'
+
 describe('processDailyPayments', () => {
   const logger = {
     info: vi.fn(),
@@ -629,8 +633,8 @@ describe('processStaleLockedPayments', () => {
   it('calls markAllStaleLockedPaymentsAsFailed, audits, and logs if any were marked', async () => {
     const affectedPayments = [
       {
-        sbi: '106284736',
-        frn: '1234567890',
+        sbi,
+        frn,
         claimId: 'R00000004',
         correlationId: 'corr-1',
         invoiceNumber: 'INV-001',
@@ -653,13 +657,9 @@ describe('processStaleLockedPayments', () => {
         correlationId: 'corr-1',
         invoiceNumber: 'INV-001',
         agreementNumber: 'AGR-001',
-        sbi: '106284736',
-        frn: '1234567890',
-        identifiers: {
-          sbi: '106284736',
-          frn: '1234567890',
-          crn: 'R00000004'
-        }
+        sbi,
+        frn,
+        identifiers: { sbi, frn, crn }
       }
     )
     expect(logger.info).toHaveBeenCalledWith('Processing stale locked payments')

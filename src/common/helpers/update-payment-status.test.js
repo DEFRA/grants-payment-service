@@ -10,6 +10,9 @@ import { config } from '#~/config/index.js'
 vi.mock('#~/api/common/models/grant_payments.js')
 vi.mock('#~/common/helpers/logging/logger.js')
 vi.mock('#~/config/index.js')
+const sbi = '123456789'
+const frn = '1234567890'
+const claimId = 'R00000004'
 
 describe('updatePaymentStatus', () => {
   const logger = {
@@ -99,9 +102,9 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
     const staleDate = new Date('2026-01-01T00:00:00Z')
     const staleDocuments = [
       {
-        sbi: '106284736',
-        frn: '1234567890',
-        claimId: 'R00000004',
+        sbi,
+        frn,
+        claimId,
         grants: [
           {
             invoiceNumber: 'INV-001',
@@ -143,9 +146,9 @@ describe('markAllStaleLockedPaymentsAsFailed', () => {
     expect(result.modifiedCount).toBe(2)
     expect(result.affectedPayments).toEqual([
       {
-        sbi: '106284736',
-        frn: '1234567890',
-        claimId: 'R00000004',
+        sbi,
+        frn,
+        claimId,
         correlationId: 'corr-1',
         invoiceNumber: 'INV-001',
         agreementNumber: 'AGR-001',
