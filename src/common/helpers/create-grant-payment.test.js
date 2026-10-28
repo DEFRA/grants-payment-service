@@ -10,6 +10,9 @@ vi.mock('#~/api/common/models/grant_payments.js', () => ({
 import { createGrantPayment } from './create-grant-payment.js'
 import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 
+const sbi = '800000001'
+const frn = `0${sbi}`
+
 describe('createGrantPayment', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -18,8 +21,8 @@ describe('createGrantPayment', () => {
 
   it('creates a grant payment with the provided payload', async () => {
     const payload = {
-      sbi: '123456789',
-      frn: '9876543210',
+      sbi,
+      frn,
       claimId: 'R00000001',
       grants: []
     }
@@ -31,8 +34,8 @@ describe('createGrantPayment', () => {
 
     expect(GrantPaymentsModel.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        sbi: '123456789',
-        frn: '9876543210',
+        sbi,
+        frn,
         claimId: 'R00000001'
       })
     )

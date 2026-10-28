@@ -38,6 +38,8 @@ vi.mock('#~/config/index.js', () => ({
   }
 }))
 
+const sbi = '800000001'
+
 describe('createSqsConsumerPlugin', () => {
   const queueUrl =
     'http://localhost:4566/000000000000/gps__sqs__create_payment.fifo'
@@ -278,7 +280,7 @@ describe('processMessage', () => {
 
     const payload = {
       type: 'cloud.defra.dev.farming-grants-agreements-api.payment.create',
-      data: { sbi: '123456789' }
+      data: { sbi }
     }
     const message = {
       MessageId: 'msg-123',
@@ -288,7 +290,7 @@ describe('processMessage', () => {
     await handleMessage(message)
 
     expect(logger.info).toHaveBeenCalledWith(
-      { messageId: 'msg-123', eventType: payload.type, sbi: '123456789' },
+      { messageId: 'msg-123', eventType: payload.type, sbi },
       `Received message msg-123: ${payload.type} event with payload ${JSON.stringify(payload, null, 2)}`
     )
   })

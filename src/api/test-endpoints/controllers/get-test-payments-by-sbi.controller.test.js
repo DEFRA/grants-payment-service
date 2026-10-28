@@ -20,6 +20,8 @@ const makeH = () => {
   }
 }
 
+const sbi = '800000001'
+
 describe('getTestPaymentsBySbiController', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -30,7 +32,6 @@ describe('getTestPaymentsBySbiController', () => {
   })
 
   test('returns 200 and payments for a given sbi when no fundCode is provided', async () => {
-    const sbi = '123456789'
     const mockPayments = [
       { id: '1', sbi },
       { id: '2', sbi }
@@ -51,7 +52,6 @@ describe('getTestPaymentsBySbiController', () => {
   })
 
   test('returns 200 and payments for a given sbi and fundCode when fundCode is provided', async () => {
-    const sbi = '123456789'
     const fundCode = 'DRD10'
     const mockPayments = [
       { id: '1', sbi },
@@ -81,25 +81,25 @@ describe('getTestPaymentsBySbiController', () => {
     const pagination = { page: 1, total: 0 }
     fetchGrantPaymentsBySbi.mockResolvedValue({ docs: [], pagination })
 
-    const req = { params: { sbi: '999999999' } }
+    const req = { params: { sbi } }
     const h = makeH()
     const result = await getTestPaymentsBySbiController.handler(req, h)
 
     expect(result.statusCode).toBe(statusCodes.ok)
-    expect(result.source).toEqual({ sbi: '999999999', docs: [], pagination })
+    expect(result.source).toEqual({ sbi, docs: [], pagination })
   })
 
   test('returns 200 and empty array when no payments found for sbi and fundCode', async () => {
     const pagination = { page: 1, total: 0 }
     fetchGrantPaymentsBySbi.mockResolvedValue({ docs: [], pagination })
 
-    const req = { params: { sbi: '999999999', fundCode: 'UNKNOWN' } }
+    const req = { params: { sbi, fundCode: 'UNKNOWN' } }
     const h = makeH()
     const result = await getTestPaymentsBySbiController.handler(req, h)
 
     expect(result.statusCode).toBe(statusCodes.ok)
     expect(result.source).toEqual({
-      sbi: '999999999',
+      sbi,
       fundCode: 'UNKNOWN',
       docs: [],
       pagination
@@ -110,7 +110,7 @@ describe('getTestPaymentsBySbiController', () => {
     const mockError = new Error('db down')
     fetchGrantPaymentsBySbi.mockRejectedValue(mockError)
 
-    const req = { params: { sbi: '123456789' }, log: vi.fn() }
+    const req = { params: { sbi }, log: vi.fn() }
     const h = makeH()
     const result = await getTestPaymentsBySbiController.handler(req, h)
 

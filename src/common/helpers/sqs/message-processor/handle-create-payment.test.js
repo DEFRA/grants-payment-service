@@ -40,9 +40,8 @@ const validPayload = {
   data: sampleData.grants[0]
 }
 
-const sbi = '123456789'
-const frn = '1234567890'
-const crn = 'R00000004'
+const sbi = '800000001'
+const frn = `0${sbi}`
 const claimId = 'R00000004'
 
 describe('handleCreatePaymentEvent', () => {
@@ -105,7 +104,7 @@ describe('handleCreatePaymentEvent', () => {
       agreementNumber: 'AGR-001',
       sbi,
       frn,
-      identifiers: { sbi, frn, crn }
+      identifiers: { sbi, frn, crn: claimId }
     })
   })
 
@@ -160,7 +159,7 @@ describe('handleCreatePaymentEvent', () => {
   it('logs a warning if createGrantPayment fails with a duplicate key error', async () => {
     const logger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() }
     const error = new Error(
-      'E11000 duplicate key error collection: grants.payments index: sbi_1 dup key: { sbi: "123456789" }'
+      `E11000 duplicate key error collection: grants.payments index: sbi_1 dup key: { sbi: "${sbi}" }`
     )
     error.name = 'MongoServerError'
     error.code = 11000

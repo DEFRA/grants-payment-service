@@ -10,8 +10,8 @@ import { config } from '#~/config/index.js'
 vi.mock('#~/api/common/models/grant_payments.js')
 vi.mock('#~/common/helpers/logging/logger.js')
 vi.mock('#~/config/index.js')
-const sbi = '123456789'
-const frn = '1234567890'
+const sbi = '800000001'
+const frn = `0${sbi}`
 const claimId = 'R00000004'
 
 describe('updatePaymentStatus', () => {

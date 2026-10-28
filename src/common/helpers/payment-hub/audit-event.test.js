@@ -22,6 +22,10 @@ vi.mock('#~/common/helpers/request-ip.js', () => ({
   getLocalIp: mockGetLocalIp
 }))
 
+const sbi = '800000001'
+const frn = `0${sbi}`
+const crn = '9000000001'
+
 describe('AuditEvent', () => {
   let AuditEvent
 
@@ -125,8 +129,8 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
       correlationId: 'corr-xyz',
       contractNumber: 'C12345',
       invoiceNumber: 'INV-001',
-      sbi: 123456789,
-      frn: 1234567890,
+      sbi,
+      frn,
       agreementNumber: 'AGR-001'
     }
 
@@ -144,8 +148,8 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
   test('publishes correct security fields', async () => {
     const context = {
       contractNumber: 'C12345',
-      sbi: 123456789,
-      frn: 1234567890
+      sbi,
+      frn
     }
 
     await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
@@ -156,8 +160,7 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
       details: {
         transactioncode: '2310',
         message: 'Payment request sent to payment hub',
-        additionalinfo:
-          'contractNumber: C12345, sbi: 123456789, frn: 1234567890'
+        additionalinfo: `contractNumber: C12345, sbi: ${sbi}, frn: ${frn}`
       }
     })
   })
@@ -168,7 +171,7 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
       contractNumber: 'C12345',
       invoiceNumber: 'INV-001',
       agreementNumber: 'AGR-001',
-      identifiers: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
+      identifiers: { sbi, frn, crn }
     }
 
     await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
@@ -180,31 +183,31 @@ describe('auditEvent - PAYMENT_HUB_REQUEST_SENT', () => {
       ],
       status: 'success',
       details: context,
-      accounts: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
+      accounts: { sbi, frn, crn }
     })
   })
 
   test('publishes correct audit.accounts fields', async () => {
     const context = {
-      identifiers: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
+      identifiers: { sbi, frn, crn }
     }
 
     await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, context)
 
     expect(getPublishedPayload().audit.accounts).toEqual({
-      sbi: 123456789,
-      frn: 1234567890,
-      crn: 'CRN-001'
+      sbi,
+      frn,
+      crn
     })
   })
 
   test('audit.accounts populates only known fields', async () => {
     await auditEvent(AuditEvent.PAYMENT_HUB_REQUEST_SENT, {
-      identifiers: { sbi: 111111111 }
+      identifiers: { sbi }
     })
 
     expect(getPublishedPayload().audit.accounts).toEqual({
-      sbi: 111111111,
+      sbi,
       frn: undefined,
       crn: undefined
     })
@@ -346,9 +349,9 @@ describe.each([
   test('publishes correct eventtype and entity action', async () => {
     const context = {
       correlationId: 'corr-xyz',
-      sbi: 123456789,
-      frn: 1234567890,
-      identifiers: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
+      sbi,
+      frn,
+      identifiers: { sbi, frn, crn }
     }
 
     await auditEvent(AuditEvent[eventKey], context)
@@ -357,7 +360,7 @@ describe.each([
       eventtype,
       entities: [{ entity: 'payment', action, entityId: 'corr-xyz' }],
       status: 'success',
-      accounts: { sbi: 123456789, frn: 1234567890, crn: 'CRN-001' }
+      accounts: { sbi, frn, crn }
     })
   })
 

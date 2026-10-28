@@ -2,8 +2,8 @@ import { afterAll } from 'vitest'
 import mongoose from 'mongoose'
 import GrantPaymentsModel from './grant_payments.js'
 
-const sbi = '123456789'
-const frn = '1234567890'
+const sbi = '800000001'
+const frn = `0${sbi}`
 
 describe('grant_payments schema', () => {
   afterAll(() => {
