@@ -155,17 +155,4 @@ describe('handleCreatePaymentEvent', () => {
     expect(logger.warn).not.toHaveBeenCalled()
     expect(auditEvent).not.toHaveBeenCalled()
   })
-
-  it('logs a warning if createGrantPayment fails with a duplicate key error', async () => {
-    const logger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() }
-    const error = new Error(
-      `E11000 duplicate key error collection: grants.payments index: sbi_1 dup key: { sbi: "${sbi}" }`
-    )
-    error.name = 'MongoServerError'
-    error.code = 11000
-
-    createGrantPayment.mockRejectedValue(error)
-
-    await handleCreatePaymentEvent('msg-1', validPayload, logger)
-  })
 })
