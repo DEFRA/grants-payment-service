@@ -1,11 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import { prepareWithPaymentHubConfig } from './prepare-with-payment-hub-config.js'
 
+const sbi = '800000001'
+const frn = `0${sbi}`
+
 describe('prepareWithPaymentHubConfig', () => {
   it('should return grantPayment with schemeConfig merged into each grant', () => {
     const grantPayment = {
-      sbi: 'SBI123',
-      frn: 'FRN456',
+      sbi,
+      frn,
       claimId: 'CLAIM-789',
       scheme: 'SFI',
       grants: [
@@ -124,8 +127,8 @@ describe('prepareWithPaymentHubConfig', () => {
 
   it('should return grantPayment with WMP schemeConfig merged into each grant', () => {
     const grantPayment = {
-      sbi: 'SBI123',
-      frn: 'FRN456',
+      sbi,
+      frn,
       claimId: 'CLAIM-789',
       scheme: 'WMP',
       grants: [
@@ -180,7 +183,7 @@ describe('prepareWithPaymentHubConfig', () => {
 
   it('should allow incoming grantPayment to overwrite schemeConfig values', () => {
     const grantPayment = {
-      sbi: 'SBI123',
+      sbi,
       scheme: 'WMP',
       grants: [
         {

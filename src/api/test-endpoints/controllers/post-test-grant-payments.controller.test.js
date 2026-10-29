@@ -23,6 +23,8 @@ const makeH = () => {
   }
 }
 
+const sbi = '800000001'
+
 describe('postTestGrantPaymentController', () => {
   const validPayload = grants[0]
   const mockLogger = { info: vi.fn(), error: vi.fn() }
@@ -146,7 +148,7 @@ describe('postTestGrantPaymentController', () => {
 
     const h = makeH()
     const result = await postTestGrantPaymentController.handler(
-      { payload: { sbi: '123' }, logger: mockLogger },
+      { payload: { sbi }, logger: mockLogger },
       h
     )
 

@@ -10,8 +10,8 @@ vi.mock('#~/api/common/models/grant_payments.js', () => {
   }
 })
 
-const sbi = '123456789'
-const frn = '1234567890'
+const sbi = '800000001'
+const frn = `0${sbi}`
 
 describe('cancelGrantPayments', () => {
   beforeEach(() => {

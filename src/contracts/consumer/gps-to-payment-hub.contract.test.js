@@ -33,8 +33,8 @@ vi.mock('#~/common/helpers/payment-hub/audit-event.js', async () => {
 let server
 let httpProxyServer
 
-const sbi = '123456789'
-const frn = '1234567890'
+const sbi = '800000001'
+const frn = `0${sbi}`
 
 describe('cron job schedule sending a POST request to payment hub', () => {
   const provider = new Pact({

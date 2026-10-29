@@ -20,6 +20,8 @@ vi.mock('#~/api/common/models/grant_payments.js', () => ({
   }
 }))
 
+const sbi = '800000001'
+
 describe('postTestProcessPaymentsController', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -267,7 +269,6 @@ describe('postTestProcessPaymentsBySbiController', () => {
   }
 
   it('fetches correlation IDs by SBI and processes payments', async () => {
-    const fakeSbi = '123456789'
     const fakeCorrelationIds = ['corr1', 'corr2']
     const fakeResults = [{ _id: 'payment1' }, { _id: 'payment2' }]
 
@@ -295,7 +296,7 @@ describe('postTestProcessPaymentsBySbiController', () => {
 
     const h = makeH()
     const req = {
-      params: { sbi: fakeSbi },
+      params: { sbi },
       server: { logger: { info: vi.fn() } },
       logger: { info: vi.fn(), error: vi.fn() }
     }
@@ -305,27 +306,25 @@ describe('postTestProcessPaymentsBySbiController', () => {
       h
     )
 
-    expect(GrantPaymentsModel.find).toHaveBeenCalledWith({ sbi: fakeSbi })
+    expect(GrantPaymentsModel.find).toHaveBeenCalledWith({ sbi })
     expect(processDailyPayments).toHaveBeenCalledWith(req.server, 10, {
       correlationIds: fakeCorrelationIds
     })
     expect(response.statusCode).toBe(statusCodes.ok)
     expect(response.source).toEqual({
-      message: `Triggered payment processing for SBI: ${fakeSbi}, showing first 10 grants with full details, check logs for more details`,
+      message: `Triggered payment processing for SBI: ${sbi}, showing first 10 grants with full details, check logs for more details`,
       result: fakeResults.map((r) => ({ db: r }))
     })
   })
 
   it('returns empty result when no payments found for SBI', async () => {
-    const fakeSbi = '123456789'
-
     GrantPaymentsModel.find.mockReturnValue({
       lean: vi.fn().mockResolvedValue([])
     })
 
     const h = makeH()
     const req = {
-      params: { sbi: fakeSbi },
+      params: { sbi },
       server: { logger: { info: vi.fn() } },
       logger: { info: vi.fn(), error: vi.fn() }
     }
@@ -337,14 +336,13 @@ describe('postTestProcessPaymentsBySbiController', () => {
 
     expect(response.statusCode).toBe(statusCodes.ok)
     expect(response.source).toEqual({
-      message: `No payments found for SBI: ${fakeSbi}`,
+      message: `No payments found for SBI: ${sbi}`,
       result: []
     })
     expect(processDailyPayments).not.toHaveBeenCalled()
   })
 
   it('forwards Boom errors unchanged', async () => {
-    const fakeSbi = '123456789'
     const boomError = Boom.badRequest('nope')
 
     const mockAccounts = [
@@ -367,7 +365,7 @@ describe('postTestProcessPaymentsBySbiController', () => {
 
     const h = makeH()
     const req = {
-      params: { sbi: fakeSbi },
+      params: { sbi },
       server: {},
       logger: { info: vi.fn(), error: vi.fn() }
     }
@@ -380,7 +378,6 @@ describe('postTestProcessPaymentsBySbiController', () => {
   })
 
   it('logs and responds 500 on generic failure', async () => {
-    const fakeSbi = '123456789'
     const error = new Error('kaboom')
 
     const mockAccounts = [
@@ -403,7 +400,7 @@ describe('postTestProcessPaymentsBySbiController', () => {
 
     const h = makeH()
     const logger = { info: vi.fn(), error: vi.fn() }
-    const req = { params: { sbi: fakeSbi }, server: {}, logger }
+    const req = { params: { sbi }, server: {}, logger }
 
     const response = await postTestProcessPaymentsBySbiController.handler(
       req,
@@ -422,7 +419,6 @@ describe('postTestProcessPaymentsBySbiController', () => {
   })
 
   it('handles background tasks with payment hub responses for SBI', async () => {
-    const fakeSbi = '123456789'
     const fakeResults = [{ _id: 'payment1' }]
     const fakeResponse = { paymentHubId: 'hub-123', status: 'sent' }
     const resolvedTask = Promise.resolve(fakeResponse)
@@ -459,7 +455,7 @@ describe('postTestProcessPaymentsBySbiController', () => {
     const h = makeH()
     const logger = { info: vi.fn(), error: vi.fn() }
     const req = {
-      params: { sbi: fakeSbi },
+      params: { sbi },
       server: { logger: { info: vi.fn() } },
       logger
     }

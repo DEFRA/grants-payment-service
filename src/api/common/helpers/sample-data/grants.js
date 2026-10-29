@@ -1,7 +1,10 @@
+const sbi = '800000001'
+const frn = `0${sbi}`
+
 export default [
   {
-    sbi: '123456789',
-    frn: '1234567890',
+    sbi,
+    frn,
     claimId: 'R00000004',
     scheme: 'SFI',
     grants: [
@@ -43,8 +46,8 @@ export default [
     ]
   },
   {
-    sbi: '123456789',
-    frn: '9876543210',
+    sbi,
+    frn,
     claimId: 'R00000001',
     scheme: 'WMP',
     grants: [

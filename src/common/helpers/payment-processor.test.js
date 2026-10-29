@@ -43,9 +43,9 @@ vi.mock('#~/api/common/models/grant_payments.js', () => ({
   }
 }))
 
-const sbi = '123456789'
-const frn = '1234567890'
-const crn = 'R00000004'
+const sbi = '800000001'
+const frn = `0${sbi}`
+const claimId = 'R00000004'
 
 describe('processDailyPayments', () => {
   const logger = {
@@ -635,7 +635,7 @@ describe('processStaleLockedPayments', () => {
       {
         sbi,
         frn,
-        claimId: 'R00000004',
+        claimId,
         correlationId: 'corr-1',
         invoiceNumber: 'INV-001',
         agreementNumber: 'AGR-001',
@@ -659,7 +659,7 @@ describe('processStaleLockedPayments', () => {
         agreementNumber: 'AGR-001',
         sbi,
         frn,
-        identifiers: { sbi, frn, crn }
+        identifiers: { sbi, frn, crn: claimId }
       }
     )
     expect(logger.info).toHaveBeenCalledWith('Processing stale locked payments')
