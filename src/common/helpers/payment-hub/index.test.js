@@ -44,6 +44,9 @@ vi.mock('#~/api/common/helpers/logging/logger.js', () => ({
 
 const globalFetch = global.fetch
 
+const sbi = '800000001'
+const frn = `0${sbi}`
+
 describe('Payment Hub Helper', () => {
   let server
   let logger
@@ -114,8 +117,8 @@ describe('Payment Hub Helper', () => {
   describe('sendPaymentHubRequest', () => {
     it('should send a request to payment hub with correct parameters', async () => {
       const payload = {
-        sbi: 'mock-sbi',
-        frn: 'mock-frn',
+        sbi,
+        frn,
         correlationId: 'mock-correlationId',
         data: 'test-data'
       }
@@ -136,7 +139,7 @@ describe('Payment Hub Helper', () => {
       )
 
       expect(logger.info).toHaveBeenCalledWith(
-        'Request successfully sent to Payment Hub for SBI: mock-sbi FRN: mock-frn (correlation ID: mock-correlationId)'
+        `Request successfully sent to Payment Hub for SBI: ${sbi} FRN: ${frn} (correlation ID: mock-correlationId)`
       )
 
       expect(result).toEqual(

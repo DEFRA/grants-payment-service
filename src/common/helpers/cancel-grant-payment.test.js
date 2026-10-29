@@ -1,0 +1,103 @@
+import { describe, expect, it, vi, beforeEach } from 'vitest'
+import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
+import { cancelGrantPayments } from './cancel-grant-payment.js'
+
+vi.mock('#~/api/common/models/grant_payments.js', () => {
+  return {
+    default: {
+      find: vi.fn()
+    }
+  }
+})
+
+const sbi = '800000001'
+const frn = `0${sbi}`
+
+describe('cancelGrantPayments', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-03-23'))
+  })
+
+  it('should cancel pending payments with dueDate >= today', async () => {
+    const today = '2026-03-23'
+    const futureDate = '2026-06-05'
+    const pastDate = '2026-03-22'
+
+    const mockSave = vi.fn()
+    const mockGrantPayment = {
+      sbi,
+      frn,
+      grants: [
+        {
+          invoiceNumber: 'INV-001',
+          agreementNumber: 'AGR-001',
+          payments: [
+            {
+              correlationId: 'corr-future',
+              dueDate: futureDate,
+              status: 'pending'
+            },
+            { correlationId: 'corr-today', dueDate: today, status: 'pending' },
+            {
+              correlationId: 'corr-past',
+              dueDate: pastDate,
+              status: 'pending'
+            },
+            { correlationId: 'corr-paid', dueDate: futureDate, status: 'paid' }
+          ]
+        }
+      ],
+      save: mockSave
+    }
+
+    GrantPaymentsModel.find.mockResolvedValue([mockGrantPayment])
+
+    const result = await cancelGrantPayments(sbi, frn)
+
+    expect(GrantPaymentsModel.find).toHaveBeenCalledWith({ sbi, frn })
+    expect(mockGrantPayment.grants[0].payments[0].status).toBe('cancelled')
+    expect(mockGrantPayment.grants[0].payments[1].status).toBe('cancelled')
+    expect(mockGrantPayment.grants[0].payments[2].status).toBe('pending') // past date not cancelled
+    expect(mockGrantPayment.grants[0].payments[3].status).toBe('paid') // non-pending not cancelled
+    expect(mockSave).toHaveBeenCalled()
+    expect(result.updatedPayments).toHaveLength(1)
+    expect(result.updatedPayments[0].grantPayment).toBe(mockGrantPayment)
+    expect(result.updatedPayments[0].cancelledPayments).toEqual([
+      {
+        correlationId: 'corr-future',
+        invoiceNumber: 'INV-001',
+        agreementNumber: 'AGR-001'
+      },
+      {
+        correlationId: 'corr-today',
+        invoiceNumber: 'INV-001',
+        agreementNumber: 'AGR-001'
+      }
+    ])
+  })
+
+  it('should not call save if no payments were updated', async () => {
+    const pastDate = '2026-03-22'
+
+    const mockSave = vi.fn()
+    const mockGrantPayment = {
+      sbi,
+      frn,
+      grants: [
+        {
+          payments: [{ dueDate: pastDate, status: 'pending' }]
+        }
+      ],
+      save: mockSave
+    }
+
+    GrantPaymentsModel.find.mockResolvedValue([mockGrantPayment])
+
+    const result = await cancelGrantPayments(sbi, frn)
+
+    expect(mockSave).not.toHaveBeenCalled()
+    expect(result.updatedPayments).toHaveLength(0)
+  })
+})

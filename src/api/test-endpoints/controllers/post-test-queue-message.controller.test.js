@@ -33,6 +33,9 @@ vi.mock('#~/config/index.js', () => ({
   }
 }))
 
+const sbi = '800000001'
+const frn = `0${sbi}`
+
 describe('postTestQueueMessageController', () => {
   const h = {
     response: vi.fn((payload) => ({
@@ -55,8 +58,8 @@ describe('postTestQueueMessageController', () => {
   const payload = {
     type: 'farming-grants-agreements-api.payment.create',
     data: {
-      sbi: '123456789',
-      frn: '9999999999',
+      sbi,
+      frn,
       grants: [
         {
           sourceSystem: 'FPTT',

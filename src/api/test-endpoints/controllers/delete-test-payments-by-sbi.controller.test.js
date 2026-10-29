@@ -20,6 +20,8 @@ const makeH = () => {
   }
 }
 
+const sbi = '800000001'
+
 describe('deleteTestPaymentsBySbiController', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -30,7 +32,6 @@ describe('deleteTestPaymentsBySbiController', () => {
   })
 
   test('returns 200 and deletedCount for a given sbi when no fundCode is provided', async () => {
-    const sbi = '123456789'
     const deletedCount = 2
     deleteGrantPaymentsBySbi.mockResolvedValue({ deletedCount })
 
@@ -44,7 +45,6 @@ describe('deleteTestPaymentsBySbiController', () => {
   })
 
   test('returns 200 and deletedCount for a given sbi and fundCode when fundCode is provided', async () => {
-    const sbi = '123456789'
     const fundCode = 'DRD10'
     const deletedCount = 2
     deleteGrantPaymentsBySbi.mockResolvedValue({ deletedCount })
@@ -62,25 +62,25 @@ describe('deleteTestPaymentsBySbiController', () => {
     const deletedCount = 0
     deleteGrantPaymentsBySbi.mockResolvedValue({ deletedCount })
 
-    const req = { params: { sbi: '999999999' } }
+    const req = { params: { sbi } }
     const h = makeH()
     const result = await deleteTestPaymentsBySbiController.handler(req, h)
 
     expect(result.statusCode).toBe(statusCodes.ok)
-    expect(result.source).toEqual({ sbi: '999999999', deletedCount: 0 })
+    expect(result.source).toEqual({ sbi, deletedCount: 0 })
   })
 
   test('returns 200 and deletedCount 0 when no payments found for sbi and fundCode', async () => {
     const deletedCount = 0
     deleteGrantPaymentsBySbi.mockResolvedValue({ deletedCount })
 
-    const req = { params: { sbi: '999999999', fundCode: 'UNKNOWN' } }
+    const req = { params: { sbi, fundCode: 'UNKNOWN' } }
     const h = makeH()
     const result = await deleteTestPaymentsBySbiController.handler(req, h)
 
     expect(result.statusCode).toBe(statusCodes.ok)
     expect(result.source).toEqual({
-      sbi: '999999999',
+      sbi,
       fundCode: 'UNKNOWN',
       deletedCount: 0
     })
@@ -90,7 +90,7 @@ describe('deleteTestPaymentsBySbiController', () => {
     const mockError = new Error('db down')
     deleteGrantPaymentsBySbi.mockRejectedValue(mockError)
 
-    const req = { params: { sbi: '123456789' }, log: vi.fn() }
+    const req = { params: { sbi }, log: vi.fn() }
     const h = makeH()
     const result = await deleteTestPaymentsBySbiController.handler(req, h)
 

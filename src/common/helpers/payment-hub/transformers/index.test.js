@@ -9,8 +9,11 @@ vi.mock('#~/common/helpers/logging/logger.js', () => ({
   })
 }))
 
+const sbi = '800000001'
+const frn = `0${sbi}`
+
 describe('transformDataToPaymentHubFormat', () => {
-  const baseIdentifiers = { sbi: '111', frn: '222', claimId: '333' }
+  const baseIdentifiers = { sbi, frn, claimId: '333' }
   const baseGrant = {
     invoiceNumber: 'INV1',
     marketingYear: '2026',
@@ -53,8 +56,8 @@ describe('transformDataToPaymentHubFormat', () => {
     expect(result).toMatchObject({
       ledger: 'AP',
       invoiceNumber: 'INV1Q1',
-      frn: '222',
-      sbi: '111',
+      frn,
+      sbi,
       fesCode: 'FALS_FPTT',
       marketingYear: '2026',
       paymentRequestNumber: 5,

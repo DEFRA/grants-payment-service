@@ -1,0 +1,160 @@
+import { afterAll } from 'vitest'
+import mongoose from 'mongoose'
+import GrantPaymentsModel from './grant_payments.js'
+
+const sbi = '800000001'
+const frn = `0${sbi}`
+
+describe('grant_payments schema', () => {
+  afterAll(() => {
+    delete mongoose.connection.models.grant_payments
+  })
+
+  test('should fail validation when required fields are missing', () => {
+    const doc = new GrantPaymentsModel({})
+    const err = doc.validateSync()
+
+    expect(err).toBeTruthy()
+    expect(err.errors).toBeTruthy()
+    expect(err.errors.sbi).toBeTruthy()
+    expect(err.errors.frn).toBeTruthy()
+    expect(err.errors.claimId).toBeTruthy()
+  })
+
+  test('should pass validation with required fields present', () => {
+    const valid = {
+      sbi,
+      frn,
+      claimId: 'R00000004',
+      grants: [
+        {
+          sourceSystem: 'FPTT',
+          paymentRequestNumber: 1,
+          correlationId: '7cf9bd11-c791-42c9-bd28-fa0fecb2d92c',
+          invoiceNumber: 'R00000004-V001Q2',
+          originalInvoiceNumber: 'R00000004-V001Q1',
+          agreementNumber: 'FPTT264870631',
+          ledger: 'AP',
+          fesCode: 'FALS_FPTT',
+          deliveryBody: 'RP00',
+          totalAmountPence: '70285',
+          currency: 'GBP',
+          marketingYear: '2026',
+          payments: [
+            {
+              dueDate: '2026-06-05',
+              totalAmountPence: '1263',
+              correlationId: '7cf9bd11-c791-42c9-bd28-fa0fecb2d92c',
+              invoiceLines: [
+                {
+                  schemeCode: 'CMOR1',
+                  description: '2026-06-05: Parcel 8083',
+                  amountPence: '1263',
+                  accountCode: 'SOS710',
+                  fundCode: 'DRD10',
+                  deliveryBody: 'RP00'
+                }
+              ],
+              status: 'pending'
+            }
+          ]
+        }
+      ]
+    }
+
+    const doc = new GrantPaymentsModel(valid)
+    expect(doc.validateSync()).toBeUndefined()
+  })
+
+  test('should pass validation with failed status', () => {
+    const valid = {
+      sbi,
+      frn,
+      claimId: 'R00000004',
+      grants: [
+        {
+          sourceSystem: 'FPTT',
+          paymentRequestNumber: 1,
+          correlationId: '7cf9bd11-c791-42c9-bd28-fa0fecb2d92c',
+          invoiceNumber: 'R00000004-V001Q2',
+          originalInvoiceNumber: 'R00000004-V001Q1',
+          agreementNumber: 'FPTT264870631',
+          ledger: 'AP',
+          fesCode: 'FALS_FPTT',
+          deliveryBody: 'RP00',
+          totalAmountPence: '70285',
+          currency: 'GBP',
+          marketingYear: '2026',
+          payments: [
+            {
+              dueDate: '2026-06-05',
+              totalAmountPence: 1263,
+              correlationId: '7cf9bd11-c791-42c9-bd28-fa0fecb2d92c',
+              invoiceLines: [
+                {
+                  schemeCode: 'CMOR1',
+                  description: '2026-06-05: Parcel 8083',
+                  amountPence: 1263,
+                  accountCode: 'SOS710',
+                  fundCode: 'DRD10',
+                  deliveryBody: 'RP00'
+                }
+              ],
+              status: 'failed'
+            }
+          ]
+        }
+      ]
+    }
+
+    const doc = new GrantPaymentsModel(valid)
+    expect(doc.validateSync()).toBeUndefined()
+  })
+})
+
+test('should fail validation when grant or payment correlationId is missing or empty', () => {
+  const base = {
+    sbi,
+    frn,
+    claimId: 'R00000004',
+    grants: [
+      {
+        sourceSystem: 'FPTT',
+        paymentRequestNumber: 1,
+        // correlationId intentionally missing
+        invoiceNumber: 'R00000004-V001Q2',
+        agreementNumber: 'FPTT264870631',
+        ledger: 'AP',
+        fesCode: 'FALS_FPTT',
+        deliveryBody: 'RP00',
+        totalAmountPence: '70285',
+        currency: 'GBP',
+        payments: [
+          {
+            dueDate: '2026-06-05',
+            totalAmountPence: '1263',
+            // payment correlationId intentionally missing
+            invoiceLines: [
+              {
+                schemeCode: 'CMOR1',
+                description: '2026-06-05: Parcel 8083',
+                amountPence: '1263',
+                accountCode: 'SOS710',
+                fundCode: 'DRD10',
+                deliveryBody: 'RP00'
+              }
+            ],
+            status: 'pending'
+          }
+        ]
+      }
+    ]
+  }
+
+  const doc = new GrantPaymentsModel(base)
+  const err = doc.validateSync()
+
+  expect(err).toBeTruthy()
+  expect(err.errors['grants.0.correlationId']).toBeTruthy()
+  expect(err.errors['grants.0.payments.0.correlationId']).toBeTruthy()
+})

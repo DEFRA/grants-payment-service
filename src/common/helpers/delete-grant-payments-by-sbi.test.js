@@ -4,13 +4,14 @@ import GrantPaymentsModel from '#~/api/common/models/grant_payments.js'
 
 vi.mock('#~/api/common/models/grant_payments.js')
 
+const sbi = '800000001'
+
 describe('deleteGrantPaymentsBySbi', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('deletes payments by SBI only', async () => {
-    const sbi = '123456789'
     const mockResult = { deletedCount: 5 }
     GrantPaymentsModel.deleteMany.mockResolvedValue(mockResult)
 
@@ -21,7 +22,6 @@ describe('deleteGrantPaymentsBySbi', () => {
   })
 
   it('deletes payments by SBI and fundCode', async () => {
-    const sbi = '123456789'
     const fundCode = 'AGF1'
     const mockResult = { deletedCount: 3 }
     GrantPaymentsModel.deleteMany.mockResolvedValue(mockResult)
@@ -36,7 +36,6 @@ describe('deleteGrantPaymentsBySbi', () => {
   })
 
   it('returns deletedCount of 0 when no payments found', async () => {
-    const sbi = '123456789'
     const mockResult = { deletedCount: 0 }
     GrantPaymentsModel.deleteMany.mockResolvedValue(mockResult)
 
@@ -47,7 +46,6 @@ describe('deleteGrantPaymentsBySbi', () => {
   })
 
   it('handles deletion with fundCode when no payments match', async () => {
-    const sbi = '123456789'
     const fundCode = 'AGF1'
     const mockResult = { deletedCount: 0 }
     GrantPaymentsModel.deleteMany.mockResolvedValue(mockResult)

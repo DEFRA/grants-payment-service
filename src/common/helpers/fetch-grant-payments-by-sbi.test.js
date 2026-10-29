@@ -9,9 +9,10 @@ vi.mock('#~/config/index.js', () => ({
   }
 }))
 
+const sbi = '800000001'
+
 describe('fetchGrantPaymentsBySbi', () => {
   it('returns payments by the provided sbi when no fundCode is provided', async () => {
-    const sbi = '123456789'
     const fakeDocs = [{ _id: 'a', sbi }]
     const skipMock = vi.fn().mockReturnThis()
     const limitMock = vi.fn().mockReturnThis()
@@ -34,7 +35,6 @@ describe('fetchGrantPaymentsBySbi', () => {
   })
 
   it('returns payments by the provided sbi and fundCode when fundCode is provided', async () => {
-    const sbi = '123456789'
     const fundCode = 'DRD10'
     const fakeDocs = [{ _id: 'a', sbi }]
     const skipMock = vi.fn().mockReturnThis()
@@ -61,7 +61,6 @@ describe('fetchGrantPaymentsBySbi', () => {
   })
 
   it('applies pagination when page is provided', async () => {
-    const sbi = '123456789'
     const fakeDocs = [{ _id: 'a', sbi }]
     const skipMock = vi.fn().mockReturnThis()
     const limitMock = vi.fn().mockReturnThis()
