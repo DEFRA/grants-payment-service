@@ -2,8 +2,9 @@
 
 Grants Payment Service (GPS) processes farming grant payment schedules received from the
 [farming-grants-agreements-api](https://github.com/DEFRA/farming-grants-agreements-api) via AWS SQS, stores them in
-MongoDB, and submits daily batch payments to the Payment Hub for settlement. It also handles payment cancellations and
-maintains an audit trail via AWS SNS.
+MongoDB, and submits daily batch payments to the Payment Hub for settlement.
+
+It also handles payment cancellations and maintains an audit trail via AWS SNS.
 
 - [Requirements](#requirements)
   - [Node.js](#nodejs)
