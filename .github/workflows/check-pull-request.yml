@@ -12,6 +12,9 @@ on:
       - ready_for_review
   merge_group:
 
+permissions:
+  contents: read
+
 jobs:
   pr-validator:
     name: Run Pull Request Checks
