@@ -8,7 +8,7 @@ It also handles payment cancellations and maintains an audit trail via AWS SNS.
 
 - [Requirements](#requirements)
   - [Node.js](#nodejs)
-  - [Gitleaks](#gitleaks)
+  - [Betterleaks](#betterleaks)
 - [Local development](#local-development)
   - [Setup](#setup)
   - [Development](#development)
@@ -52,15 +52,15 @@ cd grants-payment-service
 nvm use
 ```
 
-### Gitleaks
+### Betterleaks
 
-[Gitleaks](https://github.com/gitleaks/gitleaks) must be on your `PATH`, because the pre-commit hook uses it to stop secrets and personal data being committed - on macOS:
+[Betterleaks](https://github.com/betterleaks/betterleaks) must be on your `PATH`, because the pre-commit hook uses it to stop secrets being committed - on macOS:
 
 ```bash
-brew install gitleaks
+brew install betterleaks
 ```
 
-For other platforms, see the [gitleaks releases page](https://github.com/gitleaks/gitleaks/releases).
+For other platforms, see the [betterleaks releases page](https://github.com/betterleaks/betterleaks/releases).
 
 npm does not run install scripts in this repository, so the git hooks are not installed by `npm install`. Install them once after cloning:
 
@@ -68,15 +68,7 @@ npm does not run install scripts in this repository, so the git hooks are not in
 npm run setup:husky
 ```
 
-As well as the standard secret rules, `.gitleaks.toml` blocks real Single Business Identifiers (SBIs), Customer Reference Numbers (CRNs), Firm Reference Numbers (FRNs) and government email addresses. Use synthetic values in tests and fixtures instead:
-
-| Identifier | Synthetic range                                    |
-| ---------- | -------------------------------------------------- |
-| SBI        | `800000001` to `800000999`                         |
-| CRN        | `9000000001` to `9000000999`                       |
-| FRN        | `0` followed by a synthetic SBI, e.g. `0800000001` |
-
-If a finding is a genuine false positive, add a `// gitleaks:allow` comment to the end of that line.
+If a finding is a genuine false positive, add a `// betterleaks:allow` comment to the end of that line.
 
 ## Local development
 

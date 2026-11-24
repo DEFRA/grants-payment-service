@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/knip/schema.json",
-  "ignoreBinaries": ["gitleaks"],
+  "ignoreBinaries": ["betterleaks"],
   "ignoreDependencies": [
     "@aws-sdk/credential-providers",
     "husky",

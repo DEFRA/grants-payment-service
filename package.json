@@ -24,7 +24,7 @@
     "lint:knip": "knip",
     "lint:fix": "npm run lint:eslint -- --fix && npm run lint:knip -- --fix",
     "postinstall": "npm run setup:husky",
-    "scan:secrets": "gitleaks git --pre-commit --staged --no-banner --verbose",
+    "scan:secrets": "betterleaks git --pre-commit --staged --no-banner --verbose",
     "security-audit": "npm audit --audit-level=high",
     "server:debug": "nodemon --inspect-brk=0.0.0.0 --ext js,json --legacy-watch ./src",
     "server:watch": "nodemon --inspect=0.0.0.0 --ext js,json --legacy-watch ./src",
