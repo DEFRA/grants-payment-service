@@ -67,7 +67,7 @@
     "@types/node": "24.19.2",
     "@vitest/coverage-v8": "5.1.0",
     "eslint": "9.39.5",
-    "eslint-plugin-jsdoc": "65.4.8",
+    "eslint-plugin-jsdoc": "65.4.10",
     "husky": "9.1.7",
     "knip": "6.45.1",
     "neostandard": "0.14.1",
@@ -75,7 +75,7 @@
     "prettier": "3.10.1",
     "proxy-chain": "3.0.3",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.72.2",
+    "typescript-eslint": "8.73.0",
     "vitest": "5.1.0",
     "vitest-fetch-mock": "0.4.5",
     "vitest-mongodb": "1.0.3"
